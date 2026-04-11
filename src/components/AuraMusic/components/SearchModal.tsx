@@ -177,6 +177,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           isNetease: true,
           neteaseId: t.id,
           lyrics: [],
+          needsLyricsMatch: true,
         };
       });
       console.log("[PlaylistDebug] songs[0] neteaseId:", songs[0]?.neteaseId, "title:", songs[0]?.title);
