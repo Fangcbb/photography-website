@@ -486,6 +486,8 @@ export const usePlayer = ({
     const isNeteaseSong = currentSong.isNetease;
     const songNeteaseId = currentSong.neteaseId;
 
+    console.log("[LyricsDebug] songId:", songId, "isNetease:", isNeteaseSong, "neteaseId:", songNeteaseId, "needsLyricsMatch:", needsLyricsMatch);
+
     let cancelled = false;
 
     const markMatchFailed = () => {
@@ -515,6 +517,7 @@ export const usePlayer = ({
       setMatchStatus("matching");
       try {
         if (isNeteaseSong && songNeteaseId) {
+          console.log("[LyricsDebug] fetching lyrics by neteaseId:", songNeteaseId);
           const raw = await withTimeout(
             fetchLyricsById(songNeteaseId),
             MATCH_TIMEOUT_MS,

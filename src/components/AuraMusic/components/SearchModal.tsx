@@ -128,11 +128,15 @@ const SearchModal: React.FC<SearchModalProps> = ({
     }
   }, [isOpen, isRendering]);
 
+  // Current playlist category (for load-more consistency)
+  const [playlistCat, setPlaylistCat] = useState("华语");
+
   // --- Playlist Loading Effect ---
   useEffect(() => {
     if (!isOpen || search.activeTab !== "playlists") return;
+    const cat = search.query.trim() || "华语";
+    setPlaylistCat(cat);
     setPlaylistsLoading(true);
-    const cat = search.query.trim() || "全部";
     fetchHighQualityPlaylists(cat, 30).then((res) => {
       setPlaylists(res.playlists);
       setPlaylistsLasttime(res.lasttime);
@@ -145,7 +149,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const handleLoadMorePlaylists = () => {
     if (playlistsLoading || !playlistsHasMore) return;
     setPlaylistsLoading(true);
-    fetchHighQualityPlaylists("全部", 20, playlistsLasttime ?? undefined).then((res) => {
+    fetchHighQualityPlaylists(playlistCat, 20, playlistsLasttime ?? undefined).then((res) => {
       setPlaylists((prev) => [...prev, ...res.playlists]);
       setPlaylistsLasttime(res.lasttime);
       setPlaylistsHasMore(res.playlists.length === 20);
@@ -155,8 +159,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   const handlePlaylistClick = async (pl: NeteaseHighQualityPlaylist) => {
     setLoadingPlaylistId(pl.id);
+    console.log("[PlaylistDebug] playlist id:", pl.id, "name:", pl.name);
     const tracks = await fetchNeteasePlaylist(String(pl.id));
-    console.log("[PlaylistDebug] fetch returned tracks:", tracks.length, "first:", tracks[0]?.id);
+    console.log("[PlaylistDebug] fetchNeteasePlaylist returned tracks:", tracks.length, "first id:", tracks[0]?.id, "first neteaseId:", tracks[0]?.neteaseId, "first title:", tracks[0]?.title);
     if (tracks.length > 0) {
       const songs: Song[] = tracks.map((t) => {
         const origin = getNeteaseAudioUrl(t.id);

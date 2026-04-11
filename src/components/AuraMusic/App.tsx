@@ -177,6 +177,7 @@ const App: React.FC = () => {
   ]);
 
   const handleImportAndPlay = useCallback((song: Song) => {
+    console.log("[App handleImportAndPlay] song id:", song.id, "neteaseId:", song.neteaseId, "needsLyricsMatch:", song.needsLyricsMatch, "title:", song.title);
     // Check if song already exists in queue (by neteaseId for cloud songs, or by id)
     const existingIndex = playlist.queue.findIndex((s) => {
       if (song.isNetease && s.isNetease) {
