@@ -7,6 +7,7 @@ import {
   getNeteaseAudioUrl,
   NeteaseTrackInfo,
   fetchHighQualityPlaylists,
+  fetchTimelinePlaylists,
   fetchNeteasePlaylist,
   NeteaseHighQualityPlaylist,
 } from "../services/lyricsService";
@@ -130,31 +131,53 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   // Current playlist category (for load-more consistency)
   const [playlistCat, setPlaylistCat] = useState("华语");
+  // Playlist view mode: "timeline" = 每周精选, "category" = 分类浏览
+  const [playlistView, setPlaylistView] = useState<"timeline" | "category">("timeline");
 
   // --- Playlist Loading Effect ---
   useEffect(() => {
     if (!isOpen || search.activeTab !== "playlists") return;
-    const cat = search.query.trim() || "华语";
-    setPlaylistCat(cat);
-    setPlaylistsLoading(true);
-    fetchHighQualityPlaylists(cat, 30).then((res) => {
-      setPlaylists(res.playlists);
-      setPlaylistsLasttime(res.lasttime);
-      setPlaylistsHasMore(res.playlists.length === 30);
-      setPlaylistsLoading(false);
-    });
-  }, [isOpen, search.activeTab, search.query]);
+    // Timeline mode: always use timeline API, ignore category
+    if (playlistView === "timeline") {
+      setPlaylistsLoading(true);
+      fetchTimelinePlaylists(30).then((res) => {
+        setPlaylists(res.playlists);
+        setPlaylistsLasttime(res.lasttime);
+        setPlaylistsHasMore(res.playlists.length === 30);
+        setPlaylistsLoading(false);
+      });
+    } else {
+      const cat = search.query.trim() || "华语";
+      setPlaylistCat(cat);
+      setPlaylistsLoading(true);
+      fetchHighQualityPlaylists(cat, 30).then((res) => {
+        setPlaylists(res.playlists);
+        setPlaylistsLasttime(res.lasttime);
+        setPlaylistsHasMore(res.playlists.length === 30);
+        setPlaylistsLoading(false);
+      });
+    }
+  }, [isOpen, search.activeTab, search.query, playlistView]);
 
   // --- Playlist Handlers ---
   const handleLoadMorePlaylists = () => {
     if (playlistsLoading || !playlistsHasMore) return;
     setPlaylistsLoading(true);
-    fetchHighQualityPlaylists(playlistCat, 20, playlistsLasttime ?? undefined).then((res) => {
-      setPlaylists((prev) => [...prev, ...res.playlists]);
-      setPlaylistsLasttime(res.lasttime);
-      setPlaylistsHasMore(res.playlists.length === 20);
-      setPlaylistsLoading(false);
-    });
+    if (playlistView === "timeline") {
+      fetchTimelinePlaylists(20, playlistsLasttime ?? undefined).then((res) => {
+        setPlaylists((prev) => [...prev, ...res.playlists]);
+        setPlaylistsLasttime(res.lasttime);
+        setPlaylistsHasMore(res.playlists.length === 20);
+        setPlaylistsLoading(false);
+      });
+    } else {
+      fetchHighQualityPlaylists(playlistCat, 20, playlistsLasttime ?? undefined).then((res) => {
+        setPlaylists((prev) => [...prev, ...res.playlists]);
+        setPlaylistsLasttime(res.lasttime);
+        setPlaylistsHasMore(res.playlists.length === 20);
+        setPlaylistsLoading(false);
+      });
+    }
   };
 
   const handlePlaylistClick = async (pl: NeteaseHighQualityPlaylist) => {
@@ -706,7 +729,36 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
           {/* Playlists Results */}
           {search.activeTab === "playlists" && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <>
+              {/* View Toggle */}
+              <div className="flex items-center gap-1 mb-3 px-1">
+                <button
+                  onClick={() => setPlaylistView("timeline")}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    playlistView === "timeline"
+                      ? "bg-white/15 text-white shadow-sm"
+                      : "text-white/40 hover:text-white/60"
+                  }`}
+                >
+                  每周精选
+                </button>
+                <button
+                  onClick={() => setPlaylistView("category")}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    playlistView === "category"
+                      ? "bg-white/15 text-white shadow-sm"
+                      : "text-white/40 hover:text-white/60"
+                  }`}
+                >
+                  分类浏览
+                </button>
+                {playlistView === "timeline" && (
+                  <span className="ml-auto text-white/30 text-xs">编辑推荐 · 每周更新</span>
+                )}
+              </div>
+
+              {/* Playlist Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {playlists.map((pl) => (
                 <button
                   key={pl.id}
@@ -742,6 +794,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 </button>
               ))}
             </div>
+            </>
           )}
         </div>
 

@@ -822,3 +822,29 @@ export const fetchHighQualityPlaylists = async (
     return { playlists: [], lasttime: null };
   }
 };
+
+export const fetchTimelinePlaylists = async (
+  limit: number = 20,
+  before?: number,
+): Promise<{ playlists: NeteaseHighQualityPlaylist[]; lasttime: number | null }> => {
+  try {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      ...(before ? { before: String(before) } : {}),
+    });
+    const url = `${NETEASECLOUD_API_BASE}/top/playlist/timeline?${params}`;
+    const data = (await fetchViaProxy(url)) as NeteaseHighQualityResponse;
+    if (data.code === 200) {
+      return {
+        playlists: data.playlists ?? [],
+        lasttime: data.playlists.length > 0
+          ? (data.playlists[data.playlists.length - 1] as unknown as { updateTime: number }).updateTime ?? null
+          : null,
+      };
+    }
+    return { playlists: [], lasttime: null };
+  } catch (e) {
+    console.error("TimelinePlaylist fetch error", e);
+    return { playlists: [], lasttime: null };
+  }
+};
