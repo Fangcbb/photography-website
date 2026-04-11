@@ -130,15 +130,16 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   // --- Playlist Loading Effect ---
   useEffect(() => {
-    if (!isOpen || search.activeTab !== "playlists" || playlists.length > 0) return;
+    if (!isOpen || search.activeTab !== "playlists") return;
     setPlaylistsLoading(true);
-    fetchHighQualityPlaylists("全部", 20).then((res) => {
+    const cat = search.query.trim() || "全部";
+    fetchHighQualityPlaylists(cat, 30).then((res) => {
       setPlaylists(res.playlists);
       setPlaylistsLasttime(res.lasttime);
-      setPlaylistsHasMore(res.playlists.length === 20);
+      setPlaylistsHasMore(res.playlists.length === 30);
       setPlaylistsLoading(false);
     });
-  }, [isOpen, search.activeTab]);
+  }, [isOpen, search.activeTab, search.query]);
 
   // --- Playlist Handlers ---
   const handleLoadMorePlaylists = () => {
