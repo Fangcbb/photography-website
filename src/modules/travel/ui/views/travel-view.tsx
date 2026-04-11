@@ -1,0 +1,68 @@
+"use client";
+
+import { useState } from "react";
+import Footer from "@/components/footer";
+import { CoverPhoto } from "../components/cover-photo";
+import { Introduction } from "../components/introduction";
+import { CityItem } from "../components/city-item";
+import { CitySetWithPhotos } from "@/db/schema";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "@/trpc/client";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export const TravelView = () => {
+  const trpc = useTRPC();
+  const { data } = useSuspenseQuery(trpc.travel.getCitySets.queryOptions());
+
+  // Initialize with first city directly, no useEffect needed
+  const [activeCity, setActiveCity] = useState<CitySetWithPhotos | null>(
+    () => data?.[0] ?? null
+  );
+
+  return (
+    <div className="flex flex-col lg:flex-row min-h-screen w-full">
+      <CoverPhoto citySet={activeCity || data[0]} citySets={data} />
+
+      {/* Spacer for fixed left content */}
+      <div className="hidden lg:block lg:w-1/2" />
+
+      {/* RIGHT CONTENT - Scrollable */}
+      <div className="w-full mt-3 lg:mt-0 lg:w-1/2 space-y-3 pb-3">
+        <Introduction />
+        <div className="space-y-3">
+          {data.map((city) => (
+            <CityItem key={city.id} city={city} onMouseEnter={setActiveCity} />
+          ))}
+        </div>
+        <Footer />
+      </div>
+    </div>
+  );
+};
+
+export const LoadingStatus = () => {
+  return (
+    <div className="flex flex-col lg:flex-row min-h-screen w-full">
+      {/* LEFT CONTENT - Fixed cover photo skeleton */}
+      <div className="w-full h-[70vh] lg:w-1/2 lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3">
+        <Skeleton className="w-full h-full rounded-xl" />
+      </div>
+
+      {/* Spacer for fixed left content */}
+      <div className="hidden lg:block lg:w-1/2" />
+
+      {/* RIGHT CONTENT - Scrollable */}
+      <div className="w-full mt-3 lg:mt-0 lg:w-1/2 space-y-3 pb-3">
+        <Introduction />
+        <div className="space-y-3">
+          <Skeleton className="w-full h-12 rounded-lg" />
+          <Skeleton className="w-full h-12 rounded-lg" />
+          <Skeleton className="w-full h-12 rounded-lg" />
+          <Skeleton className="w-full h-12 rounded-lg" />
+          <Skeleton className="w-full h-12 rounded-lg" />
+        </div>
+        <Footer />
+      </div>
+    </div>
+  );
+};

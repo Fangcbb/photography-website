@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+
+# Build output
+.next
+out
+build
+
+# Version control
+.git
+.gitignore
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+.windsurf
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose*.yml
+Dockerfile
+
+# Documentation (keep README for containers)
+LICENSE
+screenshots
+.vercel
+.turbo
+*.tsbuildinfo
+next-env.d.ts
+
+# Test files
+__tests__
+*.test.*
+*.spec.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local development
+.local
+.cache
