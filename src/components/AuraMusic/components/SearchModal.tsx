@@ -131,13 +131,17 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   // Current playlist category (for load-more consistency)
   const [playlistCat, setPlaylistCat] = useState("华语");
-  // Playlist view mode: "timeline" = 每周精选, "category" = 分类浏览
+  // Playlist view mode: "timeline" = 每周精选, "category" = 语种分类（歌曲）
   const [playlistView, setPlaylistView] = useState<"timeline" | "category">("timeline");
+  // Selected language for category view
+  const [selectedLang, setSelectedLang] = useState("华语");
+  const LANGUAGE_TABS = ["华语", "欧美", "日语", "韩语", "粤语"];
 
   // --- Playlist Loading Effect ---
   useEffect(() => {
     if (!isOpen || search.activeTab !== "playlists") return;
-    // Timeline mode: always use timeline API, ignore category
+    // Always clear playlists before fetching new ones
+    setPlaylists([]);
     if (playlistView === "timeline") {
       setPlaylistsLoading(true);
       fetchTimelinePlaylists(30).then((res) => {
@@ -146,17 +150,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
         setPlaylistsHasMore(res.playlists.length === 30);
         setPlaylistsLoading(false);
       });
-    } else {
-      const cat = search.query.trim() || "华语";
-      setPlaylistCat(cat);
-      setPlaylistsLoading(true);
-      fetchHighQualityPlaylists(cat, 30).then((res) => {
-        setPlaylists(res.playlists);
-        setPlaylistsLasttime(res.lasttime);
-        setPlaylistsHasMore(res.playlists.length === 30);
-        setPlaylistsLoading(false);
-      });
     }
+    // category view fetches songs via search.performNeteaseSearch()
   }, [isOpen, search.activeTab, search.query, playlistView]);
 
   // --- Playlist Handlers ---
@@ -743,57 +738,132 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   每周精选
                 </button>
                 <button
-                  onClick={() => setPlaylistView("category")}
+                  onClick={() => {
+                    setPlaylistView("category");
+                    // Trigger language search
+                    setTimeout(() => {
+                      search.setQuery(selectedLang);
+                      search.performNeteaseSearch();
+                    }, 0);
+                  }}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                     playlistView === "category"
                       ? "bg-white/15 text-white shadow-sm"
                       : "text-white/40 hover:text-white/60"
                   }`}
                 >
-                  分类浏览
+                  语种分类
                 </button>
                 {playlistView === "timeline" && (
                   <span className="ml-auto text-white/30 text-xs">编辑推荐 · 每周更新</span>
                 )}
               </div>
 
-              {/* Playlist Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {playlists.map((pl) => (
-                <button
-                  key={pl.id}
-                  onClick={() => handlePlaylistClick(pl)}
-                  disabled={loadingPlaylistId === pl.id}
-                  className="group text-left rounded-xl overflow-hidden transition-all hover:ring-2 hover:ring-white/20 disabled:opacity-50"
-                  style={{ background: "rgba(255,255,255,0.04)" }}
-                >
-                  <div className="relative aspect-square">
-                    <SmartImage
-                      src={pl.coverImgUrl}
-                      alt={pl.name}
-                      containerClassName="w-full h-full"
-                      imgClassName="w-full h-full object-cover"
-                    />
-                    <div
-                      className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-white/80 text-xs font-medium flex items-center gap-1"
-                      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+              {playlistView === "timeline" ? (
+                /* Playlist Grid */
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {playlists.map((pl) => (
+                    <button
+                      key={pl.id}
+                      onClick={() => handlePlaylistClick(pl)}
+                      disabled={loadingPlaylistId === pl.id}
+                      className="group text-left rounded-xl overflow-hidden transition-all hover:ring-2 hover:ring-white/20 disabled:opacity-50"
+                      style={{ background: "rgba(255,255,255,0.04)" }}
                     >
-                      <PlayIcon className="w-3 h-3" />
-                      {formatCount(pl.playCount)}
-                    </div>
-                    {loadingPlaylistId === pl.id && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="relative aspect-square">
+                        <SmartImage
+                          src={pl.coverImgUrl}
+                          alt={pl.name}
+                          containerClassName="w-full h-full"
+                          imgClassName="w-full h-full object-cover"
+                        />
+                        <div
+                          className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-white/80 text-xs font-medium flex items-center gap-1"
+                          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+                        >
+                          <PlayIcon className="w-3 h-3" />
+                          {formatCount(pl.playCount)}
+                        </div>
+                        {loadingPlaylistId === pl.id && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div className="p-2">
+                        <p className="text-white/90 text-xs font-medium line-clamp-2 leading-snug">{pl.name}</p>
+                        <p className="text-white/30 text-xs mt-1">{formatCount(pl.trackCount)} 首</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                /* Language Category View */
+                <div>
+                  {/* Language Tabs */}
+                  <div className="flex items-center gap-1 mb-3 flex-wrap">
+                    {LANGUAGE_TABS.map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => {
+                          setSelectedLang(lang);
+                          search.setQuery(lang);
+                          search.performNeteaseSearch();
+                        }}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                          selectedLang === lang
+                            ? "bg-white/15 text-white shadow-sm"
+                            : "text-white/40 hover:text-white/60"
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
                   </div>
-                  <div className="p-2">
-                    <p className="text-white/90 text-xs font-medium line-clamp-2 leading-snug">{pl.name}</p>
-                    <p className="text-white/30 text-xs mt-1">{formatCount(pl.trackCount)} 首</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+
+                  {/* Song Results */}
+                  {search.neteaseProvider.isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1">
+                      {search.neteaseProvider.results.slice(0, 20).map((track, idx) => (
+                        <button
+                          key={track.id}
+                          onClick={() => playNeteaseTrack(track)}
+                          className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                        >
+                          <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
+                            <SmartImage
+                              src={track.coverUrl || ""}
+                              alt={track.title}
+                              containerClassName="w-full h-full"
+                              imgClassName="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white/90 text-sm font-medium truncate">{track.title}</p>
+                            <p className="text-white/40 text-xs truncate">{track.artist} · {track.album}</p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addNeteaseToQueue(track);
+                            }}
+                            className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <PlusIcon className="w-4 h-4 text-white/60" />
+                          </button>
+                        </button>
+                      ))}
+                      {search.neteaseProvider.results.length === 0 && (
+                        <p className="text-white/30 text-sm text-center py-8">点击上方语种标签搜索歌曲</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
