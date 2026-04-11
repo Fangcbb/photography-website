@@ -6,6 +6,9 @@ import { Song } from "../types";
 import {
   getNeteaseAudioUrl,
   NeteaseTrackInfo,
+  fetchHighQualityPlaylists,
+  fetchNeteasePlaylist,
+  NeteaseHighQualityPlaylist,
 } from "../services/lyricsService";
 import type { AnyTrackInfo } from "../hooks/useNeteaseSearchProvider";
 import { useI18n } from "../hooks/useI18n";
@@ -88,6 +91,14 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const [isRendering, setIsRendering] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // Playlist State
+  const [playlists, setPlaylists] = useState<NeteaseHighQualityPlaylist[]>([]);
+  const [playlistsLoading, setPlaylistsLoading] = useState(false);
+  const [loadingPlaylistId, setLoadingPlaylistId] = useState<number | null>(null);
+  const [playlistsLasttime, setPlaylistsLasttime] = useState<number | null>(null);
+  const [playlistsHasMore, setPlaylistsHasMore] = useState(true);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   // Refs
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -116,6 +127,65 @@ const SearchModal: React.FC<SearchModalProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isOpen, isRendering]);
+
+  // --- Playlist Loading Effect ---
+  useEffect(() => {
+    if (!isOpen || search.activeTab !== "playlists" || playlists.length > 0) return;
+    setPlaylistsLoading(true);
+    fetchHighQualityPlaylists("全部", 20).then((res) => {
+      setPlaylists(res.playlists);
+      setPlaylistsLasttime(res.lasttime);
+      setPlaylistsHasMore(res.playlists.length === 20);
+      setPlaylistsLoading(false);
+    });
+  }, [isOpen, search.activeTab]);
+
+  // --- Playlist Handlers ---
+  const handleLoadMorePlaylists = () => {
+    if (playlistsLoading || !playlistsHasMore) return;
+    setPlaylistsLoading(true);
+    fetchHighQualityPlaylists("全部", 20, playlistsLasttime ?? undefined).then((res) => {
+      setPlaylists((prev) => [...prev, ...res.playlists]);
+      setPlaylistsLasttime(res.lasttime);
+      setPlaylistsHasMore(res.playlists.length === 20);
+      setPlaylistsLoading(false);
+    });
+  };
+
+  const handlePlaylistClick = async (pl: NeteaseHighQualityPlaylist) => {
+    setLoadingPlaylistId(pl.id);
+    const tracks = await fetchNeteasePlaylist(String(pl.id));
+    if (tracks.length > 0) {
+      const songs: Song[] = tracks.map((t) => {
+        const origin = getNeteaseAudioUrl(t.id);
+        return {
+          id: t.id,
+          title: t.title,
+          artist: t.artist,
+          album: t.album,
+          coverUrl: t.coverUrl ?? "",
+          fileUrl: origin,
+          source: "remote" as const,
+          origin,
+          isNetease: true,
+          neteaseId: t.id,
+          lyrics: [],
+        };
+      });
+      onImportAndPlay(songs[0]);
+      for (let i = 1; i < songs.length; i++) {
+        onAddToQueue(songs[i]);
+      }
+      onClose();
+    }
+    setLoadingPlaylistId(null);
+  };
+
+  const formatCount = (n: number) => {
+    if (n >= 100000000) return (n / 100000000).toFixed(1) + "亿";
+    if (n >= 10000) return (n / 10000).toFixed(1) + "万";
+    return String(n);
+  };
 
   // --- Close context menu on outside click ---
   useEffect(() => {
@@ -280,8 +350,10 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <div
               className="absolute top-1 bottom-1 rounded-[6px] bg-white/15 shadow-[0_1px_2px_rgba(0,0,0,0.1)] transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
               style={{
-                left: search.activeTab === "queue" ? "4px" : "50%",
-                width: "calc(50% - 4px)",
+                left: search.activeTab === "queue" ? "4px"
+                  : search.activeTab === "netease" ? "calc(33.33% + 4px)"
+                  : "calc(66.66% + 4px)",
+                width: "calc(33.33% - 8px)",
               }}
             />
 
@@ -307,6 +379,17 @@ const SearchModal: React.FC<SearchModalProps> = ({
             >
               {search.neteaseProvider.label}
             </button>
+            <button
+              onClick={() => {
+                search.setActiveTab("playlists");
+              }}
+              className={`
+                        relative flex-1 py-1.5 text-[13px] font-medium transition-colors duration-200 z-10
+                        ${search.activeTab === "playlists" ? "text-white" : "text-white/50 hover:text-white/70"}
+                    `}
+            >
+              热门歌单
+            </button>
           </div>
 
           {/* Search Bar */}
@@ -322,6 +405,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
               placeholder={
                 search.activeTab === "netease"
                   ? dict.search.online
+                  : search.activeTab === "playlists"
+                  ? "输入关键词搜索歌单..."
                   : dict.search.queue
               }
               className="
@@ -605,6 +690,46 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* Playlists Results */}
+          {search.activeTab === "playlists" && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {playlists.map((pl) => (
+                <button
+                  key={pl.id}
+                  onClick={() => handlePlaylistClick(pl)}
+                  disabled={loadingPlaylistId === pl.id}
+                  className="group text-left rounded-xl overflow-hidden transition-all hover:ring-2 hover:ring-white/20 disabled:opacity-50"
+                  style={{ background: "rgba(255,255,255,0.04)" }}
+                >
+                  <div className="relative aspect-square">
+                    <SmartImage
+                      src={pl.coverImgUrl}
+                      alt={pl.name}
+                      containerClassName="w-full h-full"
+                      imgClassName="w-full h-full object-cover"
+                    />
+                    <div
+                      className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-white/80 text-xs font-medium flex items-center gap-1"
+                      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+                    >
+                      <PlayIcon className="w-3 h-3" />
+                      {formatCount(pl.playCount)}
+                    </div>
+                    {loadingPlaylistId === pl.id && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2">
+                    <p className="text-white/90 text-xs font-medium line-clamp-2 leading-snug">{pl.name}</p>
+                    <p className="text-white/30 text-xs mt-1">{formatCount(pl.trackCount)} 首</p>
+                  </div>
+                </button>
+              ))}
             </div>
           )}
         </div>

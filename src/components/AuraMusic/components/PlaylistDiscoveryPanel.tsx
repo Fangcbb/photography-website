@@ -35,6 +35,7 @@ const PlaylistDiscoveryPanel: React.FC<PlaylistDiscoveryPanelProps> = ({
 }) => {
   const { dict } = useI18n();
   const [playlists, setPlaylists] = useState<NeteaseHighQualityPlaylist[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [loadingPlaylistId, setLoadingPlaylistId] = useState<number | null>(null);
   const [lasttime, setLasttime] = useState<number | null>(null);
@@ -123,13 +124,13 @@ const PlaylistDiscoveryPanel: React.FC<PlaylistDiscoveryPanelProps> = ({
 
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-[95] bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
       <div
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-[90vw] max-w-2xl max-h-[75vh] rounded-2xl overflow-hidden discovery-panel-in"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[96] w-[90vw] max-w-2xl max-h-[75vh] rounded-2xl overflow-hidden discovery-panel-in"
         style={{
           background: "rgba(10, 10, 10, 0.92)",
           backdropFilter: "blur(40px)",

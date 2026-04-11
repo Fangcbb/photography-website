@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useI18n } from "../hooks/useI18n";
-import { SearchIcon, CloudDownloadIcon, FullscreenIcon, MenuIcon, CloseIcon, QueueMusicIcon } from "./Icons";
+import { SearchIcon, CloudDownloadIcon, FullscreenIcon, MenuIcon, CloseIcon } from "./Icons";
 
 interface TopBarProps {
   onFilesSelected: (files: FileList) => void;
   onSearchClick: () => void;
-  onPlaylistClick: () => void;
   disabled?: boolean;
 }
 
@@ -23,7 +22,6 @@ const HIDE_DELAY = 5000; // 5 seconds
 const TopBar: React.FC<TopBarProps> = ({
   onFilesSelected,
   onSearchClick,
-  onPlaylistClick,
   disabled,
 }) => {
   const { dict } = useI18n();
@@ -134,9 +132,6 @@ const TopBar: React.FC<TopBarProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <button onClick={onPlaylistClick} className="w-9 h-9 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all" title="精品歌单">
-              <QueueMusicIcon className="w-[18px] h-[18px]" />
-            </button>
             <button onClick={onSearchClick} className="w-9 h-9 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all" title={dict.top.search}>
               <SearchIcon className="w-[18px] h-[18px]" />
             </button>
@@ -155,9 +150,6 @@ const TopBar: React.FC<TopBarProps> = ({
             {mobileMenuOpen ? <CloseIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
           </button>
           <div className="flex items-center gap-2">
-            <button onClick={onPlaylistClick} className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all" title="精品歌单">
-              <QueueMusicIcon className="w-4 h-4" />
-            </button>
             <button onClick={onSearchClick} className="w-8 h-8 rounded-full flex items-center justify-center text-white/50 hover:text-white transition-all" title={dict.top.search}>
               <SearchIcon className="w-4 h-4" />
             </button>

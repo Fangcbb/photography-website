@@ -7,7 +7,7 @@ import {
   NeteaseSearchProviderExtended,
 } from "./useNeteaseSearchProvider";
 
-export type SearchSource = "queue" | "netease";
+export type SearchSource = "queue" | "netease" | "playlists";
 export type SearchResultItem = Song | NeteaseTrackInfo;
 
 interface ContextMenuState {

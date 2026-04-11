@@ -4,7 +4,7 @@ import { PlayState, Song } from "./types";
 import AuraShaderBackground from "./components/AuraShaderBackground";
 import Controls from "./components/Controls";
 import LyricsView from "./components/LyricsView";
-import PlaylistDiscoveryPanel from "./components/PlaylistDiscoveryPanel";
+
 import PlaylistPanel from "./components/PlaylistPanel";
 import KeyboardShortcuts from "./components/KeyboardShortcuts";
 import TopBar from "./components/TopBar";
@@ -54,7 +54,6 @@ const App: React.FC = () => {
   } = player;
 
   const [showPlaylist, setShowPlaylist] = useState(false);
-  const [showPlaylistDiscovery, setShowPlaylistDiscovery] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showVolumePopup, setShowVolumePopup] = useState(false);
   const [showSettingsPopup, setShowSettingsPopup] = useState(false);
@@ -194,13 +193,6 @@ const App: React.FC = () => {
       addSongAndPlay(song);
     }
   }, [addSongAndPlay, playIndex, playlist.queue]);
-
-  const handleAddMultipleAndPlay = useCallback((songs: Song[], startIndex = 0) => {
-    if (songs.length === 0) return;
-    playlist.addSongs(songs);
-    const queueIndex = playlist.queue.length - songs.length + startIndex;
-    playIndex(queueIndex);
-  }, [playlist, playIndex]);
 
   const handleAddToQueue = useCallback((song: Song) => {
     playlist.addSongs([song]);
@@ -386,7 +378,6 @@ const App: React.FC = () => {
       <TopBar
         onFilesSelected={handleFileChange}
         onSearchClick={() => setShowSearch(true)}
-        onPlaylistClick={() => setShowPlaylistDiscovery(true)}
       />
 
       {/* Search Modal - Always rendered to preserve state, visibility handled internally */}
@@ -400,14 +391,6 @@ const App: React.FC = () => {
         currentSong={currentSong}
         isPlaying={playState === PlayState.PLAYING}
         accentColor={accentColor}
-      />
-
-      {/* Playlist Discovery Panel */}
-      <PlaylistDiscoveryPanel
-        isOpen={showPlaylistDiscovery}
-        onClose={() => setShowPlaylistDiscovery(false)}
-        onAddMultipleAndPlay={handleAddMultipleAndPlay}
-        currentSong={currentSong}
       />
 
       {/* Main Content Split */}
