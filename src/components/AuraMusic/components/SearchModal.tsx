@@ -154,6 +154,13 @@ const SearchModal: React.FC<SearchModalProps> = ({
     // category view fetches songs via search.performNeteaseSearch()
   }, [isOpen, search.activeTab, search.query, playlistView]);
 
+  // --- Language Tab Effect: trigger search when language changes ---
+  useEffect(() => {
+    if (!isOpen || search.activeTab !== "playlists" || playlistView !== "category") return;
+    search.setQuery(selectedLang);
+    search.performNeteaseSearch();
+  }, [selectedLang, playlistView]);
+
   // --- Playlist Handlers ---
   const handleLoadMorePlaylists = () => {
     if (playlistsLoading || !playlistsHasMore) return;
@@ -738,14 +745,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   每周精选
                 </button>
                 <button
-                  onClick={() => {
-                    setPlaylistView("category");
-                    // Trigger language search
-                    setTimeout(() => {
-                      search.setQuery(selectedLang);
-                      search.performNeteaseSearch();
-                    }, 0);
-                  }}
+                  onClick={() => setPlaylistView("category")}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                     playlistView === "category"
                       ? "bg-white/15 text-white shadow-sm"
@@ -805,11 +805,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                     {LANGUAGE_TABS.map((lang) => (
                       <button
                         key={lang}
-                        onClick={() => {
-                          setSelectedLang(lang);
-                          search.setQuery(lang);
-                          search.performNeteaseSearch();
-                        }}
+                        onClick={() => setSelectedLang(lang)}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                           selectedLang === lang
                             ? "bg-white/15 text-white shadow-sm"
