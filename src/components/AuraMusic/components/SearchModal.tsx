@@ -156,6 +156,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const handlePlaylistClick = async (pl: NeteaseHighQualityPlaylist) => {
     setLoadingPlaylistId(pl.id);
     const tracks = await fetchNeteasePlaylist(String(pl.id));
+    console.log("[PlaylistDebug] fetch returned tracks:", tracks.length, "first:", tracks[0]?.id);
     if (tracks.length > 0) {
       const songs: Song[] = tracks.map((t) => {
         const origin = getNeteaseAudioUrl(t.id);
@@ -173,8 +174,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
           lyrics: [],
         };
       });
+      console.log("[PlaylistDebug] songs[0] neteaseId:", songs[0]?.neteaseId, "title:", songs[0]?.title);
+      // Only add first 30 songs to avoid queue bloat
+      const batchSize = 30;
       onImportAndPlay(songs[0]);
-      for (let i = 1; i < songs.length; i++) {
+      for (let i = 1; i < Math.min(songs.length, batchSize); i++) {
         onAddToQueue(songs[i]);
       }
       onClose();
