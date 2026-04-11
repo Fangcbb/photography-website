@@ -774,3 +774,51 @@ export const fetchLyricsById = async (
     return null;
   }
 };
+
+// ============================================================================
+// 精品歌单 API
+// ============================================================================
+export interface NeteaseHighQualityPlaylist {
+  id: number;
+  name: string;
+  coverImgUrl: string;
+  creator: { nickname: string };
+  playCount: number;
+  trackCount: number;
+  description: string;
+  tags: string[];
+}
+
+export interface NeteaseHighQualityResponse {
+  code: number;
+  total: number;
+  playlists: NeteaseHighQualityPlaylist[];
+}
+
+export const fetchHighQualityPlaylists = async (
+  cat: string = "全部",
+  limit: number = 20,
+  before?: number,
+): Promise<{ playlists: NeteaseHighQualityPlaylist[]; lasttime: number | null }> => {
+  try {
+    const params = new URLSearchParams({
+      cat,
+      limit: String(limit),
+      ...(before ? { before: String(before) } : {}),
+    });
+    const url = `${NETEASECLOUD_API_BASE}/top/playlist/highquality?${params}`;
+    const data = (await fetchViaProxy(url)) as NeteaseHighQualityResponse;
+    if (data.code === 200) {
+      return {
+        playlists: data.playlists ?? [],
+        lasttime: data.playlists.length > 0
+          ? (data.playlists[data.playlists.length - 1] as unknown as { updateTime: number }).updateTime ?? null
+          : null,
+      };
+    }
+    return { playlists: [], lasttime: null };
+  } catch (e) {
+    console.error("HighQualityPlaylist fetch error", e);
+    return { playlists: [], lasttime: null };
+  }
+};
