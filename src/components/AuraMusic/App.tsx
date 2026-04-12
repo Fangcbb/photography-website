@@ -55,6 +55,11 @@ const App: React.FC = () => {
 
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const openSearch = useCallback((query?: string) => {
+    setSearchQuery(query || "");
+    setShowSearch(true);
+  }, []);
   const [showVolumePopup, setShowVolumePopup] = useState(false);
   const [showSettingsPopup, setShowSettingsPopup] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -285,6 +290,7 @@ const App: React.FC = () => {
           setShowVolumePopup={setShowVolumePopup}
           showSettingsPopup={showSettingsPopup}
           setShowSettingsPopup={setShowSettingsPopup}
+          onArtistClick={openSearch}
           playlistPanel={
             <PlaylistPanel
               isOpen={showPlaylist}
@@ -384,7 +390,8 @@ const App: React.FC = () => {
       {/* Search Modal - Always rendered to preserve state, visibility handled internally */}
       <SearchModal
         isOpen={showSearch}
-        onClose={() => setShowSearch(false)}
+        onClose={() => { setShowSearch(false); setSearchQuery(""); }}
+        initialQuery={searchQuery}
         queue={playlist.queue}
         onPlayQueueIndex={playIndex}
         onImportAndPlay={handleImportAndPlay}

@@ -9,6 +9,7 @@ import {
   fetchHighQualityPlaylists,
   fetchTimelinePlaylists,
   fetchNeteasePlaylist,
+  fetchChartData,
   NeteaseHighQualityPlaylist,
 } from "../services/lyricsService";
 import type { AnyTrackInfo } from "../hooks/useNeteaseSearchProvider";
@@ -26,6 +27,8 @@ interface SearchModalProps {
   currentSong: Song | null;
   isPlaying: boolean;
   accentColor: string;
+  initialQuery?: string;
+  onArtistClick?: (artist: string) => void;
 }
 
 const SEQUOIA_SCROLLBAR_STYLES = `
@@ -85,6 +88,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
   currentSong,
   isPlaying,
   accentColor,
+  initialQuery,
+  onArtistClick,
 }) => {
   const { dict } = useI18n();
 
@@ -113,6 +118,18 @@ const SearchModal: React.FC<SearchModalProps> = ({
     isOpen,
   });
 
+  // Handle initialQuery changes - set search query, switch to netease tab, and search
+  useEffect(() => {
+    if (initialQuery && initialQuery.trim()) {
+      search.setQuery(initialQuery);
+      search.setActiveTab("netease");
+      // Trigger search after tab switch
+      setTimeout(() => {
+        search.performNeteaseSearch();
+      }, 50);
+    }
+  }, [initialQuery]);
+
   // --- Animation Handling ---
   useEffect(() => {
     if (isOpen) {
@@ -131,23 +148,57 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   // Current playlist category (for load-more consistency)
   const [playlistCat, setPlaylistCat] = useState("华语");
-  // Playlist view mode: "timeline" = 每周精选, "category" = 语种分类（歌曲）
-  const [playlistView, setPlaylistView] = useState<"timeline" | "category">("timeline");
+  // Playlist view mode: "recommend" = 专属推荐, "timeline" = 飙升榜, "category" = 热歌榜
+  const [playlistView, setPlaylistView] = useState<"recommend" | "timeline" | "category">("recommend");
   // Selected language for category view
   const [selectedLang, setSelectedLang] = useState("华语");
   const LANGUAGE_TABS = ["华语", "欧美", "日语", "韩语", "粤语"];
+  // Chart songs state
+  const [chartSongs, setChartSongs] = useState<NeteaseTrackInfo[]>([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  // Liked songs state (专属推荐)
+  const [likedSongs, setLikedSongs] = useState<NeteaseTrackInfo[]>([]);
+  const [likedLoading, setLikedLoading] = useState(false);
+  const CHART_IDS = { timeline: "19723756", category: "3778678" };
 
   // --- Playlist Loading Effect ---
   useEffect(() => {
     if (!isOpen || search.activeTab !== "playlists") return;
     // Always clear playlists before fetching new ones
     setPlaylists([]);
-    if (playlistView === "timeline") {
+    setChartSongs([]);
+    setLikedSongs([]);
+
+    if (playlistView === "recommend") {
+      // Fetch user's liked songs (专属推荐)
+      setLikedLoading(true);
+      fetch("/api/netease-user/liked")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.ids && Array.isArray(data.ids)) {
+            // Fetch full track info for the liked song IDs
+            const ids = data.ids.slice(0, 50);
+            Promise.all(ids.map((id: number) =>
+              fetch(`/api/netease-song?id=${id}`).then((r) => r.json()).catch(() => null)
+            )).then((songs) => {
+              const validSongs = songs.filter(Boolean) as NeteaseTrackInfo[];
+              setLikedSongs(validSongs);
+              setLikedLoading(false);
+            });
+          } else {
+            setLikedSongs([]);
+            setLikedLoading(false);
+          }
+        })
+        .catch(() => {
+          setLikedSongs([]);
+          setLikedLoading(false);
+        });
+    } else if (playlistView === "timeline") {
       setPlaylistsLoading(true);
-      fetchTimelinePlaylists(30).then((res) => {
-        setPlaylists(res.playlists);
-        setPlaylistsLasttime(res.lasttime);
-        setPlaylistsHasMore(res.playlists.length === 30);
+      // Fetch 飙升榜 chart
+      fetchChartData(CHART_IDS.timeline).then((songs) => {
+        setChartSongs(songs);
         setPlaylistsLoading(false);
       });
     }
@@ -157,26 +208,28 @@ const SearchModal: React.FC<SearchModalProps> = ({
   // --- Language Tab Effect: trigger search when language changes ---
   useEffect(() => {
     if (!isOpen || search.activeTab !== "playlists" || playlistView !== "category") return;
-    search.setQuery(selectedLang);
-    search.performNeteaseSearch();
-  }, [selectedLang, playlistView]);
+    // Fetch 热歌榜 chart
+    setPlaylistsLoading(true);
+    fetchChartData(CHART_IDS.category).then((songs) => {
+      setChartSongs(songs);
+      setPlaylistsLoading(false);
+    });
+  }, [selectedLang, playlistView, isOpen, search.activeTab]);
 
   // --- Playlist Handlers ---
   const handleLoadMorePlaylists = () => {
     if (playlistsLoading || !playlistsHasMore) return;
     setPlaylistsLoading(true);
     if (playlistView === "timeline") {
-      fetchTimelinePlaylists(20, playlistsLasttime ?? undefined).then((res) => {
-        setPlaylists((prev) => [...prev, ...res.playlists]);
-        setPlaylistsLasttime(res.lasttime);
-        setPlaylistsHasMore(res.playlists.length === 20);
+      // Fetch 飙升榜 more (append to existing)
+      fetchChartData(CHART_IDS.timeline).then((songs) => {
+        setChartSongs((prev) => [...prev, ...songs]);
         setPlaylistsLoading(false);
       });
     } else {
-      fetchHighQualityPlaylists(playlistCat, 20, playlistsLasttime ?? undefined).then((res) => {
-        setPlaylists((prev) => [...prev, ...res.playlists]);
-        setPlaylistsLasttime(res.lasttime);
-        setPlaylistsHasMore(res.playlists.length === 20);
+      // Fetch 热歌榜 more (append to existing)
+      fetchChartData(CHART_IDS.category).then((songs) => {
+        setChartSongs((prev) => [...prev, ...songs]);
         setPlaylistsLoading(false);
       });
     }
@@ -735,6 +788,16 @@ const SearchModal: React.FC<SearchModalProps> = ({
               {/* View Toggle */}
               <div className="flex items-center gap-1 mb-3 px-1">
                 <button
+                  onClick={() => setPlaylistView("recommend")}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    playlistView === "recommend"
+                      ? "bg-white/15 text-white shadow-sm"
+                      : "text-white/40 hover:text-white/60"
+                  }`}
+                >
+                  专属推荐
+                </button>
+                <button
                   onClick={() => setPlaylistView("timeline")}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                     playlistView === "timeline"
@@ -742,7 +805,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                       : "text-white/40 hover:text-white/60"
                   }`}
                 >
-                  每周精选
+                  飙升榜
                 </button>
                 <button
                   onClick={() => setPlaylistView("category")}
@@ -752,79 +815,125 @@ const SearchModal: React.FC<SearchModalProps> = ({
                       : "text-white/40 hover:text-white/60"
                   }`}
                 >
-                  语种分类
+                  热歌榜
                 </button>
-                {playlistView === "timeline" && (
-                  <span className="ml-auto text-white/30 text-xs">编辑推荐 · 每周更新</span>
-                )}
               </div>
 
-              {playlistView === "timeline" ? (
-                /* Playlist Grid */
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {playlists.map((pl) => (
-                    <button
-                      key={pl.id}
-                      onClick={() => handlePlaylistClick(pl)}
-                      disabled={loadingPlaylistId === pl.id}
-                      className="group text-left rounded-xl overflow-hidden transition-all hover:ring-2 hover:ring-white/20 disabled:opacity-50"
-                      style={{ background: "rgba(255,255,255,0.04)" }}
-                    >
-                      <div className="relative aspect-square">
-                        <SmartImage
-                          src={pl.coverImgUrl}
-                          alt={pl.name}
-                          containerClassName="w-full h-full"
-                          imgClassName="w-full h-full object-cover"
-                        />
-                        <div
-                          className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-white/80 text-xs font-medium flex items-center gap-1"
-                          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
-                        >
-                          <PlayIcon className="w-3 h-3" />
-                          {formatCount(pl.playCount)}
-                        </div>
-                        {loadingPlaylistId === pl.id && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              {playlistView === "recommend" ? (
+                /* Liked Songs List - 专属推荐 */
+                <div className="flex flex-col gap-1">
+                  {likedLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    likedSongs.slice(0, 50).map((track) => (
+                      <button
+                        key={track.id}
+                        onClick={() => playNeteaseTrack(track)}
+                        className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                      >
+                        <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
+                          <SmartImage
+                            src={track.coverUrl || ""}
+                            alt={track.title}
+                            containerClassName="w-full h-full"
+                            imgClassName="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <PlayIcon className="w-4 h-4 text-white" />
                           </div>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className="text-white/90 text-xs font-medium line-clamp-2 leading-snug">{pl.name}</p>
-                        <p className="text-white/30 text-xs mt-1">{formatCount(pl.trackCount)} 首</p>
-                      </div>
-                    </button>
-                  ))}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white/90 text-sm font-medium truncate">{track.title}</p>
+                          <p className="text-white/40 text-xs truncate">{track.artist} · {track.album}</p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addNeteaseToQueue(track);
+                          }}
+                          className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <PlusIcon className="w-4 h-4 text-white/60" />
+                        </button>
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : playlistView === "timeline" ? (
+                /* Chart Songs List - 飙升榜 */
+                <div className="flex flex-col gap-1">
+                  {playlistsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    chartSongs.slice(0, 30).map((track) => (
+                      <button
+                        key={track.id}
+                        onClick={() => playNeteaseTrack(track)}
+                        className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                      >
+                        <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
+                          <SmartImage
+                            src={track.coverUrl || ""}
+                            alt={track.title}
+                            containerClassName="w-full h-full"
+                            imgClassName="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <PlayIcon className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white/90 text-sm font-medium truncate">{track.title}</p>
+                          <p className="text-white/40 text-xs truncate">{track.artist} · {track.album}</p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addNeteaseToQueue(track);
+                          }}
+                          className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <PlusIcon className="w-4 h-4 text-white/60" />
+                        </button>
+                      </button>
+                    ))
+                  )}
                 </div>
               ) : (
-                /* Language Category View */
+                /* Chart Songs List - 热歌榜 */
                 <div>
-                  {/* Language Tabs */}
+                  {/* Category Tabs */}
                   <div className="flex items-center gap-1 mb-3 flex-wrap">
-                    {LANGUAGE_TABS.map((lang) => (
+                    {["飙升榜", "热歌榜"].map((tab) => (
                       <button
-                        key={lang}
-                        onClick={() => setSelectedLang(lang)}
+                        key={tab}
+                        onClick={() => {
+                          if (tab === "飙升榜") setPlaylistView("timeline");
+                          else setPlaylistView("category");
+                        }}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                          selectedLang === lang
+                          playlistView === (tab === "飙升榜" ? "timeline" : "category")
                             ? "bg-white/15 text-white shadow-sm"
                             : "text-white/40 hover:text-white/60"
                         }`}
                       >
-                        {lang}
+                        {tab}
                       </button>
                     ))}
                   </div>
 
                   {/* Song Results */}
-                  {search.neteaseProvider.isLoading ? (
+                  {playlistsLoading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
                     </div>
                   ) : (
                     <div className="flex flex-col gap-1">
-                      {search.neteaseProvider.results.slice(0, 20).map((track, idx) => (
+                      {chartSongs.slice(0, 30).map((track) => (
                         <button
                           key={track.id}
                           onClick={() => playNeteaseTrack(track)}
@@ -837,6 +946,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
                               containerClassName="w-full h-full"
                               imgClassName="w-full h-full object-cover"
                             />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <PlayIcon className="w-4 h-4 text-white" />
+                            </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-white/90 text-sm font-medium truncate">{track.title}</p>
@@ -853,8 +965,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
                           </button>
                         </button>
                       ))}
-                      {search.neteaseProvider.results.length === 0 && (
-                        <p className="text-white/30 text-sm text-center py-8">点击上方语种标签搜索歌曲</p>
+                      {chartSongs.length === 0 && (
+                        <p className="text-white/30 text-sm text-center py-8">加载中...</p>
                       )}
                     </div>
                   )}

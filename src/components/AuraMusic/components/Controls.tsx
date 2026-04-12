@@ -52,7 +52,8 @@ interface ControlsProps {
   setShowSettingsPopup: (show: boolean) => void;
   isBuffering: boolean;
   playlistPanel?: React.ReactNode;
-}
+  onArtistClick?: (artist: string) => void;
+};
 
 const Controls: React.FC<ControlsProps> = ({
   isPlaying,
@@ -83,6 +84,7 @@ const Controls: React.FC<ControlsProps> = ({
   setShowSettingsPopup,
   isBuffering,
   playlistPanel,
+  onArtistClick,
 }) => {
   const { dict } = useI18n();
   const volumeContainerRef = useRef<HTMLDivElement>(null);
@@ -437,7 +439,10 @@ const Controls: React.FC<ControlsProps> = ({
           <h2 className="text-[1.4rem] leading-tight font-bold tracking-tight drop-shadow-md truncate text-left w-full text-white select-text">
             {title}
           </h2>
-          <p className="text-white/60 text-[1.1rem] leading-tight font-medium truncate text-left w-full mt-0.5 select-text">
+          <p
+            className="text-white/60 text-[1.1rem] leading-tight font-medium truncate text-left w-full mt-0.5 select-text cursor-pointer hover:text-white/80 transition-colors"
+            onClick={() => onArtistClick?.(artist)}
+          >
             {artist}
           </p>
         </div>

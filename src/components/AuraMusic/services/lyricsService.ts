@@ -339,7 +339,8 @@ export const mergeMetadata = (input: {
 };
 
 export const getNeteaseAudioUrl = (id: string) => {
-  return `${NETEASE_API_PUBLIC}/song/url?id=${id}`;
+  // Use server-side proxy to get audio (handles JSON response and redirects)
+  return `/api/netease-play?id=${id}`;
 };
 
 const fetchTtmlByNeteaseId = async (id: string): Promise<string | null> => {
@@ -846,5 +847,20 @@ export const fetchTimelinePlaylists = async (
   } catch (e) {
     console.error("TimelinePlaylist fetch error", e);
     return { playlists: [], lasttime: null };
+  }
+};
+
+// Fetch chart playlist (飙升榜/热歌榜) - returns songs directly
+export const fetchChartData = async (id: string): Promise<NeteaseTrackInfo[]> => {
+  try {
+    const url = `${NETEASECLOUD_API_BASE}/top/list?id=${id}&limit=50`;
+    const data = await fetchViaProxy(url) as { playlist?: { tracks?: NeteaseApiSong[] }; code: number };
+    if (data.code === 200 && Array.isArray(data.playlist?.tracks)) {
+      return data.playlist.tracks.map(mapNeteaseSongToTrack);
+    }
+    return [];
+  } catch (e) {
+    console.error("ChartData fetch error", e);
+    return [];
   }
 };
