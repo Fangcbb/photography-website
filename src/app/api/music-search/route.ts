@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const KUYOU_API_LOCAL = 'http://127.0.0.1:3001';
+const NETEASE_API_LOCAL = 'http://127.0.0.1:3002';
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
@@ -10,7 +11,7 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 const KUYOU_API_PUBLIC = 'https://kugou-api.fangc.cc';
-const ZM_API = 'https://zm.wwoyun.cn';
+
 const QQ_API = 'https://api.uomg.com/api/song.search';
 
 export async function GET(req: NextRequest) {
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
         next: { revalidate: 0 }
       });
     } else if (engine === 'netease') {
-      url = `${ZM_API}/cloudsearch?keywords=${encodeURIComponent(keyword)}&limit=${limit}`;
+      url = `${NETEASE_API_LOCAL}/cloudsearch?keywords=${encodeURIComponent(keyword)}&limit=${limit}`;
       response = await fetch(url, { next: { revalidate: 0 } });
     } else if (engine === 'qq') {
       url = `${QQ_API}?name=${encodeURIComponent(keyword)}&pagesize=${limit}`;
