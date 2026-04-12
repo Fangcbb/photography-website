@@ -1,11 +1,11 @@
 import { fetchViaProxy } from "./utils";
 import { isMetadataLine } from "./lyrics/types";
 
-const NETEASE_API_LOCAL = "http://127.0.0.1:3002";
+const NETEASE_API_PUBLIC = "https://netease-api.fangc.cc";
 const METING_API = "https://api.qijieya.cn/meting/";
-const NETEASE_SEARCH_API = "http://127.0.0.1:3002/cloudsearch";
+const NETEASE_SEARCH_API = "https://netease-api.fangc.cc/cloudsearch";
 
-const NETEASECLOUD_API_BASE = "http://127.0.0.1:3002";
+const NETEASECLOUD_API_BASE = "https://netease-api.fangc.cc";
 const TTML_DB_BASE = "https://amll-ttml-db.stevexmh.net";
 // QQ音乐搜索 API
 const QQ_SEARCH_API = "https://api.uomg.com/api/song.search";
@@ -339,7 +339,7 @@ export const mergeMetadata = (input: {
 };
 
 export const getNeteaseAudioUrl = (id: string) => {
-  return `${NETEASE_API_LOCAL}/song/url?id=${id}`;
+  return `${NETEASE_API_PUBLIC}/song/url?id=${id}`;
 };
 
 const fetchTtmlByNeteaseId = async (id: string): Promise<string | null> => {
