@@ -98,7 +98,7 @@ export const CityView = ({ city }: Props) => {
               <Link
                 href={`/p/${photo.id}`}
                 key={photo.id}
-                className="space-y-2"
+                className="space-y-2 cursor-pointer"
               >
                 <div className="flex items-center justify-center bg-gray-50 dark:bg-muted p-4 rounded-xl">
                   <FramedPhoto

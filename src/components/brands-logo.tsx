@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 type BrandConfigType = {
   src: string;
   width: number;
@@ -8,6 +6,7 @@ type BrandConfigType = {
 
 /**
  * BrandsLogo component displays a brand logo like Canon, Nikon, etc.
+ * Uses img tag for better SVG compatibility compared to Next.js Image.
  */
 export const BrandsLogo = ({
   brand,
@@ -64,14 +63,18 @@ export const BrandsLogo = ({
     ? brandConfigs[shortBrand] 
     : { src: "/placeholder.svg", width: 40, height: 40 };
 
+  const finalWidth = width || config.width;
+  const finalHeight = height || config.height;
+
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src={config.src}
       alt={brand}
-      width={width || config.width}
-      height={height || config.height}
+      width={finalWidth}
+      height={finalHeight}
       className={`object-contain ${className}`}
-      unoptimized
+      style={{ width: finalWidth, height: finalHeight }}
     />
   );
 };

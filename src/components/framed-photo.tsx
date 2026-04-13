@@ -22,7 +22,7 @@ export function FramedPhoto({
   className,
 }: FramedPhotoProps) {
   return (
-    <div className="relative inline-block shadow-[10px_10px_8px_rgba(0,0,0,0.65)]">
+    <div className="relative inline-block shadow-[10px_10px_8px_rgba(0,0,0,0.65)] touch-manipulation">
       <div className="relative box-border border-10 border-neutral-700 bg-neutral-700">
         <div
           className={cn(

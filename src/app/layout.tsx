@@ -267,9 +267,11 @@ var _hmt = _hmt || [];
     }
   });
   
-  // 禁止触摸设备长按保存
+  // 禁止触摸设备长按保存（但不阻止链接内的图片/视频点击）
   document.addEventListener('touchstart', function(e) {
-    if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
+    // 检查点击目标是否在可点击元素内（如链接、按钮）
+    const clickable = e.target.closest('a, button, [role="button"]');
+    if ((e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') && !clickable) {
       e.preventDefault();
     }
   }, { passive: false });

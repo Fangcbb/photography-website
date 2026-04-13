@@ -246,13 +246,15 @@ export const DiscoverView = () => {
                             </div>
                           </Link>
                         ) : (
-                          <FramedPhoto
-                            src={photo.url}
-                            alt={photo.title}
-                            blurhash={photo.blurData || ""}
-                            width={photo.width}
-                            height={photo.height}
-                          />
+                          <Link href={`/p/${photo.id}`} className="block relative">
+                            <FramedPhoto
+                              src={photo.url}
+                              alt={photo.title}
+                              blurhash={photo.blurData || ""}
+                              width={photo.width}
+                              height={photo.height}
+                            />
+                          </Link>
                         )}
                       </div>
                       <div className="flex flex-col w-full items-center justify-center">
@@ -311,13 +313,15 @@ export const DiscoverView = () => {
                           </div>
                         </Link>
                       ) : (
-                        <FramedPhoto
-                          src={photo.url}
-                          alt={photo.title}
-                          blurhash={photo.blurData!}
-                          width={photo.width}
-                          height={photo.height}
-                        />
+                        <Link href={`/p/${photo.id}`} className="block relative">
+                          <FramedPhoto
+                            src={photo.url}
+                            alt={photo.title}
+                            blurhash={photo.blurData!}
+                            width={photo.width}
+                            height={photo.height}
+                          />
+                        </Link>
                       )}
                     </div>
                     <div className="flex flex-col items-center justify-center">
