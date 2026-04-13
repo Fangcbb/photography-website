@@ -5,8 +5,7 @@ import Footer from "@/components/footer";
 import { FramedPhoto } from "@/components/framed-photo";
 import VectorCombined from "@/components/vector-combined";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
-import { useTRPC } from "@/trpc/client";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useCityPhotos } from "@/modules/travel/hooks/use-city-photos";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -15,10 +14,7 @@ interface Props {
 }
 
 export const CityView = ({ city }: Props) => {
-  const trpc = useTRPC();
-  const { data } = useSuspenseQuery(trpc.travel.getOne.queryOptions({ city }));
-
-  const coverPhoto = data.photos.find((item) => data.coverPhotoId === item.id);
+  const { cityData, coverPhoto, photos } = useCityPhotos({ city });
 
   return (
     <div className="size-full">
@@ -28,7 +24,7 @@ export const CityView = ({ city }: Props) => {
           <div className="w-full h-full relative">
             <BlurImage
               src={keyToUrl(coverPhoto?.url, "display") || "/placeholder.svg"}
-              alt={data.city}
+              alt={cityData.city}
               fill
               quality={75}
               blurhash={coverPhoto?.blurData || ""}
@@ -36,7 +32,7 @@ export const CityView = ({ city }: Props) => {
               className="object-cover rounded-xl overflow-hidden"
             />
             <div className="absolute right-0 bottom-0">
-              <VectorCombined title={data.city} position="bottom-right" />
+              <VectorCombined title={cityData.city} position="bottom-right" />
             </div>
           </div>
         </div>
@@ -54,28 +50,28 @@ export const CityView = ({ city }: Props) => {
                   {/* NAME  */}
                   <div className="flex flex-col gap-[2px]">
                     <h1 className="text-4xl">
-                      {data.city} {data.countryCode}
+                      {cityData.city} {cityData.countryCode}
                     </h1>
                   </div>
                 </div>
 
                 <div>
                   <p className="text-text-muted text-[15px]">
-                    {data.description}
+                    {cityData.description}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="col-span-1 md:col-span-1 lg:col-span-1 2xl:col-span-1 flex flex-col gap-3">
+            <div className="col-span-1 md:col-span-1 lg:col-span-1 2xl:col-col-1 flex flex-col gap-3">
               <div className="w-full h-full p-3 lg:p-5 bg-muted rounded-xl flex justify-between items-center">
                 <p className="text-xs text-text-muted">Country</p>
-                <p className="text-xs">{data.country}</p>
+                <p className="text-xs">{cityData.country}</p>
               </div>
 
               <div className="w-full h-full p-3 lg:p-5 bg-muted rounded-xl flex justify-between items-center">
                 <p className="text-xs text-text-muted">City</p>
-                <p className="text-xs">{data.city}</p>
+                <p className="text-xs">{cityData.city}</p>
               </div>
 
               <div className="w-full h-full p-3 lg:p-5 bg-muted rounded-xl flex justify-between items-center">
@@ -87,14 +83,14 @@ export const CityView = ({ city }: Props) => {
 
               <div className="w-full h-full p-3 lg:p-5 bg-muted rounded-xl flex justify-between items-center">
                 <p className="text-xs text-text-muted">Photos</p>
-                <p className="text-xs">{data.photos?.length}</p>
+                <p className="text-xs">{photos.length}</p>
               </div>
             </div>
           </div>
 
           {/* IMAGES  */}
           <div className="w-full space-y-2">
-            {data.photos?.map((photo) => (
+            {photos.map((photo) => (
               <Link
                 href={`/p/${photo.id}`}
                 key={photo.id}
