@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Song } from "../types";
-import { NeteaseTrackInfo } from "../services/lyricsService";
 import { useQueueSearchProvider } from "./useQueueSearchProvider";
 import {
   useNeteaseSearchProvider,
   NeteaseSearchProviderExtended,
+  AnyTrackInfo,
 } from "./useNeteaseSearchProvider";
 
 export type SearchSource = "queue" | "netease" | "playlists";
-export type SearchResultItem = Song | NeteaseTrackInfo;
+export type SearchResultItem = Song | AnyTrackInfo;
 
 interface ContextMenuState {
   visible: boolean;

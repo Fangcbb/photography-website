@@ -16,6 +16,8 @@ import type { AnyTrackInfo } from "../hooks/useNeteaseSearchProvider";
 import { useI18n } from "../hooks/useI18n";
 import { useKeyboardScope } from "../hooks/useKeyboardScope";
 import { useSearchModal } from "../hooks/useSearchModal";
+import { fetchKuwoLyrics } from "@/lib/music/adapters/kuwo-adapter";
+import { parseLrc } from "../services/lyrics/lrc";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -363,31 +365,42 @@ const SearchModal: React.FC<SearchModalProps> = ({
   };
 
   const buildSongFromTrack = async (track: AnyTrackInfo): Promise<Song> => {
-    const ne = track as NeteaseTrackInfo;
-    const origin = getNeteaseAudioUrl(ne.id);
+    // 优先使用 track 中的 url（来自新 API），否则用旧方式
+    const origin = (track as any).url || getNeteaseAudioUrl((track as NeteaseTrackInfo).id || track.neteaseId);
+    
+    // 获取歌词（通过后端代理解决 CORS）
+    let lyrics: any[] = [];
+    const trackId = track.neteaseId || (track as any).id;
+    if (trackId) {
+      const lyricContent = await fetchKuwoLyrics(trackId.toString());
+      if (lyricContent) {
+        lyrics = parseLrc(lyricContent);
+      }
+    }
+    
     return {
       id: track.id,
       title: track.title,
       artist: track.artist,
       coverUrl: (track.coverUrl ?? '').replace('http:', 'https:'),
       album: track.album,
-      lyrics: [],
+      lyrics,
       fileUrl: origin,
       source: 'remote',
       origin,
-      isNetease: true,
-      neteaseId: ne.neteaseId,
-      needsLyricsMatch: true,
+      isNetease: false, // 改用酷我，不再是网易云
+      neteaseId: track.neteaseId,
+      needsLyricsMatch: false, // 禁用网易云歌词匹配
     };
   };
 
-  const playNeteaseTrack = async (track: AnyTrackInfo) => {
-    const song = await buildSongFromTrack(track);
+  const playNeteaseTrack = async (track: AnyTrackInfo | NeteaseTrackInfo) => {
+    const song = await buildSongFromTrack(track as AnyTrackInfo);
     onImportAndPlay(song);
   };
 
-  const addNeteaseToQueue = async (track: AnyTrackInfo) => {
-    const song = await buildSongFromTrack(track);
+  const addNeteaseToQueue = async (track: AnyTrackInfo | NeteaseTrackInfo) => {
+    const song = await buildSongFromTrack(track as AnyTrackInfo);
     onAddToQueue(song);
   };
 

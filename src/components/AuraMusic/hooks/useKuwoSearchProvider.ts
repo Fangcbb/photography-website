@@ -1,45 +1,32 @@
 /**
- * 搜索 Provider - 使用新的统一酷我 API
+ * 酷我搜索 Provider - 使用新的统一 API
  */
 import { useState, useCallback } from "react";
 import { SearchProvider, SearchResultItem } from "./useSearchProvider";
 import { useI18n } from "./useI18n";
-import type { NeteaseTrackInfo, AnySearchTrack } from "../services/lyricsService";
+import { Song } from "../types";
+import { searchKuwo, getAudioUrl, getLyricUrl } from "@/lib/music/adapters/kuwo-adapter";
 import type { KuGouTrackInfo } from "../services/lyricsService";
-
-// 导入新的搜索适配器
-import { searchKuwo, getLyricUrl } from "@/lib/music/adapters/kuwo-adapter";
 
 const LIMIT = 30;
 
-// 使用 KuGouTrackInfo 作为结果类型（兼容前端）
-export type AnyTrackInfo = KuGouTrackInfo & { url?: string; lyricUrl?: string };
-
-export interface NeteaseSearchProviderExtended extends SearchProvider {
-  performSearch: (query: string) => Promise<void>;
-  hasSearched: boolean;
-  results: AnyTrackInfo[];
+export interface KuwoTrackInfo extends KuGouTrackInfo {
+  url?: string;
+  lyricUrl?: string;
 }
 
-export const useNeteaseSearchProvider = (): NeteaseSearchProviderExtended => {
+export interface KuwoSearchProviderExtended extends SearchProvider {
+  performSearch: (query: string) => Promise<void>;
+  hasSearched: boolean;
+  results: KuwoTrackInfo[];
+}
+
+export const useKuwoSearchProvider = (): KuwoSearchProviderExtended => {
   const { dict } = useI18n();
-  const [results, setResults] = useState<AnyTrackInfo[]>([]);
+  const [results, setResults] = useState<KuwoTrackInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [hasSearched, setHasSearched] = useState(false);
-
-  const doSearch = useCallback(async (query: string, offset = 0) => {
-    // 使用新的统一 API（酷我）
-    const searchResults = await searchKuwo(query, LIMIT);
-    
-    // 添加歌词 URL
-    const tracksWithLyric = searchResults.map(track => ({
-      ...track,
-      lyricUrl: getLyricUrl(track as any),
-    }));
-    
-    return tracksWithLyric;
-  }, []);
 
   const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -54,16 +41,24 @@ export const useNeteaseSearchProvider = (): NeteaseSearchProviderExtended => {
     setHasMore(true);
 
     try {
-      const searchResults = await doSearch(query, 0);
-      setResults(searchResults);
-      setHasMore(searchResults.length >= LIMIT);
+      const searchResults = await searchKuwo(query, LIMIT);
+      
+      // 添加 url 和 lyricUrl
+      const tracksWithUrl: KuwoTrackInfo[] = searchResults.map(track => ({
+        ...track,
+        url: getAudioUrl(track as any),
+        lyricUrl: getLyricUrl(track as any),
+      }));
+      
+      setResults(tracksWithUrl);
+      setHasMore(tracksWithUrl.length >= LIMIT);
     } catch (e) {
       console.error("Search failed:", e);
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
-  }, [doSearch]);
+  }, []);
 
   const loadMore = useCallback(
     async (query: string, offset: number, limit: number): Promise<SearchResultItem[]> => {
@@ -71,14 +66,19 @@ export const useNeteaseSearchProvider = (): NeteaseSearchProviderExtended => {
 
       setIsLoading(true);
       try {
-        const searchResults = await doSearch(query, offset);
-
+        const searchResults = await searchKuwo(query, limit);
+        
         if (searchResults.length === 0) {
           setHasMore(false);
           return [];
         } else {
-          setResults((prev) => [...prev, ...searchResults]);
-          return searchResults;
+          const tracksWithUrl: KuwoTrackInfo[] = searchResults.map(track => ({
+            ...track,
+            url: getAudioUrl(track as any),
+            lyricUrl: getLyricUrl(track as any),
+          }));
+          setResults((prev) => [...prev, ...tracksWithUrl]);
+          return tracksWithUrl;
         }
       } catch (e) {
         console.error("Load more failed:", e);
@@ -88,12 +88,12 @@ export const useNeteaseSearchProvider = (): NeteaseSearchProviderExtended => {
         setIsLoading(false);
       }
     },
-    [isLoading, hasMore, doSearch]
+    [isLoading, hasMore]
   );
 
-  const provider: NeteaseSearchProviderExtended = {
+  const provider: KuwoSearchProviderExtended = {
     id: "kuwo",
-    label: "🎵 酷我音乐",
+    label: dict.search.cloudLabel || "🎵 酷我音乐",
     requiresExplicitSearch: true,
     isLoading,
     hasMore,
