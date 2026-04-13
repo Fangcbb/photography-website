@@ -8,7 +8,7 @@ import { kuwoProvider } from "@/lib/music/providers/kuwo";
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const keyword = searchParams.get("keyword") || "";
-  const limit = parseInt(searchParams.get("limit") || "20", 10);
+  const limit = parseInt(searchParams.get("limit") || "35", 10);
 
   if (!keyword) {
     return NextResponse.json({ error: "keyword is required" }, { status: 400 });

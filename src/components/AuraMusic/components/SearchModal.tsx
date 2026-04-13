@@ -152,11 +152,19 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   // Current playlist category (for load-more consistency)
   const [playlistCat, setPlaylistCat] = useState("华语");
-  // Playlist view mode: "recommend" = 专属推荐, "timeline" = 飙升榜, "category" = 热歌榜
-  const [playlistView, setPlaylistView] = useState<"recommend" | "timeline" | "category">("recommend");
-  // Selected language for category view
-  const [selectedLang, setSelectedLang] = useState("华语");
-  const LANGUAGE_TABS = ["华语", "欧美", "日语", "韩语", "粤语"];
+  // Kuwo playlist categories
+  const KUWO_PLAYLISTS = [
+    { name: "热歌", keyword: "热歌" },
+    { name: "飙升榜", keyword: "飙升榜" },
+    { name: "抖音热门", keyword: "抖音热门" },
+    { name: "华语经典", keyword: "华语经典" },
+    { name: "欧美流行", keyword: "欧美流行" },
+    { name: "日语精选", keyword: "日语精选" },
+    { name: "韩语热曲", keyword: "韩语热曲" },
+    { name: "摇滚", keyword: "摇滚" },
+  ];
+  // Selected Kuwo playlist
+  const [selectedKuwoPlaylist, setSelectedKuwoPlaylist] = useState(KUWO_PLAYLISTS[0]);
   // Chart songs state (网易云榜单 - 保留兼容)
   const [chartSongs, setChartSongs] = useState<NeteaseTrackInfo[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
@@ -176,59 +184,18 @@ const SearchModal: React.FC<SearchModalProps> = ({
     setChartSongs([]);
     setKuwoPlaylistSongs([]);
 
-    if (playlistView === "recommend") {
-      // Fetch hot songs from kuwo (专属推荐 -> 酷我热歌)
-      setKuwoPlaylistLoading(true);
-      kuwoProvider.search("热歌", 30).then((result) => {
-        setKuwoPlaylistSongs(result.tracks);
-        setKuwoPlaylistLoading(false);
-      }).catch(() => {
-        setKuwoPlaylistSongs([]);
-        setKuwoPlaylistLoading(false);
-      });
-    } else if (playlistView === "timeline") {
-      setPlaylistsLoading(true);
-      // Fetch 飙升榜 chart from kuwo
-      kuwoProvider.search("飙升榜", 30).then((result) => {
-        setKuwoPlaylistSongs(result.tracks);
-        setPlaylistsLoading(false);
-      }).catch(() => {
-        setKuwoPlaylistSongs([]);
-        setPlaylistsLoading(false);
-      });
-    }
-    // category view fetches songs via search.performNeteaseSearch()
-  }, [isOpen, search.activeTab, search.query, playlistView]);
-
-  // --- Language Tab Effect: trigger search when language changes ---
-  useEffect(() => {
-    if (!isOpen || search.activeTab !== "playlists" || playlistView !== "category") return;
-    // Fetch 热歌榜 chart
-    setPlaylistsLoading(true);
-    fetchChartData(CHART_IDS.category).then((songs) => {
-      setChartSongs(songs);
-      setPlaylistsLoading(false);
+    // Fetch songs for selected Kuwo playlist
+    setKuwoPlaylistLoading(true);
+    kuwoProvider.search(selectedKuwoPlaylist.keyword, 50).then((result) => {
+      setKuwoPlaylistSongs(result.tracks);
+      setKuwoPlaylistLoading(false);
+    }).catch(() => {
+      setKuwoPlaylistSongs([]);
+      setKuwoPlaylistLoading(false);
     });
-  }, [selectedLang, playlistView, isOpen, search.activeTab]);
+  }, [isOpen, search.activeTab, search.query, selectedKuwoPlaylist]);
 
   // --- Playlist Handlers ---
-  const handleLoadMorePlaylists = () => {
-    if (playlistsLoading || !playlistsHasMore) return;
-    setPlaylistsLoading(true);
-    if (playlistView === "timeline") {
-      // Fetch 飙升榜 more (append to existing)
-      fetchChartData(CHART_IDS.timeline).then((songs) => {
-        setChartSongs((prev) => [...prev, ...songs]);
-        setPlaylistsLoading(false);
-      });
-    } else {
-      // Fetch 热歌榜 more (append to existing)
-      fetchChartData(CHART_IDS.category).then((songs) => {
-        setChartSongs((prev) => [...prev, ...songs]);
-        setPlaylistsLoading(false);
-      });
-    }
-  };
 
   const handlePlaylistClick = async (pl: NeteaseHighQualityPlaylist) => {
     setLoadingPlaylistId(pl.id);
@@ -375,7 +342,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
       id: track.id,
       title: track.title,
       artist: track.artist,
-      coverUrl: (track.coverUrl ?? '').replace('http:', 'https:'),
+      coverUrl: (((track as any).coverUrl ?? (track as any).cover) ?? '').replace('http:', 'https:'),
       album: track.album,
       lyrics,
       fileUrl: origin,
@@ -461,7 +428,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                         ${search.activeTab === "netease" ? "text-white" : "text-white/50 hover:text-white/70"}
                     `}
             >
-              🎵 在线搜索
+              在线搜索
             </button>
             <button
               onClick={() => {
@@ -791,48 +758,30 @@ const SearchModal: React.FC<SearchModalProps> = ({
           {/* Playlists Results */}
           {search.activeTab === "playlists" && (
             <>
-              {/* View Toggle */}
-              <div className="flex items-center gap-1 mb-3 px-1">
-                <button
-                  onClick={() => setPlaylistView("recommend")}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                    playlistView === "recommend"
-                      ? "bg-white/15 text-white shadow-sm"
-                      : "text-white/40 hover:text-white/60"
-                  }`}
-                >
-                  专属推荐
-                </button>
-                <button
-                  onClick={() => setPlaylistView("timeline")}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                    playlistView === "timeline"
-                      ? "bg-white/15 text-white shadow-sm"
-                      : "text-white/40 hover:text-white/60"
-                  }`}
-                >
-                  飙升榜
-                </button>
-                <button
-                  onClick={() => setPlaylistView("category")}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                    playlistView === "category"
-                      ? "bg-white/15 text-white shadow-sm"
-                      : "text-white/40 hover:text-white/60"
-                  }`}
-                >
-                  热歌榜
-                </button>
+              {/* Kuwo Playlist Categories - Horizontal Scroll */}
+              <div className="flex items-center gap-2 mb-3 px-1 overflow-x-auto scrollbar-hide">
+                {KUWO_PLAYLISTS.map((pl) => (
+                  <button
+                    key={pl.name}
+                    onClick={() => setSelectedKuwoPlaylist(pl)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                      selectedKuwoPlaylist.name === pl.name
+                        ? "bg-white/15 text-white shadow-sm"
+                        : "text-white/40 hover:text-white/60"
+                    }`}
+                  >
+                    {pl.name}
+                  </button>
+                ))}
               </div>
 
-              {playlistView === "recommend" ? (
-                /* Kuwo Hot Songs List - 酷我热歌 */
-                <div className="flex flex-col gap-1">
-                  {kuwoPlaylistLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-                    </div>
-                  ) : (
+              {/* Playlist Songs */}
+              <div className="flex flex-col gap-1">
+                {kuwoPlaylistLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                  </div>
+                ) : (
                     kuwoPlaylistSongs.slice(0, 50).map((track) => (
                       <button
                         key={track.id}
@@ -867,117 +816,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
                     ))
                   )}
                 </div>
-              ) : playlistView === "timeline" ? (
-                /* Kuwo Chart Songs List - 酷我飙升榜 */
-                <div className="flex flex-col gap-1">
-                  {kuwoPlaylistLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-                    </div>
-                  ) : (
-                    kuwoPlaylistSongs.slice(0, 30).map((track) => (
-                      <button
-                        key={track.id}
-                        onClick={() => playNeteaseTrack(track as any)}
-                        className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
-                      >
-                        <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
-                          <SmartImage
-                            src={track.cover || ""}
-                            alt={track.title}
-                            containerClassName="w-full h-full"
-                            imgClassName="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <PlayIcon className="w-4 h-4 text-white" />
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white/90 text-sm font-medium truncate">{track.title}</p>
-                          <p className="text-white/40 text-xs truncate">{track.artist} · {track.album}</p>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addNeteaseToQueue(track as any);
-                          }}
-                          className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <PlusIcon className="w-4 h-4 text-white/60" />
-                        </button>
-                      </button>
-                    ))
-                  )}
-                </div>
-              ) : (
-                /* Chart Songs List - 热歌榜 */
-                <div>
-                  {/* Category Tabs */}
-                  <div className="flex items-center gap-1 mb-3 flex-wrap">
-                    {["飙升榜", "热歌榜"].map((tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => {
-                          if (tab === "飙升榜") setPlaylistView("timeline");
-                          else setPlaylistView("category");
-                        }}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                          playlistView === (tab === "飙升榜" ? "timeline" : "category")
-                            ? "bg-white/15 text-white shadow-sm"
-                            : "text-white/40 hover:text-white/60"
-                        }`}
-                      >
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Song Results */}
-                  {playlistsLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1">
-                      {kuwoPlaylistSongs.slice(0, 30).map((track) => (
-                        <button
-                          key={track.id}
-                          onClick={() => playNeteaseTrack(track as any)}
-                          className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
-                        >
-                          <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
-                            <SmartImage
-                              src={track.cover || ""}
-                              alt={track.title}
-                              containerClassName="w-full h-full"
-                              imgClassName="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <PlayIcon className="w-4 h-4 text-white" />
-                            </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white/90 text-sm font-medium truncate">{track.title}</p>
-                            <p className="text-white/40 text-xs truncate">{track.artist} · {track.album}</p>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addNeteaseToQueue(track as any);
-                            }}
-                            className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            <PlusIcon className="w-4 h-4 text-white/60" />
-                          </button>
-                        </button>
-                      ))}
-                      {kuwoPlaylistSongs.length === 0 && (
-                        <p className="text-white/30 text-sm text-center py-8">加载中...</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
             </>
           )}
         </div>

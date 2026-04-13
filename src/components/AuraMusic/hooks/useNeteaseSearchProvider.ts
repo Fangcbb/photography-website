@@ -10,7 +10,7 @@ import type { KuGouTrackInfo } from "../services/lyricsService";
 // 导入新的搜索适配器
 import { searchKuwo, getLyricUrl } from "@/lib/music/adapters/kuwo-adapter";
 
-const LIMIT = 30;
+const LIMIT = 35;
 
 // 使用 KuGouTrackInfo 作为结果类型（兼容前端）
 export type AnyTrackInfo = KuGouTrackInfo & { url?: string; lyricUrl?: string };
@@ -93,7 +93,7 @@ export const useNeteaseSearchProvider = (): NeteaseSearchProviderExtended => {
 
   const provider: NeteaseSearchProviderExtended = {
     id: "kuwo",
-    label: "🎵 在线搜索",
+    label: "在线搜索",
     requiresExplicitSearch: true,
     isLoading,
     hasMore,
