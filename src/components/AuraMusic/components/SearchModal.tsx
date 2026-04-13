@@ -12,11 +12,13 @@ import {
   fetchChartData,
   NeteaseHighQualityPlaylist,
 } from "../services/lyricsService";
+import type { UnifiedTrack } from "@/lib/music/types";
 import type { AnyTrackInfo } from "../hooks/useNeteaseSearchProvider";
 import { useI18n } from "../hooks/useI18n";
 import { useKeyboardScope } from "../hooks/useKeyboardScope";
 import { useSearchModal } from "../hooks/useSearchModal";
 import { fetchKuwoLyrics } from "@/lib/music/adapters/kuwo-adapter";
+import { kuwoProvider } from "@/lib/music/providers/kuwo";
 import { parseLrc } from "../services/lyrics/lrc";
 
 interface SearchModalProps {
@@ -155,9 +157,12 @@ const SearchModal: React.FC<SearchModalProps> = ({
   // Selected language for category view
   const [selectedLang, setSelectedLang] = useState("华语");
   const LANGUAGE_TABS = ["华语", "欧美", "日语", "韩语", "粤语"];
-  // Chart songs state
+  // Chart songs state (网易云榜单 - 保留兼容)
   const [chartSongs, setChartSongs] = useState<NeteaseTrackInfo[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
+  // Kuwo playlist songs (热门歌单用酷我数据)
+  const [kuwoPlaylistSongs, setKuwoPlaylistSongs] = useState<UnifiedTrack[]>([]);
+  const [kuwoPlaylistLoading, setKuwoPlaylistLoading] = useState(false);
   // Liked songs state (专属推荐)
   const [likedSongs, setLikedSongs] = useState<NeteaseTrackInfo[]>([]);
   const [likedLoading, setLikedLoading] = useState(false);
@@ -169,38 +174,26 @@ const SearchModal: React.FC<SearchModalProps> = ({
     // Always clear playlists before fetching new ones
     setPlaylists([]);
     setChartSongs([]);
-    setLikedSongs([]);
+    setKuwoPlaylistSongs([]);
 
     if (playlistView === "recommend") {
-      // Fetch user's liked songs (专属推荐)
-      setLikedLoading(true);
-      fetch("/api/netease-user/liked")
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.ids && Array.isArray(data.ids)) {
-            // Fetch full track info for the liked song IDs
-            const ids = data.ids.slice(0, 50);
-            Promise.all(ids.map((id: number) =>
-              fetch(`/api/netease-song?id=${id}`).then((r) => r.json()).catch(() => null)
-            )).then((songs) => {
-              const validSongs = songs.filter(Boolean) as NeteaseTrackInfo[];
-              setLikedSongs(validSongs);
-              setLikedLoading(false);
-            });
-          } else {
-            setLikedSongs([]);
-            setLikedLoading(false);
-          }
-        })
-        .catch(() => {
-          setLikedSongs([]);
-          setLikedLoading(false);
-        });
+      // Fetch hot songs from kuwo (专属推荐 -> 酷我热歌)
+      setKuwoPlaylistLoading(true);
+      kuwoProvider.search("热歌", 30).then((result) => {
+        setKuwoPlaylistSongs(result.tracks);
+        setKuwoPlaylistLoading(false);
+      }).catch(() => {
+        setKuwoPlaylistSongs([]);
+        setKuwoPlaylistLoading(false);
+      });
     } else if (playlistView === "timeline") {
       setPlaylistsLoading(true);
-      // Fetch 飙升榜 chart
-      fetchChartData(CHART_IDS.timeline).then((songs) => {
-        setChartSongs(songs);
+      // Fetch 飙升榜 chart from kuwo
+      kuwoProvider.search("飙升榜", 30).then((result) => {
+        setKuwoPlaylistSongs(result.tracks);
+        setPlaylistsLoading(false);
+      }).catch(() => {
+        setKuwoPlaylistSongs([]);
         setPlaylistsLoading(false);
       });
     }
@@ -452,13 +445,24 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <div
               className="absolute top-1 bottom-1 rounded-[6px] bg-white/15 shadow-[0_1px_2px_rgba(0,0,0,0.1)] transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
               style={{
-                left: search.activeTab === "queue" ? "4px"
-                  : search.activeTab === "netease" ? "calc(33.33% + 4px)"
+                left: search.activeTab === "netease" ? "4px"
+                  : search.activeTab === "queue" ? "calc(33.33% + 4px)"
                   : "calc(66.66% + 4px)",
                 width: "calc(33.33% - 8px)",
               }}
             />
 
+            <button
+              onClick={() => {
+                search.setActiveTab("netease");
+              }}
+              className={`
+                        relative flex-1 py-1.5 text-[13px] font-medium transition-colors duration-200 z-10
+                        ${search.activeTab === "netease" ? "text-white" : "text-white/50 hover:text-white/70"}
+                    `}
+            >
+              🎵 在线搜索
+            </button>
             <button
               onClick={() => {
                 search.setActiveTab("queue");
@@ -469,17 +473,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
                     `}
             >
               {search.queueProvider.label}
-            </button>
-            <button
-              onClick={() => {
-                search.setActiveTab("netease");
-              }}
-              className={`
-                        relative flex-1 py-1.5 text-[13px] font-medium transition-colors duration-200 z-10
-                        ${search.activeTab === "netease" ? "text-white" : "text-white/50 hover:text-white/70"}
-                    `}
-            >
-              {search.neteaseProvider.label}
             </button>
             <button
               onClick={() => {
@@ -506,7 +499,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
               onChange={(e) => search.setQuery(e.target.value)}
               placeholder={
                 search.activeTab === "netease"
-                  ? dict.search.online
+                  ? "输入关键词搜索音乐..."
                   : search.activeTab === "playlists"
                   ? "输入关键词搜索歌单..."
                   : dict.search.queue
@@ -833,22 +826,22 @@ const SearchModal: React.FC<SearchModalProps> = ({
               </div>
 
               {playlistView === "recommend" ? (
-                /* Liked Songs List - 专属推荐 */
+                /* Kuwo Hot Songs List - 酷我热歌 */
                 <div className="flex flex-col gap-1">
-                  {likedLoading ? (
+                  {kuwoPlaylistLoading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
                     </div>
                   ) : (
-                    likedSongs.slice(0, 50).map((track) => (
+                    kuwoPlaylistSongs.slice(0, 50).map((track) => (
                       <button
                         key={track.id}
-                        onClick={() => playNeteaseTrack(track)}
+                        onClick={() => playNeteaseTrack(track as any)}
                         className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
                       >
                         <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
                           <SmartImage
-                            src={track.coverUrl || ""}
+                            src={track.cover || ""}
                             alt={track.title}
                             containerClassName="w-full h-full"
                             imgClassName="w-full h-full object-cover"
@@ -864,7 +857,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            addNeteaseToQueue(track);
+                            addNeteaseToQueue(track as any);
                           }}
                           className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
                         >
@@ -875,22 +868,22 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   )}
                 </div>
               ) : playlistView === "timeline" ? (
-                /* Chart Songs List - 飙升榜 */
+                /* Kuwo Chart Songs List - 酷我飙升榜 */
                 <div className="flex flex-col gap-1">
-                  {playlistsLoading ? (
+                  {kuwoPlaylistLoading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
                     </div>
                   ) : (
-                    chartSongs.slice(0, 30).map((track) => (
+                    kuwoPlaylistSongs.slice(0, 30).map((track) => (
                       <button
                         key={track.id}
-                        onClick={() => playNeteaseTrack(track)}
+                        onClick={() => playNeteaseTrack(track as any)}
                         className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
                       >
                         <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
                           <SmartImage
-                            src={track.coverUrl || ""}
+                            src={track.cover || ""}
                             alt={track.title}
                             containerClassName="w-full h-full"
                             imgClassName="w-full h-full object-cover"
@@ -906,7 +899,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            addNeteaseToQueue(track);
+                            addNeteaseToQueue(track as any);
                           }}
                           className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
                         >
@@ -946,15 +939,15 @@ const SearchModal: React.FC<SearchModalProps> = ({
                     </div>
                   ) : (
                     <div className="flex flex-col gap-1">
-                      {chartSongs.slice(0, 30).map((track) => (
+                      {kuwoPlaylistSongs.slice(0, 30).map((track) => (
                         <button
                           key={track.id}
-                          onClick={() => playNeteaseTrack(track)}
+                          onClick={() => playNeteaseTrack(track as any)}
                           className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
                         >
                           <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
                             <SmartImage
-                              src={track.coverUrl || ""}
+                              src={track.cover || ""}
                               alt={track.title}
                               containerClassName="w-full h-full"
                               imgClassName="w-full h-full object-cover"
@@ -970,7 +963,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              addNeteaseToQueue(track);
+                              addNeteaseToQueue(track as any);
                             }}
                             className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
                           >
@@ -978,7 +971,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                           </button>
                         </button>
                       ))}
-                      {chartSongs.length === 0 && (
+                      {kuwoPlaylistSongs.length === 0 && (
                         <p className="text-white/30 text-sm text-center py-8">加载中...</p>
                       )}
                     </div>

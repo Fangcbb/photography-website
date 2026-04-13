@@ -93,7 +93,7 @@ export const useNeteaseSearchProvider = (): NeteaseSearchProviderExtended => {
 
   const provider: NeteaseSearchProviderExtended = {
     id: "kuwo",
-    label: "🎵 酷我音乐",
+    label: "🎵 在线搜索",
     requiresExplicitSearch: true,
     isLoading,
     hasMore,
