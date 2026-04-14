@@ -35,7 +35,6 @@ const Footer = () => {
           links={[
             { title: "Dashboard", href: "/dashboard" },
             { title: "魔塔", href: "/tower" },
-            { title: "猛鬼宿舍", href: "/dorm" },
           ]}
         />
         <FooterNav
