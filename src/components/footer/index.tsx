@@ -34,7 +34,6 @@ const Footer = () => {
           title="CMS"
           links={[
             { title: "Dashboard", href: "/dashboard" },
-            { title: "Game", href: "/tower" },
           ]}
         />
         <FooterNav
