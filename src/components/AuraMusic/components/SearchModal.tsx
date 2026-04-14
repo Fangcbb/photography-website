@@ -413,9 +413,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
               className="absolute top-1 bottom-1 rounded-[6px] bg-white/15 shadow-[0_1px_2px_rgba(0,0,0,0.1)] transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
               style={{
                 left: search.activeTab === "netease" ? "4px"
-                  : search.activeTab === "queue" ? "calc(33.33% + 4px)"
-                  : "calc(66.66% + 4px)",
-                width: "calc(33.33% - 8px)",
+                  : "calc(50% + 4px)",
+                width: "calc(50% - 8px)",
               }}
             />
 
@@ -441,17 +440,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
             >
               {search.queueProvider.label}
             </button>
-            <button
-              onClick={() => {
-                search.setActiveTab("playlists");
-              }}
-              className={`
-                        relative flex-1 py-1.5 text-[13px] font-medium transition-colors duration-200 z-10
-                        ${search.activeTab === "playlists" ? "text-white" : "text-white/50 hover:text-white/70"}
-                    `}
-            >
-              热门歌单
-            </button>
           </div>
 
           {/* Search Bar */}
@@ -467,8 +455,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
               placeholder={
                 search.activeTab === "netease"
                   ? "输入关键词搜索音乐..."
-                  : search.activeTab === "playlists"
-                  ? "输入关键词搜索歌单..."
                   : dict.search.queue
               }
               className="
@@ -755,69 +741,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
             </div>
           )}
 
-          {/* Playlists Results */}
-          {search.activeTab === "playlists" && (
-            <>
-              {/* Kuwo Playlist Categories - Horizontal Scroll */}
-              <div className="flex items-center gap-2 mb-3 px-1 overflow-x-auto scrollbar-hide">
-                {KUWO_PLAYLISTS.map((pl) => (
-                  <button
-                    key={pl.name}
-                    onClick={() => setSelectedKuwoPlaylist(pl)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                      selectedKuwoPlaylist.name === pl.name
-                        ? "bg-white/15 text-white shadow-sm"
-                        : "text-white/40 hover:text-white/60"
-                    }`}
-                  >
-                    {pl.name}
-                  </button>
-                ))}
-              </div>
-
-              {/* Playlist Songs */}
-              <div className="flex flex-col gap-1">
-                {kuwoPlaylistLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-                  </div>
-                ) : (
-                    kuwoPlaylistSongs.slice(0, 50).map((track) => (
-                      <button
-                        key={track.id}
-                        onClick={() => playNeteaseTrack(track as any)}
-                        className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
-                      >
-                        <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-white/5">
-                          <SmartImage
-                            src={track.cover || ""}
-                            alt={track.title}
-                            containerClassName="w-full h-full"
-                            imgClassName="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <PlayIcon className="w-4 h-4 text-white" />
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white/90 text-sm font-medium truncate">{track.title}</p>
-                          <p className="text-white/40 text-xs truncate">{track.artist} · {track.album}</p>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addNeteaseToQueue(track as any);
-                          }}
-                          className="flex-shrink-0 p-2 rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <PlusIcon className="w-4 h-4 text-white/60" />
-                        </button>
-                      </button>
-                    ))
-                  )}
-                </div>
-            </>
-          )}
         </div>
 
         {/* Context Menu Portal */}
