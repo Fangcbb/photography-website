@@ -9,6 +9,8 @@ import {
   LoadingStatus,
 } from "@/modules/photos/ui/views/dashboard-photos-view";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Photo Collection",
   description: "Photo Collection",

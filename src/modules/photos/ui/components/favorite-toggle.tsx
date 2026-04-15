@@ -7,6 +7,7 @@ import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { usePhotosFilters } from "../../hooks/use-photos-filters";
 
 interface FavoriteToggleProps {
   photoId: string;
@@ -17,16 +18,30 @@ export function FavoriteToggle({ photoId, initialValue }: FavoriteToggleProps) {
   const [isFavorite, setIsFavorite] = useState(initialValue);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [filters] = usePhotosFilters();
 
   const updatePhoto = useMutation(trpc.photos.update.mutationOptions());
 
   const handleToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent row click if table has row click handler
+    e.stopPropagation();
 
     const newValue = !isFavorite;
 
-    // Optimistic update
+    // Optimistic update — update immediately for snappy UX
     setIsFavorite(newValue);
+
+    // Directly write to query cache instead of relying on invalidation
+    // This guarantees the UI sees the updated data immediately
+    const queryKey = trpc.photos.getMany.queryOptions({ ...filters }).queryKey;
+    queryClient.setQueryData(queryKey, (old: any) => {
+      if (!old?.items) return old;
+      return {
+        ...old,
+        items: old.items.map((photo: any) =>
+          photo.id === photoId ? { ...photo, isFavorite: newValue } : photo
+        ),
+      };
+    });
 
     updatePhoto.mutate(
       {
@@ -34,18 +49,24 @@ export function FavoriteToggle({ photoId, initialValue }: FavoriteToggleProps) {
         isFavorite: newValue,
       },
       {
-        onSuccess: async () => {
-          // Invalidate queries to refetch photos list
-          await queryClient.invalidateQueries(
-            trpc.photos.getMany.queryOptions({})
-          );
+        onSuccess: () => {
           toast.success(
             newValue ? "Added to favorites" : "Removed from favorites"
           );
         },
         onError: (error) => {
-          // Revert on error
+          // Revert optimistic update on error
           setIsFavorite(!newValue);
+          // Also revert the cache
+          queryClient.setQueryData(queryKey, (old: any) => {
+            if (!old?.items) return old;
+            return {
+              ...old,
+              items: old.items.map((photo: any) =>
+                photo.id === photoId ? { ...photo, isFavorite: !newValue } : photo
+              ),
+            };
+          });
           toast.error(error.message || "Failed to update favorite status");
         },
       }

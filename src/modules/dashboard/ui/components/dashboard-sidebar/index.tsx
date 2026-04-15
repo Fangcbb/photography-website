@@ -1,5 +1,5 @@
 import { NavMain } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-main";
-import { NavSecondary } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-secondary";
+
 import { NavUser } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-user";
 import {
   Sidebar,
@@ -36,11 +36,6 @@ const data = {
       title: "Videos",
       url: "/dashboard/videos",
       icon: "video",
-    },
-    {
-      title: "Music",
-      url: "/dashboard/music",
-      icon: "music",
     },
     {
       title: "Posts",
@@ -93,7 +88,6 @@ export const DashboardSidebar = async ({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={session?.user as User} />
