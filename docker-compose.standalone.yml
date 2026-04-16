@@ -1,5 +1,5 @@
-# Standalone Configuration (Local Postgres + RustFS)
-# Run with: docker compose up
+# Standalone Full-Stack Configuration (PostgreSQL + RustFS + App)
+# Run with: docker compose -f docker-compose.standalone.yml up
 # Override defaults by creating a .env file (see .env.example)
 services:
   postgres:
@@ -51,7 +51,7 @@ services:
     working_dir: /app
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-photography}
-    command: bunx drizzle-kit push
+    command: npm run db:push
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,36 +71,27 @@ services:
     command: >
       /bin/sh -c "
         echo 'Waiting for database...' &&
-        bun run db:push &&
-        echo 'Building application (SSG)...' &&
-        bun run build &&
+        npm run db:push &&
+        echo 'Building application...' &&
+        npm run build &&
         echo 'Copying static assets...' &&
         cp -r .next/static .next/standalone/.next/static &&
         cp -r public .next/standalone/public &&
         echo 'Starting server...' &&
-        bun .next/standalone/server.js
+        node .next/standalone/server.js
       "
     environment:
-      # Database
       DATABASE_PROVIDER: local
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-photography}
-
-      # Auth
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-development_secret_key_change_me}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
-
-      # App
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-
-      # S3 (RustFS)
       S3_ENDPOINT: http://rustfs:9000
       S3_BUCKET_NAME: ${POSTGRES_DB:-photography}
       S3_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
       S3_SECRET_ACCESS_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
       S3_PUBLIC_URL: http://localhost:9000/${POSTGRES_DB:-photography}
       NEXT_PUBLIC_S3_PUBLIC_URL: http://localhost:9000/${POSTGRES_DB:-photography}
-
-      # Mapbox (Optional, needs real token for maps)
       NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN:-}
     extra_hosts:
       - "localhost:host-gateway"

@@ -111,7 +111,7 @@ gh workflow run deploy.yml
 | 文件 | 用途 |
 |------|------|
 | `Dockerfile` | 多阶段构建，生产镜像 ~200MB |
-| `docker-compose.yml` | 开发配置（SQLite） |
+| `docker-compose.yml` | 本地开发（PostgreSQL + App，无 S3） |
 | `docker-compose.cloud.yml` | 云端配置（PostgreSQL + COS） |
 | `docker-compose.standalone.yml` | 完全独立（PostgreSQL 内置） |
 
