@@ -245,7 +245,7 @@ export default function NotFoundClient() {
           </a>
         </div>
 
-        <div className="nf-ghost-wrapper" style={{ marginTop: "2rem" }}>
+        <div className="nf-ghost-wrapper">
           <img
             src="/404-ghost.png"
             alt="Ghost"
@@ -287,14 +287,16 @@ export default function NotFoundClient() {
           z-index: 2;
           display: flex;
           align-items: center;
-          justify-content: center;
-          padding: 6rem 2rem 2rem;
+          justify-content: space-between;
+          padding: 6rem 4rem 2rem;
           gap: 3rem;
         }
 
         .nf-content {
           text-align: left;
           color: #fff;
+          flex: 1 1 0;
+          min-width: 0;
         }
 
         .nf-subtitle {
@@ -443,6 +445,8 @@ export default function NotFoundClient() {
           display: flex;
           flex-direction: column;
           align-items: center;
+          margin-top: 2rem;
+          flex: 0 0 auto;
         }
 
         .nf-ghost-img {
@@ -472,18 +476,45 @@ export default function NotFoundClient() {
           100% { transform: scale(0.8, 0.8); opacity: 0.12; }
         }
 
-        /* Mobile: stack vertically */
+        /* Mobile: keep side-by-side, compact */
         @media (max-width: 767px) {
           .nf-container {
-            flex-direction: column-reverse;
-            gap: 1.5rem;
-            padding-top: 4rem;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            padding: 4rem 1.5rem 1.5rem;
+          }
+          .nf-content {
+            flex: 1 1 0;
+            min-width: 0;
+          }
+          .nf-title {
+            font-size: clamp(2rem, 10vw, 3rem);
+            margin: 0.25rem 0;
+          }
+          .nf-subtitle {
+            font-size: 0.75rem;
+          }
+          .nf-desc {
+            font-size: 0.8rem;
+            line-height: 1.5;
+            margin-top: 0.25rem;
+          }
+          .nf-button {
+            margin-top: 1rem;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.85rem;
+          }
+          .nf-ghost-wrapper {
+            flex: 0 0 auto;
+            margin-top: 0;
           }
           .nf-ghost-img {
-            width: clamp(120px, 40vw, 180px);
+            width: clamp(110px, 28vw, 150px);
           }
           .nf-ghost-shadow {
-            width: clamp(80px, 26vw, 120px);
+            width: clamp(72px, 18vw, 100px);
           }
         }
       `}</style>
