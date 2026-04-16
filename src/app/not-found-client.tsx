@@ -13,10 +13,10 @@ function MobileToggle({
   return (
     <button
       onClick={onToggle}
-      className="fixed top-3 right-3 z-[110] bg-black/80 rounded-full size-10 flex items-center justify-center cursor-pointer select-none lg:hidden backdrop-blur-sm"
+      className="fixed z-[110] flex items-center justify-center cursor-pointer select-none max-[1023px]:flex hidden top-[1rem] right-[1.5rem] size-9 rounded-full bg-black/40 border border-white/10 backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
       aria-label={open ? "Close menu" : "Open menu"}
     >
-      {open ? <X size={20} color="white" /> : <Menu size={20} color="white" />}
+      {open ? <X size={18} color="white" /> : <Menu size={18} color="white" />}
     </button>
   );
 }
@@ -366,7 +366,6 @@ export default function NotFoundClient() {
           align-items: center;
           text-decoration: none;
           transition: opacity 0.2s;
-          margin-left: 1rem;
         }
 
         .nf-nav__logo:hover {
@@ -416,6 +415,9 @@ export default function NotFoundClient() {
           }
           .nf-container {
             padding-top: 5rem;
+          }
+          .nf-logo-img {
+            height: 20px;
           }
         }
 
