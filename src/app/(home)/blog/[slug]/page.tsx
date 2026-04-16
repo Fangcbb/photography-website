@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Metadata } from "next";
 import { VideoPlayerView, VideoPlayerLoadingState } from "@/modules/video/ui/views/video-player-view";
 import { getQueryClient } from "@/trpc/server";

@@ -7,12 +7,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/site.config";
 
-import { Readex_Pro } from "next/font/google";
-
-const readexPro = Readex_Pro({
-  subsets: ["latin"],
-});
-
 const BASE_URL = "https://www.fangc.cc";
 
 export const metadata: Metadata = {
@@ -318,7 +312,7 @@ var _hmt = _hmt || [];
           }}
         />
       </head>
-      <body className={`${readexPro.className} antialiased`} style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', WebkitTouchCallout: 'none' }}>
+      <body className="antialiased system-font" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', WebkitTouchCallout: 'none' }}>
         <NuqsAdapter>
           <TRPCReactProvider>
             <ThemeProvider attribute="class">

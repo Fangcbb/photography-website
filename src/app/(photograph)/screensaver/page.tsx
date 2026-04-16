@@ -5,6 +5,8 @@ import { ErrorBoundary } from "react-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { ScreensaverView } from "@/modules/photograph/ui/views/screensaver-view";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Screensaver",
   description: "Screensaver",

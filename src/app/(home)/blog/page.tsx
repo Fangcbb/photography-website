@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";

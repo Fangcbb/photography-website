@@ -17,6 +17,8 @@ import {
   SliderView,
 } from "@/modules/home/ui/views/slider-view";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Fang Bing Photography | 方斌的摄影作品集",
   description: "探索方斌的旅行与街头摄影作品。一位来自安徽的摄影师，记录世界各地的美丽风景、城市景观和迷人的瞬间。",

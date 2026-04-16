@@ -228,6 +228,13 @@
   }
 }
 
+/* System font stack — no Google Fonts dependency */
+.system-font {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+}
+
 /* THEME SWITCH TRANSITION */
 @layer utilities {
   ::view-transition-group(root) {

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && cp -r public/* .next/standalone/public/ && cp -r .next/static/* .next/standalone/.next/static/ 2>/dev/null || true",
+    "build": "next build && mkdir -p .next/standalone/.next/static && cp -r .next/static/* .next/standalone/.next/static/ && mkdir -p .next/standalone/public && cp -r public/* .next/standalone/public/",
     "start": "next start",
     "db:push": "bunx drizzle-kit push --config drizzle.config.ts",
     "db:studio": "bunx drizzle-kit studio",
