@@ -7,7 +7,7 @@ const Navbar = () => {
     <nav>
       <div className="flex items-center gap-8 pb-3 px-4 relative">
         <Logo />
-        <div className="hidden xl:flex gap-4">
+        <div className="hidden lg:flex gap-4">
           <FlipLink href="/travel">Travel</FlipLink>
           <FlipLink href="/discover">Discover</FlipLink>
           <FlipLink href="/music">Music</FlipLink>
