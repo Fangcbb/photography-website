@@ -1,9 +1,30 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
+
+function MobileToggle({
+  open,
+  onToggle,
+}: {
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="fixed top-3 right-3 z-[110] bg-black/80 rounded-full size-10 flex items-center justify-center cursor-pointer select-none lg:hidden backdrop-blur-sm"
+      aria-label={open ? "Close menu" : "Open menu"}
+    >
+      {open ? <X size={20} color="white" /> : <Menu size={20} color="white" />}
+    </button>
+  );
+}
 
 export default function NotFoundClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const toggleMenu = () => setMenuOpen(!menuOpen);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -107,10 +128,7 @@ export default function NotFoundClient() {
     const vertexShader = compileShader(gl.VERTEX_SHADER, vertexSource);
     const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentSource);
 
-    if (!vertexShader || !fragmentShader) {
-      console.error("Failed to compile shaders");
-      return;
-    }
+    if (!vertexShader || !fragmentShader) return;
 
     const program = gl.createProgram();
     if (!program) return;
@@ -119,10 +137,7 @@ export default function NotFoundClient() {
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
 
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error("Program link error:", gl.getProgramInfoLog(program));
-      return;
-    }
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
 
     gl.useProgram(program);
 
@@ -179,27 +194,85 @@ export default function NotFoundClient() {
   return (
     <div className="not-found-page">
       <canvas ref={canvasRef} className="shader-canvas" />
-      <div className="center">
-        <div className="content">
-          <h1>404</h1>
-          <p>Page not found</p>
-          <a href="/">← Back to Home</a>
+
+      {/* Mobile toggle */}
+      <MobileToggle open={menuOpen} onToggle={toggleMenu} />
+
+      {/* Navigation */}
+      <header className="nf-header">
+        <nav className="nf-nav container">
+          <a href="/" className="nf-nav__logo">
+            <img src="/121.svg" alt="Photography" className="nf-logo-img" />
+          </a>
+          <div
+            className={`nf-nav__menu${menuOpen ? " show-menu" : ""}`}
+            id="nav-menu"
+          >
+            <ul className="nf-nav__list">
+              {[
+                { label: "Home", href: "/" },
+                { label: "Travel", href: "/travel" },
+                { label: "Discover", href: "/discover" },
+                { label: "Music", href: "/music" },
+                { label: "Blog", href: "/blog" },
+                { label: "About", href: "/about" },
+              ].map((item) => (
+                <li key={item.href} className="nf-nav__item">
+                  <a
+                    href={item.href}
+                    className="nf-nav__link"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+      </header>
+
+      {/* 404 Content — Bedimcode ghost style */}
+      <div className="nf-container">
+        <div className="nf-content">
+          <span className="nf-subtitle">Error 404</span>
+          <h1 className="nf-title">Hey Buddy</h1>
+          <p className="nf-desc">
+            We can&apos;t seem to find the page you are looking for.
+          </p>
+          <a href="/" className="nf-button">
+            Go Home
+          </a>
+        </div>
+
+        <div className="nf-ghost-wrapper" style={{ marginTop: "2rem" }}>
+          <img
+            src="/404-ghost.png"
+            alt="Ghost"
+            className="nf-ghost-img"
+          />
+          <div className="nf-ghost-shadow" />
         </div>
       </div>
+
       <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap");
+
         html, body {
           margin: 0;
           width: 100%;
           height: 100%;
           overflow: hidden;
           background: #000;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+          font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
+
         .not-found-page {
           position: relative;
           width: 100vw;
           height: 100vh;
         }
+
         .shader-canvas {
           position: fixed;
           inset: 0;
@@ -207,48 +280,211 @@ export default function NotFoundClient() {
           height: 100vh;
           display: block;
         }
-        .center {
+
+        .nf-container {
           position: fixed;
           inset: 0;
+          z-index: 2;
           display: flex;
           align-items: center;
           justify-content: center;
-          pointer-events: none;
-          z-index: 2;
+          padding: 6rem 2rem 2rem;
+          gap: 3rem;
         }
-        .content {
-          text-align: center;
-          color: rgba(255, 255, 255, 0.78);
-          pointer-events: auto;
-          padding: 24px;
+
+        .nf-content {
+          text-align: left;
+          color: #fff;
         }
-        .content h1 {
-          margin: 0;
-          font-size: clamp(84px, 14vw, 180px);
-          line-height: 0.95;
-          font-weight: 600;
-          opacity: 0.34;
-          letter-spacing: 0.02em;
+
+        .nf-subtitle {
+          font-size: 1rem;
+          font-weight: 500;
+          opacity: 0.7;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
-        .content p {
-          margin: 18px 0 0;
-          font-size: clamp(15px, 1.6vw, 22px);
-          opacity: 0.72;
+
+        .nf-title {
+          font-size: clamp(3rem, 8vw, 5.5rem);
+          font-weight: 700;
+          margin: 0.5rem 0;
+          line-height: 1;
+          letter-spacing: -0.02em;
         }
-        .content a {
+
+        .nf-desc {
+          font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+          opacity: 0.75;
+          line-height: 1.6;
+          margin-top: 0.5rem;
+        }
+
+        .nf-button {
           display: inline-block;
-          margin-top: 28px;
-          padding: 12px 22px;
-          color: rgba(255, 255, 255, 0.92);
+          margin-top: 2rem;
+          padding: 0.8rem 2rem;
+          background-color: #fff;
+          color: #1a1a2e;
+          font-weight: 600;
+          font-size: 1rem;
+          border-radius: 3rem;
           text-decoration: none;
-          border: 1px solid rgba(255, 255, 255, 0.35);
-          border-radius: 8px;
-          transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .content a:hover {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.55);
-          transform: translateY(-1px);
+
+        .nf-button:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== Header ===== */
+        .nf-header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          z-index: 100;
+        }
+
+        .nf-nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.2rem 6rem;
+        }
+
+        .nf-nav__menu {
+          margin-left: auto;
+          margin-right: 0;
+        }
+
+        .nf-nav__logo {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          transition: opacity 0.2s;
+          margin-left: 1rem;
+        }
+
+        .nf-nav__logo:hover {
+          opacity: 0.7;
+        }
+
+        .nf-logo-img {
+          height: clamp(18px, 2.2vw, 28px);
+          width: auto;
+        }
+
+        .nf-nav__list {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+
+        .nf-nav__link {
+          color: rgba(255, 255, 255, 0.65);
+          text-decoration: none;
+          font-size: 0.9rem;
+          font-weight: 500;
+          transition: color 0.2s;
+          letter-spacing: 0.03em;
+        }
+
+        .nf-nav__link:hover {
+          color: rgba(255, 255, 255, 1);
+        }
+
+        /* Mobile */
+        @media (max-width: 767px) {
+          .nf-nav {
+            padding: 1rem 1.5rem;
+          }
+          .nf-nav__menu {
+            display: none;
+          }
+          .nf-nav__list {
+            gap: 1.5rem;
+          }
+          .nf-nav__link {
+            font-size: 0.85rem;
+          }
+          .nf-container {
+            padding-top: 5rem;
+          }
+        }
+
+        /* Show mobile menu */
+        .show-menu {
+          display: flex !important;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          padding: 5rem 2rem 3rem;
+          flex-direction: column;
+          align-items: center;
+          gap: 1.8rem;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(12px);
+        }
+        .show-menu .nf-nav__list {
+          flex-direction: column;
+          gap: 1.8rem;
+        }
+        .show-menu .nf-nav__link {
+          font-size: 1.1rem;
+        }
+
+        .nf-ghost-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .nf-ghost-img {
+          width: clamp(160px, 22vw, 320px);
+          height: auto;
+          animation: floaty 2s infinite ease-in-out alternate;
+          filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.25));
+        }
+
+        .nf-ghost-shadow {
+          width: clamp(100px, 14vw, 200px);
+          height: 16px;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 50%;
+          margin-top: 8px;
+          animation: shadow 2s infinite ease-in-out alternate;
+          filter: blur(6px);
+        }
+
+        @keyframes floaty {
+          0% { transform: translateY(0px); }
+          100% { transform: translateY(18px); }
+        }
+
+        @keyframes shadow {
+          0% { transform: scale(1, 1); opacity: 0.2; }
+          100% { transform: scale(0.8, 0.8); opacity: 0.12; }
+        }
+
+        /* Mobile: stack vertically */
+        @media (max-width: 767px) {
+          .nf-container {
+            flex-direction: column-reverse;
+            gap: 1.5rem;
+            padding-top: 4rem;
+          }
+          .nf-ghost-img {
+            width: clamp(120px, 40vw, 180px);
+          }
+          .nf-ghost-shadow {
+            width: clamp(80px, 26vw, 120px);
+          }
         }
       `}</style>
     </div>
