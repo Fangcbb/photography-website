@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Graphic from "../../../../../components/graphic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { useEffect } from "react";
 import { siteConfig } from "@/site.config";
 
@@ -61,13 +61,10 @@ export default function MobileMenu({ isOpen, onClose }: Props) {
               {/* CLOSE BUTTON  */}
               <button
                 onClick={onClose}
-                className="fixed top-3 right-3 z-50 bg-background rounded-bl-[18px] cursor-pointer select-none"
+                className="fixed top-3 right-3 z-50 bg-background rounded-full size-10 flex items-center justify-center cursor-pointer select-none"
+                aria-label="Close menu"
               >
-                <div className="relative pb-3 px-4">
-                  <h1 className="text-sm font-light">Close</h1>
-                  <Graphic className="absolute -bottom-4 right-0 rotate-90" />
-                  <Graphic className="absolute -left-4 top-0 rotate-90" />
-                </div>
+                <X size={20} />
               </button>
 
               <div className="flex gap-4 items-center">
