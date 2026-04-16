@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { cache } from "react";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -43,8 +44,8 @@ export const metadata = {
 };
 
 // SEO fallback: 少量视频数据，供 Google 索引
-// ISR 模式下每 60s 重新验证，build 时若 DB 不可用则返回空数组不阻塞构建
-async function getSeoVideos() {
+// cache() 确保单次请求内多次调用只查一次 DB
+const getSeoVideos = cache(async () => {
   try {
     return await db
       .select({
@@ -60,14 +61,28 @@ async function getSeoVideos() {
   } catch {
     return [];
   }
-}
+});
 
 const page = async () => {
   const seoVideos = await getSeoVideos();
 
   return (
     <>
-      {/* SEO fallback: Googlebot sees完整视频列表 */}
+      {/* SEO fallback: 可见背景视频缩略图，hydration 后 VideoListView 覆盖 */}
+      {seoVideos.length > 0 && (
+        <div className="fixed inset-0 z-0 select-none pointer-events-none overflow-hidden">
+          {seoVideos.map((v) => (
+            v.thumbnailUrl && (
+              <img
+                key={v.id}
+                src={keyToUrl(v.thumbnailUrl)}
+                alt={v.title}
+                className="w-full h-full object-cover opacity-10"
+              />
+            )
+          ))}
+        </div>
+      )}
       <div className="sr-only">
         {seoVideos.map((v) => (
           <a key={v.id} href={`/blog/${v.slug}`}>
