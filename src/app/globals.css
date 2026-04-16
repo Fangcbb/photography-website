@@ -279,3 +279,29 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Edge */
 }
+
+/* ============================================
+   Header nav fix: completely bypass Tailwind display classes
+   Hamburger: always visible, hidden at 1024px+
+   Navbar links: always hidden, visible at 1024px+
+   ============================================ */
+
+/* Hamburger button - always flex, hidden from 1024px+ */
+header .hamburger-btn {
+  display: flex !important;
+}
+@media (min-width: 1024px) {
+  header .hamburger-btn {
+    display: none !important;
+  }
+}
+
+/* Navbar links container - always hidden, visible from 1024px+ */
+header .navbar-links {
+  display: none !important;
+}
+@media (min-width: 1024px) {
+  header .navbar-links {
+    display: flex !important;
+  }
+}

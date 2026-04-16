@@ -12,7 +12,7 @@ const MobileMenuButton = () => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed top-3 right-3 z-40 bg-black/30 backdrop-blur-md rounded-full size-10 flex items-center justify-center cursor-pointer select-none flex max-lg:hidden"
+        className="hamburger-btn fixed top-3 right-3 z-40 bg-black/30 backdrop-blur-md rounded-full size-10 items-center justify-center cursor-pointer select-none"
         aria-label="Open menu"
       >
         <Menu size={20} color="white" />
