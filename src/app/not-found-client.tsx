@@ -398,8 +398,8 @@ export default function NotFoundClient() {
           color: rgba(255, 255, 255, 1);
         }
 
-        /* Mobile */
-        @media (max-width: 767px) {
+        /* Mobile (< 1024px): hide desktop nav, show hamburger */
+        @media (max-width: 1023px) {
           .nf-nav {
             padding: 1rem 1.5rem;
           }
