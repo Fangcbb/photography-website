@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
  * Rollback script for photo URL cleanup
  * Restores original URLs from backup file

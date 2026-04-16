@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
  * Safe script to clean photo URLs in database with backup and rollback functionality
  * Removes domain prefix from URLs and keeps only the key
