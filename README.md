@@ -108,7 +108,7 @@ cd photography-website
 cp .env.example .env
 # 编辑 .env 填入所需配置
 
-# 启动（使用 SQLite 本地开发）
+# 启动（使用 PostgreSQL 本地开发）
 docker-compose up -d
 
 # 或使用 PostgreSQL
@@ -237,7 +237,7 @@ export const siteConfig = {
 | 文件 | 用途 |
 |------|------|
 | `Dockerfile` | 多阶段构建，生产镜像 |
-| `docker-compose.yml` | 开发/演示配置（SQLite） |
+| `docker-compose.yml` → `standalone` | 本地开发（PostgreSQL，非生产方案） |
 | `docker-compose.cloud.yml` | 云端生产配置（PostgreSQL） |
 | `docker-compose.standalone.yml` | 完全独立部署 |
 
