@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, memo } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, memo, useRef } from "react";
 import Image, { ImageProps } from "next/image";
 import { Blurhash } from "react-blurhash";
 
@@ -33,8 +33,17 @@ const BlurImageInner = function BlurImageInner({
 }: BlurImageProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const containerStyle = fill ? "absolute inset-0" : "relative w-full h-full";
+
+  // Fix: Handle images already complete on mount (SSR hydration case)
+  useLayoutEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setImageLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!imageLoaded) return;
@@ -70,6 +79,7 @@ const BlurImageInner = function BlurImageInner({
         </div>
       )}
       <Image
+        ref={imgRef}
         src={src}
         alt={alt}
         width={width}
