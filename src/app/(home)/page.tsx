@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { cache } from "react";
 import { db } from "@/db";
 import { photos } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -16,7 +17,7 @@ import {
   SliderView,
 } from "@/modules/home/ui/views/slider-view";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata = {
   title: "Fang Bing Photography | 方斌的摄影作品集",
@@ -48,9 +49,8 @@ export const metadata = {
 };
 
 // SSR fallback: 服务端直接获取少量数据，渲染到 HTML
-// 页面每次请求都走服务端渲染，HTML 中已有照片内容
-// 不触发 ISR，不卡 build，首屏有真实 HTML（不只是 skeleton）
-async function getSeoPhotos() {
+// cache() 确保单次请求内多次调用只查一次 DB
+const getSeoPhotos = cache(async () => {
   try {
     return await db
       .select({
@@ -66,26 +66,29 @@ async function getSeoPhotos() {
   } catch {
     return [];
   }
-}
+});
 
 export default async function HomePage() {
   const seoPhotos = await getSeoPhotos();
 
   return (
     <>
-      {/* SSR fallback: 首屏可见的真实照片内容，JS 加载前就有 */}
-      <div className="sr-only">
-        {seoPhotos.map((p) => (
-          <a key={p.id} href={`/p/${p.id}`}>
-            {p.url && <img src={keyToUrl(p.url)} alt={p.title} />}
-            <h2>{p.title}</h2>
-            {p.description && <p>{p.description}</p>}
-          </a>
-        ))}
-      </div>
+      {/* SSR fallback: 可见内容，hydration 后 SliderView 覆盖 */}
+      {seoPhotos.length > 0 && (
+        <div className="fixed inset-0 z-0 select-none pointer-events-none">
+          {seoPhotos.map((p) => (
+            <img
+              key={p.id}
+              src={keyToUrl(p.url)}
+              alt={p.title}
+              className="w-full h-full object-cover opacity-20"
+            />
+          ))}
+        </div>
+      )}
 
       {/* 实际 UI: client components 通过 useSuspenseQuery 加载完整数据 */}
-      <div className="flex flex-col lg:flex-row min-h-screen w-full">
+      <div className="relative z-10 flex flex-col lg:flex-row min-h-screen w-full">
         {/* LEFT CONTENT - Fixed */}
         <div className="w-full lg:w-1/2 h-[70vh] lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3 rounded-xl">
           <Suspense fallback={<SliderViewLoadingStatus />}>
