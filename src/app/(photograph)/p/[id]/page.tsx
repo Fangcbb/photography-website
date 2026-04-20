@@ -1,6 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { TRPCError } from "@trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { trpc } from "@/trpc/server";
 import { HydrationBoundary } from "@tanstack/react-query";
@@ -19,9 +21,17 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = (await params).id;
   const queryClient = getQueryClient();
-  const data = await queryClient.fetchQuery(
-    trpc.home.getPhotoById.queryOptions({ id })
-  );
+  let data;
+  try {
+    data = await queryClient.fetchQuery(
+      trpc.home.getPhotoById.queryOptions({ id })
+    );
+  } catch (e) {
+    if (e instanceof TRPCError && e.code === "NOT_FOUND") {
+      notFound();
+    }
+    throw e;
+  }
 
   return {
     title: data.title,
@@ -32,7 +42,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const page = async ({ params }: Props) => {
   const id = (await params).id;
   const queryClient = getQueryClient();
-  await queryClient.fetchQuery(trpc.home.getPhotoById.queryOptions({ id }));
+  try {
+    await queryClient.fetchQuery(trpc.home.getPhotoById.queryOptions({ id }));
+  } catch (e) {
+    if (e instanceof TRPCError && e.code === "NOT_FOUND") {
+      notFound();
+    }
+    throw e;
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
