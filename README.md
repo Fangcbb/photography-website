@@ -64,7 +64,7 @@ photography-website/
 │   │   ├── photograph/         # 照片库组件
 │   │   └── ui/                 # 通用 UI 组件
 │   ├── lib/                    # 工具函数
-│   └── site.config.ts          # ⚠️ 唯一需要编辑的配置文件
+│   └── site.config.ts          # 品牌和站点配置（与 .env 共同构成完整配置）
 ├── public/                     # 静态资源
 ├── drizzle/                    # 数据库迁移
 ├── scripts/                    # 运维脚本

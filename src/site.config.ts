@@ -2,8 +2,11 @@
  * ============================================================================
  * SITE CONFIGURATION
  * ============================================================================
- * This is the ONLY file you need to edit to customize the site for your own use.
- * All branding, personal info, social links, and site metadata are defined here.
+ * Main brand and site metadata configuration file.
+ * Edit this file to customize site name, bio, social links, and contact info.
+ *
+ * NOTE: Environment variables (.env) must also be configured for production deploy.
+ * See .env.example for required variables.
  *
  * After editing this file, restart the dev server to see changes.
  * ============================================================================
