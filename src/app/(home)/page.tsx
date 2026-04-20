@@ -73,19 +73,16 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* SSR fallback: 可见内容，hydration 后 SliderView 覆盖 */}
-      {seoPhotos.length > 0 && (
-        <div className="fixed inset-0 z-0 select-none pointer-events-none">
-          {seoPhotos.map((p) => (
-            <img
-              key={p.id}
-              src={keyToUrl(p.url)}
-              alt={p.title}
-              className="w-full h-full object-cover opacity-20"
-            />
-          ))}
-        </div>
-      )}
+      {/* SEO 照片：仅供 Google 索引，对用户不可见 */}
+      <div className="sr-only">
+        {seoPhotos.map((p) => (
+          <a key={p.id} href={`/p/${p.id}`}>
+            <img src={keyToUrl(p.url)} alt={p.title} />
+            <h2>{p.title}</h2>
+            {p.description && <p>{p.description}</p>}
+          </a>
+        ))}
+      </div>
 
       {/* 实际 UI: client components 通过 useSuspenseQuery 加载完整数据 */}
       <div className="relative z-10 flex flex-col lg:flex-row min-h-screen w-full">
