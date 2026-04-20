@@ -23,6 +23,27 @@ bash /opt/scripts/photo-deploy.sh
 bash /opt/scripts/photo-rollback.sh
 ```
 
+## 构建产物结构
+
+项目使用 Next.js `output: "standalone"` 模式。构建后产物位于 `.next/standalone/`：
+
+```
+.next/standalone/
+├── server.js              # PM2 启动入口
+├── package.json
+├── .next/
+│   ├── static/            # SSR 静态资源（由 npm run build 自动复制）
+│   └── server/             # Next.js SSR chunks
+└── public/                # 静态公共资源（由 npm run build 自动复制）
+```
+
+**deploy.sh 部署逻辑：**
+1. rsync 源代码（排除 `.git`、`node_modules`、`.next`）
+2. 在服务器执行 `npm run build`（在源代码目录）
+3. 将构建后的 `.next` 整体复制到 release 目录
+
+> ⚠️ 不要在 rsync 时同时复制 `.next/`（会导致嵌套 .next/.next/ 结构）
+
 ## 重要说明
 
 - 所有脚本运行在 **生产服务器** `/opt/scripts/` 目录
