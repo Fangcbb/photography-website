@@ -72,6 +72,8 @@ const App: React.FC = () => {
   const [dragOffsetX, setDragOffsetX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const mobileViewportRef = useRef<HTMLDivElement>(null);
+  // Track actual container width via ResizeObserver (avoids window.innerWidth mismatch on mobile)
+  const containerWidthRef = useRef(0);
   const [paneWidth, setPaneWidth] = useState(() => {
     if (typeof window === "undefined") return 0;
     return window.innerWidth;
@@ -120,9 +122,21 @@ const App: React.FC = () => {
     updateWidth();
     window.addEventListener("resize", updateWidth);
     window.visualViewport?.addEventListener("resize", updateWidth);
+
+    // Track actual container width via ResizeObserver
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        containerWidthRef.current = entry.contentRect.width;
+      }
+    });
+    if (mobileViewportRef.current) {
+      ro.observe(mobileViewportRef.current);
+    }
+
     return () => {
       window.removeEventListener("resize", updateWidth);
       window.visualViewport?.removeEventListener("resize", updateWidth);
+      ro.disconnect();
     };
   }, [isMobileLayout]);
 
@@ -329,8 +343,10 @@ const App: React.FC = () => {
     </div>
   );
 
-  const fallbackWidth = typeof window !== "undefined" ? window.innerWidth : 0;
-  const effectivePaneWidth = paneWidth || fallbackWidth;
+  // Use ResizeObserver-measured width when available, fall back to paneWidth (window.innerWidth)
+  const effectivePaneWidth = isMobileLayout
+    ? (containerWidthRef.current || paneWidth)
+    : paneWidth || (typeof window !== "undefined" ? window.innerWidth : 0);
   const baseOffset = activePanel === "lyrics" ? -effectivePaneWidth : 0;
   const mobileTranslate = baseOffset + dragOffsetX;
 

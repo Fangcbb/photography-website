@@ -497,7 +497,7 @@ const Controls: React.FC<ControlsProps> = ({
             style={{ width: `${(displayTime / (duration || 1)) * 100}%` }}
           ></div>
 
-          {/* Input Range */}
+          {/* Input Range - onChange removed: onInput fires during drag, onPointerUp ends seek. Adding onChange caused double-fire on mobile. */}
           <input
             type="range"
             min={0}
@@ -505,10 +505,6 @@ const Controls: React.FC<ControlsProps> = ({
             value={displayTime}
             onPointerDown={startSeek}
             onInput={(e) => {
-              const time = parseFloat((e.target as HTMLInputElement).value);
-              dragSeek(time);
-            }}
-            onChange={(e) => {
               const time = parseFloat((e.target as HTMLInputElement).value);
               dragSeek(time);
             }}
