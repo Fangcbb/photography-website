@@ -14,7 +14,7 @@ services:
       - "3000:3000"
     environment:
       # Database (Defaults to Cloud/Neon if not set to 'local')
-      - DATABASE_PROVIDER=cloud
+      - DATABASE_PROVIDER=neon
 
       # Environment variables should be passed via a .env file or the host environment
       # Required vars:

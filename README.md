@@ -117,6 +117,8 @@ docker-compose -f docker-compose.yml up -d
 
 ### 方式三：Node.js 手动部署
 
+> ⚠️ **推荐方式**：生产环境应使用项目自带的部署脚本，见 [deploy/README.md](./deploy/README.md)。以下仅作参考。
+
 ```bash
 git clone https://github.com/Fangcbb/photography-website.git
 cd photography-website

@@ -20,7 +20,7 @@
 
 | 要求 | 最低版本 | 推荐版本 |
 |------|----------|----------|
-| Node.js | 18.17 | 20.x LTS |
+| Node.js | 20.9 | 22.x LTS |
 | npm | 9.x | 10.x |
 | PostgreSQL | 14 | 15+ |
 | Docker | 24 | 25+ |
@@ -176,6 +176,8 @@ services:
 
 ## 手动部署 (Node.js)
 
+> ⚠️ **推荐方式**：生产环境应使用项目自带的部署脚本，详见 [deploy/README.md](./deploy/README.md)。以下手动部署流程仅作参考。
+
 适用于 VPS、云服务器。
 
 ### 1. 服务器准备
@@ -259,7 +261,7 @@ su - app
 # 安装
 git clone https://github.com/Fangcbb/photography-website.git
 cd photography-website
-npm install --production
+npm install
 
 # 配置
 cp .env.example .env

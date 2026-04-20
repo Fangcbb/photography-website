@@ -9,13 +9,8 @@ import { count } from "drizzle-orm";
 
 export const auth = betterAuth({
   trustedOrigins: [
-    "http://122.51.140.190:3000",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "https://fangc.cc",
     "https://www.fangc.cc",
-    "http://fangc.cc",
-    "http://www.fangc.cc",
   ],
   database: drizzleAdapter(db, {
     provider: "pg",
