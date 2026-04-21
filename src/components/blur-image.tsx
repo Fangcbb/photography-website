@@ -11,15 +11,7 @@ interface BlurImageProps
 
 /**
  * BlurImage component displays an image with a blurhash placeholder.
- *
- * @param {string} src - The source of the image.
- * @param {string} alt - The alt text of the image.
- * @param {number} width - The width of the image.
- * @param {number} height - The height of the image.
- * @param {string} fill - The fill of the image.
- * @param {string} className - Optional className for the component.
- * @param {string} blurhash - The blurhash of the image.
- * @returns {JSX.Element} - The BlurImage component.
+ * onLoad fires when the image finishes loading (including cached).
  */
 const BlurImageInner = function BlurImageInner({
   src,
@@ -37,25 +29,11 @@ const BlurImageInner = function BlurImageInner({
 
   const containerStyle = fill ? "absolute inset-0" : "relative w-full h-full";
 
-  // Handle SSR hydration: after paint, check if image was already cached
-  // (useLayoutEffect is too early - Next.js Image fill may not be ready yet)
-  useEffect(() => {
-    // Use a microtask to ensure paint has completed
-    Promise.resolve().then(() => {
-      const img = imgRef.current;
-      if (img && img.complete && img.naturalWidth > 0) {
-        setImageLoaded(true);
-      }
-    });
-  }, []);
-
   useEffect(() => {
     if (!imageLoaded) return;
-
     const timeout = window.setTimeout(() => {
       setShowPlaceholder(false);
     }, 550);
-
     return () => window.clearTimeout(timeout);
   }, [imageLoaded]);
 
