@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "photo",
-      script: ".next/standalone/server.js",
+      script: "./server.js",
       cwd: "/var/www/photo-site/current",
       instances: 1,
       autorestart: true,

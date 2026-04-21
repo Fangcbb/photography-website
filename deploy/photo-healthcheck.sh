@@ -76,7 +76,10 @@ run_health_check() {
     local EXIT_CODE=0
 
     # ---- 读取状态 ----
+    # PM2 返回的 cwd 可能是 symlink（如 /var/www/photo-site/current），
+    # 必须全部解析后再比较，避免 “PM2 cwd != symlink” 假阳性
     PM2_CWD=$(get_pm2_cwd)
+    PM2_CWD=$(readlink -f "$PM2_CWD" 2>/dev/null || echo "$PM2_CWD")
     PM2_SCRIPT=$(get_pm2_script)
     SYMLINK_REAL=$($READLINK -f "$SITE_DIR/current" 2>/dev/null || echo "")
     BUILD_TS_FILE="$SITE_DIR/current/BUILD_TIMESTAMP"
