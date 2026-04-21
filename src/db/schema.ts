@@ -198,6 +198,16 @@ export const photosUpdateSchema = createUpdateSchema(photos)
 // Types
 export type Photo = InferSelectModel<typeof photos>;
 export type CitySet = InferSelectModel<typeof citySets>;
+// 概览接口返回的精简类型（不含 photos 数组）
+export type CitySetSummary = {
+  id: string;
+  city: string;
+  country: string;
+  photoCount: number;
+  coverPhotoId: string;
+  coverPhoto: Photo;
+};
+
 // with photos & cover photo
 export type CitySetWithPhotos = CitySet & { photos: Photo[] } & {
   coverPhoto: Photo;

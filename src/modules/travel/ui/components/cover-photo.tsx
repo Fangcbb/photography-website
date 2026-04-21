@@ -1,11 +1,11 @@
 import BlurImage from "@/components/blur-image";
-import { CitySetWithPhotos } from "@/db/schema";
+import { CitySetSummary } from "@/db/schema";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import VectorCombined from "@/components/vector-combined";
 
 interface CoverPhotoProps {
-  citySet: CitySetWithPhotos;
-  citySets: CitySetWithPhotos[];
+  citySet: CitySetSummary;
+  citySets: CitySetSummary[];
 }
 
 export const CoverPhoto = ({ citySet, citySets }: CoverPhotoProps) => {

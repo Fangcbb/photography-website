@@ -9,7 +9,14 @@ export const travelRouter = createTRPCRouter({
     const data = await ctx.db.query.citySets.findMany({
       with: {
         coverPhoto: true,
-        photos: true,
+        // photos 未使用，不取回来减轻列表页负担
+      },
+      columns: {
+        id: true,
+        city: true,
+        country: true,
+        photoCount: true,
+        coverPhotoId: true,
       },
       orderBy: [desc(citySets.updatedAt)],
     });
