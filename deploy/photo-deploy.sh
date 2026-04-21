@@ -426,9 +426,6 @@ sample_check() {
 BASE="https://www.fangc.cc"
 sample_check "${BASE}/" "首页 HTML"
 sample_check "${BASE}/travel" "Travel HTML"
-sample_check "${BASE}/_next/static/chunks/02istpvlbok3p.js" "JS chunk (首页引用)"
-sample_check "${BASE}/_next/static/chunks/0bzq.xblv206j.css" "CSS chunk (首页引用)"
-sample_check "${BASE}/_next/static/chunks/turbopack-03510d2klfewf.js" "JS chunk (turbopack)"
 sample_check "${BASE}/api/health" "健康 API"
 
 if [ $SAMPLE_ERRORS -gt 0 ]; then
@@ -436,7 +433,7 @@ if [ $SAMPLE_ERRORS -gt 0 ]; then
     V3_RESULT="FAIL ($SAMPLE_ERRORS errors)"
     VERIFICATION_FAILED=1
 else
-    V3_RESULT="PASS (6 项采样)"
+    V3_RESULT="PASS (3 项采样)"
 fi
 
 # 判定

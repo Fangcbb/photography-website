@@ -19,17 +19,15 @@ export const travelRouter = createTRPCRouter({
   getOne: baseProcedure
     .input(
       z.object({
-        city: z.string(),
+        id: z.string().uuid(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { city } = input;
-
-      // Get city set info
+      // Get city set info by stable UUID primary key
       const [citySet] = await ctx.db
         .select()
         .from(citySets)
-        .where(and(eq(citySets.city, city)));
+        .where(eq(citySets.id, input.id));
 
       if (!citySet) {
         throw new TRPCError({
@@ -42,7 +40,7 @@ export const travelRouter = createTRPCRouter({
       const cityPhotos = await ctx.db
         .select()
         .from(photos)
-        .where(and(eq(photos.city, city), eq(photos.visibility, "public")))
+        .where(and(eq(photos.city, citySet.city), eq(photos.visibility, "public")))
         .orderBy(desc(photos.dateTimeOriginal), desc(photos.createdAt));
 
       return {

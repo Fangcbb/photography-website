@@ -10,36 +10,30 @@ import { CityView } from "@/modules/travel/ui/views/city-view";
 
 type Props = {
   params: Promise<{
-    city: string;
+    id: string;
   }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const city = (await params).city;
-
+  const { id } = await params;
   return {
-    title: decodeURIComponent(city),
+    title: id, // Will be overridden by client-side fetch
   };
 }
 
 const Page = async ({ params }: Props) => {
-  const { city } = await params;
-
-  // Decode URL-encoded params
-  const decodedCity = decodeURIComponent(city);
+  const { id } = await params;
 
   const queryClient = getQueryClient();
   void queryClient.prefetchQuery(
-    trpc.travel.getOne.queryOptions({
-      city: decodedCity,
-    })
+    trpc.travel.getOne.queryOptions({ id }),
   );
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <ErrorBoundary fallback={<p>Something went wrong</p>}>
         <Suspense fallback={<p>Loading...</p>}>
-          <CityView city={decodedCity} />
+          <CityView id={id} />
         </Suspense>
       </ErrorBoundary>
     </HydrationBoundary>

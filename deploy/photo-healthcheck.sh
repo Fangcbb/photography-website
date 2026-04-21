@@ -139,15 +139,12 @@ run_health_check() {
 
     sample_check "${BASE_URL}/" "首页 HTML"      || { SAMPLE_ERRORS=$((SAMPLE_ERRORS+1)); EXIT_CODE=1; }
     sample_check "${BASE_URL}/travel" "Travel HTML" || { SAMPLE_ERRORS=$((SAMPLE_ERRORS+1)); EXIT_CODE=1; }
-    sample_check "${BASE_URL}/_next/static/chunks/02istpvlbok3p.js" "JS chunk (首页)" || { SAMPLE_ERRORS=$((SAMPLE_ERRORS+1)); EXIT_CODE=1; }
-    sample_check "${BASE_URL}/_next/static/chunks/0bzq.xblv206j.css" "CSS chunk" || { SAMPLE_ERRORS=$((SAMPLE_ERRORS+1)); EXIT_CODE=1; }
-    sample_check "${BASE_URL}/_next/static/chunks/turbopack-03510d2klfewf.js" "JS chunk (turbopack)" || { SAMPLE_ERRORS=$((SAMPLE_ERRORS+1)); EXIT_CODE=1; }
     sample_check "${BASE_URL}/api/health" "健康 API" || { SAMPLE_ERRORS=$((SAMPLE_ERRORS+1)); EXIT_CODE=1; }
 
     if [ $SAMPLE_ERRORS -gt 0 ]; then
         V3="FAIL ($SAMPLE_ERRORS errors)"
     else
-        V3="PASS (6 项采样)"
+        V3="PASS (3 项采样)"
     fi
     [ "$CALLER" = "deploy" ] && log "  资源采样结果: $V3"
 

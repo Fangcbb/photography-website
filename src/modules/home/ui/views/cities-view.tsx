@@ -18,6 +18,7 @@ export const CitiesView = () => {
       {data.map((item) => (
         <CityCard
           key={item.id}
+          cityId={item.id}
           title={item.city}
           coverPhoto={item.coverPhoto}
         />

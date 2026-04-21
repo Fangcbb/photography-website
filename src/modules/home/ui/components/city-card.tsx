@@ -8,14 +8,15 @@ import VectorTopLeftAnimation from "./vector-top-left-animation";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface Props {
+  cityId: string;
   title: string;
   coverPhoto: Photo;
 }
 
-const CityCard = ({ title, coverPhoto }: Props) => {
+const CityCard = ({ cityId, title, coverPhoto }: Props) => {
   return (
     <Link
-      href={`/travel/${title}`}
+      href={`/travel/${cityId}`}
       className="w-full relative group cursor-pointer block"
     >
       <AspectRatio

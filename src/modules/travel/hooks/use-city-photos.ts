@@ -4,28 +4,28 @@ import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 interface CityPhotosOptions {
-  city: string;
+  id: string;
 }
 
 interface CityPhotosResult {
   // 城市数据
   cityData: any;
-  
+
   // 封面照片
   coverPhoto: any;
-  
+
   // 照片列表
   photos: any[];
-  
+
   // 照片数量
   photoCount: number;
 }
 
-export function useCityPhotos({ city }: CityPhotosOptions): CityPhotosResult {
+export function useCityPhotos({ id }: CityPhotosOptions): CityPhotosResult {
   const trpc = useTRPC();
-  
+
   const { data } = useSuspenseQuery(
-    trpc.travel.getOne.queryOptions({ city }),
+    trpc.travel.getOne.queryOptions({ id }),
   );
 
   const coverPhoto = data.photos.find((item: any) => data.coverPhotoId === item.id);

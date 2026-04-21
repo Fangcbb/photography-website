@@ -10,11 +10,11 @@ import { format } from "date-fns";
 import Link from "next/link";
 
 interface Props {
-  city: string;
+  id: string;
 }
 
-export const CityView = ({ city }: Props) => {
-  const { cityData, coverPhoto, photos } = useCityPhotos({ city });
+export const CityView = ({ id }: Props) => {
+  const { cityData, coverPhoto, photos } = useCityPhotos({ id });
 
   return (
     <div className="size-full">
