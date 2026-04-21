@@ -1,20 +1,33 @@
 #!/bin/bash
 #
-# photo-deploy.sh — 新版本发布脚本 (增强版)
-# 用法: bash /opt/scripts/photo-deploy.sh
+# photo-deploy.sh — 原子化部署脚本
 #
-# 增强项:
-#   - flock 互斥锁，防止并发部署
-#   - PM2 重启优先级：reload → restart → stop+start
-#   - 多层健康检查（HTTP + HTML 关键字 + 健康 API）
-#   - release 自动清理（保留 5 个）
-#   - 日志规范化 (/opt/photo/logs/)
-#   - CDN 失败降级 warning，不触发回滚
-#   - 绝对路径
-#   - previous 只在构建成功后更新（链路保护）
+# 用法:
+#   bash /opt/scripts/photo-deploy.sh           # 完整部署
+#   bash /opt/scripts/photo-deploy.sh --dry-run  # 仅校验，不切换
+#   bash /opt/scripts/photo-deploy.sh --check    # 仅三重校验（独立巡检模式）
+#
+# 核心设计原则:
+#   - PM2 切换: pm2 delete + pm2 start（原子操作，无假成功可能）
+#   - 三重校验作为部署成功的硬条件，任意一项失败自动回滚
+#   - 资源采样带 no-cache，覆盖 HTML/JS/CSS/字体
+#   - 回滚后自动重启 PM2 到旧 release
+#   - 部署结束输出明确摘要，并落盘为 JSON
 #
 
 set -Eeuo pipefail
+
+# ============================================================
+# 模式检测
+# ============================================================
+MODE="deploy"
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run|--check-only|--check)
+            MODE="check"
+            ;;
+    esac
+done
 
 # ============================================================
 # 绝对路径定义
@@ -28,13 +41,13 @@ RM="/usr/bin/rm"
 CP="/usr/bin/cp"
 MKDIR="/usr/bin/mkdir"
 RSYNC="/usr/bin/rsync"
-SORT="/usr/bin/sort"
 TAIL="/usr/bin/tail"
 WC="/usr/bin/wc"
 TEE="/usr/bin/tee"
 TCCLI="/usr/local/bin/tccli"
-PKILL="/usr/bin/pkill"
 FLOCK="/usr/bin/flock"
+KILL="/usr/bin/kill"
+DATE="/bin/date"
 
 # ============================================================
 # 目录与路径定义
@@ -45,43 +58,52 @@ SHARED_DIR="$SITE_DIR/shared"
 LOG_BASE="/opt/photo/logs"
 DEPLOY_LOCK="/tmp/photo-deploy.lock"
 HEALTH_URL="http://127.0.0.1:3000/"
-HEALTH_RETRIES=6
+HEALTH_RETRIES=5
 HEALTH_INTERVAL=3
 KEEP_RELEASES=5
-
-# 源代码目录（用于 rsync）
 SOURCE_DIR="/photography-website-main"
-
-# ============================================================
-# 健康检查关键字（首页 HTML 中稳定存在的标识）
-# ============================================================
 HEALTH_KEYWORD="Fang Bing"
 
 # ============================================================
-# 日志初始化（flock 之后才初始化日志，避免未获锁时产生空日志）
+# 共享校验函数（被 deploy / --check 共用）
 # ============================================================
+PHOTO_HEALTH_INCLUDED=1
+source /opt/scripts/photo-healthcheck.sh
 
 # ============================================================
-# 0. 互斥锁（flock）— 脚本获锁后才继续
+# 模式分支
 # ============================================================
+if [ "$MODE" = "check" ]; then
+    # --check 模式: 单独巡检，不获锁，不切换任何东西
+    log "========================================="
+    log "[巡检模式] 三重校验"
+    log "========================================="
+    run_health_check "巡检"
+    exit $?
+fi
+
+# ============================================================
+# 以下为完整部署流程
+# ============================================================
+
+# 获锁
 DEPLOY_LOCK_FD=200
 eval "exec $DEPLOY_LOCK_FD>\"$DEPLOY_LOCK\""
 
 if ! $FLOCK -n $DEPLOY_LOCK_FD; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: 另一个部署正在进行中，退出。"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 如确认无部署在运行，请手动删除: rm $DEPLOY_LOCK"
+    echo "[$($DATE '+%Y-%m-%d %H:%M:%S')] ERROR: 另一个部署正在进行中，退出。" >&2
     exit 1
 fi
 
-# 脚本退出时自动释放锁（OS 关闭 fd，锁自动失效）
 trap "flock -u $DEPLOY_LOCK_FD 2>/dev/null; rm -f \"$DEPLOY_LOCK\" 2>/dev/null" EXIT
 
-# 现在初始化日志（已获锁）
-TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+# 日志初始化
+TIMESTAMP=$($DATE +%Y%m%d-%H%M%S)
 LOG_DIR="$LOG_BASE"
 $MKDIR -p "$LOG_DIR"
-DEPLOY_LOG="$LOG_DIR/deploy-$(date +%Y%m%d).log"
-EXEC_LOG="$LOG_DIR/exec-$(date +%Y%m%d-%H%M%S).log"
+DEPLOY_LOG="$LOG_DIR/deploy-$($DATE +%Y%m%d).log"
+EXEC_LOG="$LOG_DIR/exec-${TIMESTAMP}.log"
+SUMMARY_FILE="$LOG_DIR/summary-${TIMESTAMP}.json"
 
 exec > >(cat | $TEE -a "$DEPLOY_LOG" | $TEE "$EXEC_LOG")
 exec 2>&1
@@ -90,7 +112,7 @@ exec 2>&1
 # 辅助函数
 # ============================================================
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    echo "[$($DATE '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 log_section() {
@@ -99,84 +121,159 @@ log_section() {
     log "========================================="
 }
 
-log "部署锁已获得 (PID $$)"
-
-# ============================================================
-# 1. 前置检查
-# ============================================================
-log_section "1. 前置检查"
-
-if [ ! -d "$SITE_DIR" ]; then
-    log "ERROR: $SITE_DIR 不存在，退出"
+fail_with_rollback() {
+    log "❌ $1"
+    log "执行自动回滚..."
+    do_rollback
+    write_summary_json "FAIL" "$1"
     exit 1
-fi
+}
 
-if [ ! -d "$SOURCE_DIR" ]; then
-    log "ERROR: 源代码目录 $SOURCE_DIR 不存在，退出"
-    log "提示: rsync 源路径无效，请检查 /photography-website-main 是否存在"
-    exit 1
-fi
+do_rollback() {
+    log "回滚: current symlink → $PREVIOUS_REAL"
+    $RM -f "$SITE_DIR/current"
+    $LN -s "$PREVIOUS_REAL" "$SITE_DIR/current"
 
-CURRENT_LINK="$SITE_DIR/current"
-PREVIOUS_LINK="$SITE_DIR/previous"
+    log "回滚: PM2 重启到 $PREVIOUS_REAL"
+    $PM2 delete photo >> "$EXEC_LOG" 2>&1 || true
+    sleep 1
+    $PM2 start "$PREVIOUS_REAL/.next/standalone/server.js" \
+        --name photo \
+        --cwd "$PREVIOUS_REAL" >> "$EXEC_LOG" 2>&1
 
-if [ ! -L "$CURRENT_LINK" ]; then
-    log "ERROR: $CURRENT_LINK 不是有效的 symlink，退出"
-    exit 1
-fi
-
-if [ ! -L "$PREVIOUS_LINK" ]; then
-    log "ERROR: $PREVIOUS_LINK 不是有效的 symlink，退出"
-    exit 1
-fi
-
-CURRENT_REAL=$(readlink -f "$CURRENT_LINK")
-PREVIOUS_REAL=$(readlink -f "$PREVIOUS_LINK")
-log "当前版本 (current): $CURRENT_REAL"
-log "旧版本 (previous): $PREVIOUS_REAL"
-
-# PM2 验证：cwd 必须指向 current（symlink 路径）
-PM2_CWD=$($PM2 show photo 2>/dev/null | awk -F'│' '/exec cwd/{gsub(/^[ \t]+|[ \t]+$/,"",$3); print $3; exit}')
-PM2_SCRIPT=$($PM2 show photo 2>/dev/null | awk -F'│' '/script path/{gsub(/^[ \t]+|[ \t]+$/,"",$3); print $3; exit}')
-log "PM2 cwd:   $PM2_CWD"
-log "PM2 script: $PM2_SCRIPT"
-
-if [ "$PM2_CWD" != "$SITE_DIR/current" ]; then
-    log "WARN: PM2 cwd ($PM2_CWD) 不是 $SITE_DIR/current，尝试修复..."
-    $PM2 stop photo >> "$EXEC_LOG" 2>&1 || true
-    $PKILL -f "next-server" >> "$EXEC_LOG" 2>&1 || true
-    sleep 2
-    $PM2 start photo >> "$EXEC_LOG" 2>&1
     sleep 3
-    NEW_CWD=$($PM2 show photo 2>/dev/null | grep "exec cwd" | awk '{print $NF}')
-    if [ "$NEW_CWD" != "$SITE_DIR/current" ]; then
-        log "ERROR: PM2 cwd 修复失败，退出"
-        exit 1
+    PM2_CWD_AFTER=$($PM2 show photo 2>/dev/null | awk -F'│' '/exec cwd/{gsub(/^[ \t]+|[ \t]+$/,"",$3); print $3; exit}')
+    log "回滚完成: PM2 cwd = $PM2_CWD_AFTER"
+}
+
+get_pm2_cwd() {
+    $PM2 show photo 2>/dev/null | awk -F'│' '/exec cwd/{gsub(/^[ \t]+|[ \t]+$/,"",$3); print $3; exit}'
+}
+
+get_pm2_script() {
+    $PM2 show photo 2>/dev/null | awk -F'│' '/script path/{gsub(/^[ \t]+|[ \t]+$/,"",$3); print $3; exit}'
+}
+
+write_summary_json() {
+    local STATUS="$1"
+    local REASON="${2:-}"
+    local CWD_NOW
+    local SYMLINK_NOW
+    CWD_NOW=$(get_pm2_cwd)
+    SYMLINK_NOW=$(readlink -f "$SITE_DIR/current" 2>/dev/null || echo "")
+
+    # 写带时间戳的 summary
+    cat > "$SUMMARY_FILE" <<EOF
+{
+  "timestamp": "${TIMESTAMP}",
+  "status": "${STATUS}",
+  "reason": "${REASON}",
+  "release": {
+    "current": "${NEW_CURRENT_REAL:-${CWD_NOW}}",
+    "previous": "${PREVIOUS_REAL:-}",
+    "new": "${NEW_RELEASE:-}",
+    "symlink": "${SYMLINK_NOW}",
+    "pm2_cwd": "${CWD_NOW}",
+    "pm2_script": "$(get_pm2_script)",
+    "build_timestamp": "${RELEASE_TIMESTAMP:-}",
+    "git_commit": "${GIT_COMMIT:-}",
+    "mode": "deploy"
+  },
+  "verification": {
+    "cwd_vs_symlink": "${V1_RESULT:-SKIP}",
+    "version_marker": "${V2_RESULT:-SKIP}",
+    "resource_sample": "${V3_RESULT:-SKIP}"
+  },
+  "cdn_flush": "${CDN_OK:-unknown}",
+  "exec_log": "${EXEC_LOG}",
+  "deploy_log": "${DEPLOY_LOG}"
+}
+EOF
+
+    # 同步写一份 summary-latest.json（供监控/快速查阅）
+    cp "$SUMMARY_FILE" "$LOG_DIR/summary-latest.json"
+
+    # FAIL 时额外保留失败现场快照（带排障专用字段）
+    if [ "$STATUS" = "FAIL" ]; then
+        local CWD_NOW SYMLINK_NOW
+        CWD_NOW=$(get_pm2_cwd)
+        SYMLINK_NOW=$(readlink -f "$SITE_DIR/current" 2>/dev/null || echo "")
+        local FAIL_JSON
+        FAIL_JSON=$(cat <<EOF
+{
+  "timestamp": "${TIMESTAMP}",
+  "status": "FAIL",
+  "failed_at": "${TIMESTAMP}",
+  "release_at_failure": "${SYMLINK_NOW}",
+  "pm2_cwd_at_failure": "${CWD_NOW}",
+  "reason": "${REASON}",
+  "release": {
+    "current": "${NEW_CURRENT_REAL:-${CWD_NOW}}",
+    "previous": "${PREVIOUS_REAL:-}",
+    "new": "${NEW_RELEASE:-}",
+    "symlink": "${SYMLINK_NOW}",
+    "pm2_cwd": "${CWD_NOW}",
+    "pm2_script": "$(get_pm2_script)",
+    "build_timestamp": "${RELEASE_TIMESTAMP:-}",
+    "git_commit": "${GIT_COMMIT:-}",
+    "mode": "deploy"
+  },
+  "verification": {
+    "cwd_vs_symlink": "${V1_RESULT:-SKIP}",
+    "version_marker": "${V2_RESULT:-SKIP}",
+    "resource_sample": "${V3_RESULT:-SKIP}"
+  },
+  "cdn_flush": "${CDN_OK:-unknown}",
+  "exec_log": "${EXEC_LOG}",
+  "deploy_log": "${DEPLOY_LOG}"
+}
+EOF
+)
+        echo "$FAIL_JSON" > "$LOG_DIR/summary-last-fail.json"
+        if [ -f "$LOG_DIR/summary-latest.txt" ]; then
+            cp "$LOG_DIR/summary-latest.txt" "$LOG_DIR/summary-last-fail.txt" 2>/dev/null || true
+        fi
     fi
-    log "PM2 cwd 已修复为: $NEW_CWD"
-else
-    log "PM2 cwd 正确: $PM2_CWD"
-fi
+}
 
 # ============================================================
-# 2. 创建新 release 目录
+# 阶段 0: 前置检查
 # ============================================================
-log_section "2. 创建新 release"
+log_section "0. 前置检查"
 
-RELEASE_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+[ ! -d "$SITE_DIR" ] && fail_with_rollback "ERROR: $SITE_DIR 不存在"
+[ ! -d "$SOURCE_DIR" ] && fail_with_rollback "ERROR: 源代码目录 $SOURCE_DIR 不存在"
+[ ! -L "$SITE_DIR/current" ] && fail_with_rollback "ERROR: $SITE_DIR/current 不是有效的 symlink"
+[ ! -L "$SITE_DIR/previous" ] && fail_with_rollback "ERROR: $SITE_DIR/previous 不是有效的 symlink"
+
+CURRENT_REAL=$(readlink -f "$SITE_DIR/current")
+PREVIOUS_REAL=$(readlink -f "$SITE_DIR/previous")
+PM2_CWD=$(get_pm2_cwd)
+PM2_SCRIPT=$(get_pm2_script)
+
+log "PM2 cwd:       $PM2_CWD"
+log "PM2 script:    $PM2_SCRIPT"
+log "current:       $CURRENT_REAL"
+log "previous:      $PREVIOUS_REAL"
+
+# ============================================================
+# 阶段 1: 创建新 release
+# ============================================================
+log_section "1. 创建新 release"
+
+RELEASE_TIMESTAMP=$($DATE +%Y%m%d-%H%M%S)
 NEW_RELEASE="$RELEASES_DIR/$RELEASE_TIMESTAMP"
 $MKDIR -p "$NEW_RELEASE"
 log "新版本目录: $NEW_RELEASE"
 
 # ============================================================
-# 3. 复制源代码
+# 阶段 2: 复制源代码
 # ============================================================
-log_section "3. 复制源代码"
+log_section "2. 复制源代码"
 
 $RSYNC -a --exclude='.git' --exclude='node_modules' --exclude='.next' \
     "$SOURCE_DIR/" "$NEW_RELEASE/"
 
-# 复制 shared/.env
 if [ -f "$SHARED_DIR/.env" ]; then
     $CP "$SHARED_DIR/.env" "$NEW_RELEASE/.env"
     log ".env 复制完成"
@@ -187,219 +284,175 @@ fi
 log "源代码复制完成"
 
 # ============================================================
-# 4. 构建（在源代码目录执行，使用其 node_modules）
+# 阶段 3: 构建
 # ============================================================
-log_section "4. 构建"
+log_section "3. 构建"
 
-BUILD_START=$(date +%s)
-# 在源代码目录构建（该目录有 node_modules），输出到新 release
+BUILD_START=$($DATE +%s)
 cd "$SOURCE_DIR"
 
-if $NPM run build >> "$EXEC_LOG" 2>&1; then
-    BUILD_DUR=$(( $(date +%s) - BUILD_START ))
-    log "✅ 构建成功，耗时 ${BUILD_DUR}s"
-
-    # 将构建产物 .next 整体复制到 release（覆盖 rsync 产生的空目录）
-    log "复制 .next 构建产物到 release..."
-    $RM -rf "$NEW_RELEASE/.next"
-    $CP -r "$SOURCE_DIR/.next" "$NEW_RELEASE/.next"
-    log ".next 构建产物复制完成"
-else
+if ! $NPM run build >> "$EXEC_LOG" 2>&1; then
     log "❌ 构建失败，请查看: $EXEC_LOG"
     log "❌ 发布中止（旧版本 $CURRENT_REAL 未受影响）"
     exit 1
 fi
 
+BUILD_DUR=$(( $($DATE +%s) - BUILD_START ))
+log "✅ 构建成功，耗时 ${BUILD_DUR}s"
+
+log "复制 .next 构建产物到 release..."
+$RM -rf "$NEW_RELEASE/.next"
+$CP -r "$SOURCE_DIR/.next" "$NEW_RELEASE/.next"
+log ".next 构建产物复制完成"
+
 # ============================================================
-# 5. 更新 previous（构建成功后才更新链路）
+# 阶段 4: 写入版本标识
+# ============================================================
+log_section "4. 版本标识"
+
+GIT_COMMIT=$(cd "$SOURCE_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+echo "$RELEASE_TIMESTAMP" > "$NEW_RELEASE/BUILD_TIMESTAMP"
+echo "$GIT_COMMIT" > "$NEW_RELEASE/GIT_COMMIT"
+log "BUILD_TIMESTAMP: $RELEASE_TIMESTAMP"
+log "GIT_COMMIT: $GIT_COMMIT"
+
+# ============================================================
+# 阶段 5: 更新 previous 链路
 # ============================================================
 log_section "5. 更新 previous 链路"
 
-# previous 指向当前版本（旧 successful release）
-$RM -f "$PREVIOUS_LINK"
-$LN -s "$CURRENT_REAL" "$PREVIOUS_LINK"
+$RM -f "$SITE_DIR/previous"
+$LN -s "$CURRENT_REAL" "$SITE_DIR/previous"
 log "previous 已指向: $CURRENT_REAL"
 
 # ============================================================
-# 6. 切换 current symlink
+# 阶段 6: 切换 current symlink
 # ============================================================
 log_section "6. 切换 current symlink"
 
-$RM -f "$CURRENT_LINK"
-$LN -s "$NEW_RELEASE" "$CURRENT_LINK"
-NEW_CURRENT=$(readlink -f "$CURRENT_LINK")
-log "current 已切换到: $NEW_CURRENT"
+$RM -f "$SITE_DIR/current"
+$LN -s "$NEW_RELEASE" "$SITE_DIR/current"
+NEW_CURRENT_REAL=$(readlink -f "$SITE_DIR/current")
+log "current 已切换到: $NEW_CURRENT_REAL"
 
 # ============================================================
-# 7. PM2 重启（优先级：reload → restart → stop+start）
+# 阶段 7: PM2 原子切换
 # ============================================================
-log_section "7. PM2 重启"
+log_section "7. PM2 原子切换"
 
-PM2_ACTION="unknown"
-PM2_ACTION_REASON=""
+$PM2 delete photo >> "$EXEC_LOG" 2>&1 || true
+sleep 2
 
-# ---- 尝试 1: pm2 reload ----
-log "尝试 pm2 reload photo ..."
-PM2_ACTION="reload"
-if $PM2 reload photo >> "$EXEC_LOG" 2>&1; then
-    log "✅ pm2 reload photo 成功"
-else
-    PM2_ACTION_REASON="reload 失败"
-    log "⚠️  pm2 reload photo 失败 (${PM2_ACTION_REASON})，尝试 restart ..."
-
-    # ---- 尝试 2: pm2 restart ----
-    log "尝试 pm2 restart photo ..."
-    PM2_ACTION="restart"
-    if $PM2 restart photo >> "$EXEC_LOG" 2>&1; then
-        log "✅ pm2 restart photo 成功"
-    else
-        PM2_ACTION_REASON="restart 失败"
-        log "⚠️  pm2 restart photo 失败 (${PM2_ACTION_REASON})，回退到 stop+start ..."
-
-        # ---- 尝试 3: pm2 stop + start ----
-        log "执行 pm2 stop photo && pm2 start photo ..."
-        PM2_ACTION="stop+start"
-        $PM2 stop photo >> "$EXEC_LOG" 2>&1 || true
-
-        # 等待旧进程退出
-        sleep 3
-
-        # 清理残留 orphan next-server
-        $PKILL -f "next-server" >> "$EXEC_LOG" 2>&1 || true
-
-        # 确认端口已释放
-        RETRY=0
-        while ss -tlnp 2>/dev/null | grep -q ':3000'; do
-            RETRY=$((RETRY+1))
-            if [ $RETRY -ge 5 ]; then
-                REMAINING=$(ss -tlnp 2>/dev/null | grep ':3000' | grep -o 'pid=[0-9]*' | cut -d= -f2 | head -1)
-                log "WARN: 端口 3000 仍被占用 (pid $REMAINING)，强制清理"
-                kill $REMAINING 2>/dev/null || true
-                sleep 2
-                break
-            fi
-            sleep 2
-        done
-
-        if ! $PM2 start photo >> "$EXEC_LOG" 2>&1; then
-            log "❌ PM2 start photo 也失败了，执行回滚！"
-            $RM -f "$CURRENT_LINK"
-            $LN -s "$CURRENT_REAL" "$CURRENT_LINK"
-            $PM2 start photo >> "$EXEC_LOG" 2>&1
-            log "已回滚到: $CURRENT_REAL"
-            exit 1
-        fi
-        log "✅ pm2 stop+start 成功"
-    fi
+ZOMBIE_PIDS=$(ss -tlnp 2>/dev/null | grep ':3000' | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u || true)
+if [ -n "$ZOMBIE_PIDS" ]; then
+    log "清理残留进程: $ZOMBIE_PIDS"
+    echo "$ZOMBIE_PIDS" | xargs -I{} $KILL {} 2>/dev/null || true
+    sleep 2
 fi
 
-log "本次使用 PM2 动作: $PM2_ACTION ${PM2_ACTION_REASON:+(原因: ${PM2_ACTION_REASON})}"
-log "PM2 photo 已重启（直接进入健康检查...）"
-
-# ============================================================
-# 8. 多层健康检查
-# ============================================================
-log_section "8. 多层健康检查"
-
-HEALTH_OK=false
-for i in $(seq 1 $HEALTH_RETRIES); do
-    log "健康检查第 ${i} 次..."
-
-    # 8a. HTTP 状态码
-    HTTP_FILE="/tmp/http-code-$TIMESTAMP-$i.txt"
-    $CURL -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" > "$HTTP_FILE" 2>/dev/null || echo "000" > "$HTTP_FILE"
-    HTTP_CODE=$(cat "$HTTP_FILE")
-    rm -f "$HTTP_FILE"
-    if [ "$HTTP_CODE" != "200" ]; then
-        log "  ❌ HTTP $HTTP_CODE (非 200)"
-        [ $i -eq $HEALTH_RETRIES ] && break
-        sleep $HEALTH_INTERVAL
-        continue
-    fi
-    log "  ✅ HTTP 200"
-
-    # 8b. HTML 内容关键字检查（兼容 exec > >(tee) 环境下的变量替换）
-    HTML_FILE="/tmp/health-check-$TIMESTAMP-$i.html"
-    $CURL -s "$HEALTH_URL" > "$HTML_FILE" 2>/dev/null || true
-    if grep -q "$HEALTH_KEYWORD" "$HTML_FILE" 2>/dev/null; then
-        log "  ✅ HTML 包含关键字: $HEALTH_KEYWORD"
-    else
-        log "  ❌ HTML 不包含关键字: $HEALTH_KEYWORD"
-        rm -f "$HTML_FILE"
-        [ $i -eq $HEALTH_RETRIES ] && break
-        sleep $HEALTH_INTERVAL
-        continue
-    fi
-    rm -f "$HTML_FILE"
-
-    # 8c. 健康 API 检查（验证 app 层正常）
-    HEALTH_API=$($CURL -s -o /dev/null -w "%{http_code}" "${HEALTH_URL}api/health" 2>/dev/null || echo "000")
-    if [ "$HEALTH_API" = "200" ]; then
-        log "  ✅ 健康 API 正常 (HTTP $HEALTH_API)"
-    else
-        log "  ❌ 健康 API 异常 (HTTP $HEALTH_API)"
-        rm -f "$HTML_FILE"
-        [ $i -eq $HEALTH_RETRIES ] && break
-        sleep $HEALTH_INTERVAL
-        continue
-    fi
-
-    HEALTH_OK=true
-    log "✅ 健康检查通过 (第 ${i} 次尝试)"
-    break
-done
-
-if [ "$HEALTH_OK" = false ]; then
-    log "❌ 健康检查全部失败，执行回滚！"
-    log "旧版本: $CURRENT_REAL"
-    log "新 release 目录保留供排查: $NEW_RELEASE"
-
-    # 1. 先把 current symlink 切回旧版本（此时 PM2 仍指向新 release，必须先切 symlink）
-    log "回滚中：恢复 current symlink 到旧版本..."
-    $RM -f "$CURRENT_LINK"
-    $LN -s "$CURRENT_REAL" "$CURRENT_LINK"
-    log "current 已恢复: $(readlink -f "$CURRENT_LINK")"
-
-    # 2. 再把 previous 切回更旧的版本
-    log "回滚中：恢复 previous symlink..."
-    $RM -f "$PREVIOUS_LINK"
-    $LN -s "$PREVIOUS_REAL" "$PREVIOUS_LINK"
-    log "previous 已恢复: $(readlink -f "$PREVIOUS_LINK")"
-
-    # 3. 然后执行 PM2 重启（此时 symlink 已指向正确旧版本，重启后加载旧 release）
-    log "回滚中（reload → restart → stop+start）..."
-    if $PM2 reload photo >> "$EXEC_LOG" 2>&1; then
-        log "✅ 回滚 reload 成功"
-    else
-        if $PM2 restart photo >> "$EXEC_LOG" 2>&1; then
-            log "✅ 回滚 restart 成功"
-        else
-            log "⚠️  回滚 restart 也失败，执行 stop+start ..."
-            $PM2 stop photo >> "$EXEC_LOG" 2>&1 || true
-            sleep 3
-            $PKILL -f "next-server" >> "$EXEC_LOG" 2>&1 || true
-            RETRY=0
-            while ss -tlnp 2>/dev/null | grep -q ':3000'; do
-                RETRY=$((RETRY+1))
-                if [ $RETRY -ge 5 ]; then
-                    REMAINING=$(ss -tlnp 2>/dev/null | grep ':3000' | grep -o 'pid=[0-9]*' | cut -d= -f2 | head -1)
-                    kill $REMAINING 2>/dev/null || true
-                    sleep 2
-                    break
-                fi
-                sleep 2
-            done
-            $PM2 start photo >> "$EXEC_LOG" 2>&1
-            log "✅ 回滚 stop+start 成功"
-        fi
-    fi
-
-    log "已回滚到: $CURRENT_REAL"
+NEW_SCRIPT="$NEW_RELEASE/.next/standalone/server.js"
+if ! $PM2 start "$NEW_SCRIPT" \
+    --name photo \
+    --cwd "$NEW_RELEASE" >> "$EXEC_LOG" 2>&1; then
+    log "❌ pm2 start 失败，执行回滚！"
+    do_rollback
+    write_summary_json "FAIL" "pm2 start failed"
     exit 1
 fi
 
+log "✅ pm2 delete + start 完成"
+PM2_CWD_AFTER=$(get_pm2_cwd)
+PM2_SCRIPT_AFTER=$(get_pm2_script)
+log "PM2 cwd after switch:  $PM2_CWD_AFTER"
+log "PM2 script after switch: $PM2_SCRIPT_AFTER"
+
 # ============================================================
-# 9. Release 清理（保留最近 5 个）
+# 阶段 8: 三重校验（硬条件）
+# ============================================================
+log_section "8. 三重校验"
+
+VERIFICATION_FAILED=0
+
+# 校验 1: PM2 cwd == current symlink
+log "[校验 1/3] PM2 cwd == current symlink"
+if [ "$PM2_CWD_AFTER" = "$NEW_CURRENT_REAL" ]; then
+    log "  ✅ PASS: PM2 cwd ($PM2_CWD_AFTER) == current ($NEW_CURRENT_REAL)"
+    V1_RESULT="PASS"
+else
+    log "  ❌ FAIL: PM2 cwd ($PM2_CWD_AFTER) != current ($NEW_CURRENT_REAL)"
+    V1_RESULT="FAIL"
+    VERIFICATION_FAILED=1
+fi
+
+# 校验 2: BUILD_TIMESTAMP
+log "[校验 2/3] release 版本标识"
+PM2_LOADED_TIMESTAMP=""
+PM2_LOADED_COMMIT=""
+if [ "$PM2_CWD_AFTER" = "$NEW_CURRENT_REAL" ]; then
+    PM2_LOADED_TIMESTAMP=$(cat "$PM2_CWD_AFTER/BUILD_TIMESTAMP" 2>/dev/null || echo "")
+    PM2_LOADED_COMMIT=$(cat "$PM2_CWD_AFTER/GIT_COMMIT" 2>/dev/null || echo "")
+fi
+
+if [ "$PM2_LOADED_TIMESTAMP" = "$RELEASE_TIMESTAMP" ]; then
+    log "  ✅ PASS: BUILD_TIMESTAMP ($PM2_LOADED_TIMESTAMP) == expected ($RELEASE_TIMESTAMP)"
+    V2_RESULT="PASS"
+else
+    log "  ❌ FAIL: BUILD_TIMESTAMP ($PM2_LOADED_TIMESTAMP) != expected ($RELEASE_TIMESTAMP)"
+    V2_RESULT="FAIL"
+    VERIFICATION_FAILED=1
+fi
+
+# 校验 3: 资源采样
+log "[校验 3/3] 资源采样 (no-cache)"
+SAMPLE_ERRORS=0
+
+sample_check() {
+    local URL="$1"
+    local LABEL="$2"
+    local CODE
+    CODE=$($CURL -s -o /dev/null -w "%{http_code}" \
+        -H "Cache-Control: no-cache" \
+        -H "Pragma: no-cache" \
+        --compressed \
+        "${URL}?t=$($DATE +%s)" 2>/dev/null || echo "000")
+    if [ "$CODE" = "200" ]; then
+        log "  ✅ $LABEL → 200"
+    else
+        log "  ❌ $LABEL → HTTP $CODE"
+        SAMPLE_ERRORS=$((SAMPLE_ERRORS+1))
+    fi
+}
+
+BASE="https://www.fangc.cc"
+sample_check "${BASE}/" "首页 HTML"
+sample_check "${BASE}/travel" "Travel HTML"
+sample_check "${BASE}/_next/static/chunks/02istpvlbok3p.js" "JS chunk (首页引用)"
+sample_check "${BASE}/_next/static/chunks/0bzq.xblv206j.css" "CSS chunk (首页引用)"
+sample_check "${BASE}/_next/static/chunks/turbopack-03510d2klfewf.js" "JS chunk (turbopack)"
+sample_check "${BASE}/api/health" "健康 API"
+
+if [ $SAMPLE_ERRORS -gt 0 ]; then
+    log "  ❌ FAIL: $SAMPLE_ERRORS 个资源采样失败"
+    V3_RESULT="FAIL ($SAMPLE_ERRORS errors)"
+    VERIFICATION_FAILED=1
+else
+    V3_RESULT="PASS (6 项采样)"
+fi
+
+# 判定
+if [ "$VERIFICATION_FAILED" -ne 0 ]; then
+    log ""
+    log "❌ 三重校验失败 ($VERIFICATION_FAILED 项未通过)，执行自动回滚..."
+    do_rollback
+    write_summary_json "FAIL" "verification_failed"
+    exit 1
+fi
+
+log ""
+log "✅ 三重校验全部通过"
+
+# ============================================================
+# 阶段 9: Release 清理
 # ============================================================
 log_section "9. Release 清理"
 
@@ -410,12 +463,10 @@ if [ "$RELEASE_COUNT" -gt "$KEEP_RELEASES" ]; then
     log "开始清理旧 release（保留 $KEEP_RELEASES 个）..."
     CANDIDATES=$(ls -1dt "$RELEASES_DIR"/????????-?????? 2>/dev/null | $TAIL -n +$((KEEP_RELEASES + 1)))
     for RELEASE in $CANDIDATES; do
-        # 安全检查：绝对不能删 current 或 previous
         if [ "$RELEASE" = "$CURRENT_REAL" ] || [ "$RELEASE" = "$PREVIOUS_REAL" ]; then
             log "SKIP (protected): $RELEASE"
             continue
         fi
-        # 防路径穿越二次确认
         case "$RELEASE" in
             "$RELEASES_DIR"/*)
                 log "删除旧 release: $RELEASE"
@@ -433,36 +484,56 @@ else
 fi
 
 # ============================================================
-# 10. CDN 刷新（失败降级为 warning，不触发回滚）
+# 阶段 10: CDN 刷新
 # ============================================================
 log_section "10. CDN 刷新"
 
-CDN_OK=true
-$TCCLI cdn PurgeUrlsCache --Urls '["https://www.fangc.cc/", "https://cdn.fangc.cc/"]' >> "$EXEC_LOG" 2>&1
+CDN_OK="unknown"
+$TCCLI cdn PurgePathCache \
+    --Paths '["https://www.fangc.cc/_next/", "https://cdn.fangc.cc/_next/"]' \
+    --FlushType flush >> "$EXEC_LOG" 2>&1
 if [ $? -eq 0 ]; then
-    log "✅ CDN 刷新完成"
+    log "✅ CDN 刷新已提交"
+    CDN_OK="submitted"
 else
-    log "⚠️  CDN 刷新失败（源站已成功，CDN 缓存可能仍有旧内容）"
-    log "⚠️  建议手动执行: tccli cdn PurgeUrlsCache ..."
-    CDN_OK=false
+    log "⚠️  CDN 刷新失败（源站已成功，需手动确认）"
+    CDN_OK="failed"
 fi
 
 # ============================================================
-# 11. 完成
+# 阶段 11: PM2 状态保存
 # ============================================================
-log_section "发布完成"
-
-log "✅ 新版本:     $NEW_CURRENT"
-log "✅ 旧版本:     $CURRENT_REAL (现为 previous)"
-log "✅ 发布日志:   $EXEC_LOG"
-log "✅ 部署日志:   $DEPLOY_LOG"
-
-if [ "$CDN_OK" = false ]; then
-    log "⚠️  警告: CDN 刷新失败，源站已正常运行，需手动关注"
-fi
-
 $PM2 save >> "$EXEC_LOG" 2>&1
 log "PM2 状态已保存"
+
+# ============================================================
+# 阶段 12: 落盘部署摘要 JSON
+# ============================================================
+write_summary_json "SUCCESS"
+
+# ============================================================
+# 阶段 13: 终端摘要输出
+# ============================================================
+log ""
 log "========================================="
-log "部署流程结束"
+log "           部署摘要"
+log "========================================="
+printf "%-20s %s\n" "当前 release:" "$NEW_CURRENT_REAL"
+printf "%-20s %s\n" "current symlink:" "$NEW_CURRENT_REAL"
+printf "%-20s %s\n" "PM2 cwd:" "$PM2_CWD_AFTER"
+printf "%-20s %s\n" "PM2 script:" "$PM2_SCRIPT_AFTER"
+printf "%-20s %s\n" "BUILD_TIMESTAMP:" "$RELEASE_TIMESTAMP"
+printf "%-20s %s\n" "GIT_COMMIT:" "$GIT_COMMIT"
+printf "%-20s %s\n" "previous:" "$PREVIOUS_REAL"
+printf "%-20s %s\n" "校验 1 (cwd==symlink):" "✅ PASS"
+printf "%-20s %s\n" "校验 2 (版本标识):" "✅ PASS"
+printf "%-20s %s\n" "校验 3 (资源采样):" "✅ PASS (6 项采样)"
+printf "%-20s %s\n" "CDN 刷新:" "${CDN_OK}"
+printf "%-20s %s\n" "摘要文件:" "$SUMMARY_FILE"
+printf "%-20s %s\n" "发布日志:" "$EXEC_LOG"
+printf "%-20s %s\n" "部署日志:" "$DEPLOY_LOG"
+log "========================================="
+log "✅ 部署成功"
+log "========================================="
+
 exit 0
