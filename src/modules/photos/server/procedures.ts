@@ -122,9 +122,11 @@ export const photosRouter = createTRPCRouter({
                           and(
                             eq(photos.country, photo.country),
                             eq(photos.city, photo.city),
+                            eq(photos.visibility, "public"),
                             sql`${photos.id} != ${photo.id}`,
                           ),
                         )
+                        .orderBy(desc(photos.createdAt))
                         .limit(1)
                     )[0]?.id
                   : undefined;
