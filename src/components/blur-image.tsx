@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useState, memo, useRef } from "react";
+import { useEffect, useMemo, useState, memo, useRef } from "react";
 import Image, { ImageProps } from "next/image";
 import { Blurhash } from "react-blurhash";
 
@@ -37,12 +37,16 @@ const BlurImageInner = function BlurImageInner({
 
   const containerStyle = fill ? "absolute inset-0" : "relative w-full h-full";
 
-  // Fix: Handle images already complete on mount (SSR hydration case)
-  useLayoutEffect(() => {
-    const img = imgRef.current;
-    if (img && img.complete && img.naturalWidth > 0) {
-      setImageLoaded(true);
-    }
+  // Handle SSR hydration: after paint, check if image was already cached
+  // (useLayoutEffect is too early - Next.js Image fill may not be ready yet)
+  useEffect(() => {
+    // Use a microtask to ensure paint has completed
+    Promise.resolve().then(() => {
+      const img = imgRef.current;
+      if (img && img.complete && img.naturalWidth > 0) {
+        setImageLoaded(true);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -91,9 +95,7 @@ const BlurImageInner = function BlurImageInner({
           imageLoaded ? "opacity-100" : "opacity-0"
         }`}
         onLoad={() => {
-          window.requestAnimationFrame(() => {
-            setImageLoaded(true);
-          });
+          setImageLoaded(true);
         }}
         onError={() => {
           setShowPlaceholder(false);
