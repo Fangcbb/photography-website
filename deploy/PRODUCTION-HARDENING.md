@@ -103,7 +103,36 @@ pm2 logs photo --lines 100 --nostream
 
 ---
 
-## 3. 后续观察项
+## 3. 产品行为规则（业务层）
+
+以下为有意设计的产品行为，非 bug，排查时请勿误判。
+
+### 地域封面图规则
+
+**封面图来源**：`city_sets.cover_photo_id`，关联 `photos.id`
+
+**变更规则**：
+- 上传新照片 → `cover_photo_id` 更新为该照片 id（首页缩略图 + travel 左侧封面同步更新）
+- 删除当前封面图 → `cover_photo_id` 自动切换为该城市 `created_at` 最新的剩余照片
+- 删除某城市最后一张照片 → 整个 `city_sets` 记录被删除，该城市从首页和 travel 列表消失
+- 重新上传该城市任意照片 → `city_sets` 重建，`cover_photo_id` 自动设为最新上传的那张
+
+**相关文件**：
+- `src/modules/photos/server/procedures.ts` — 上传/删除时自动维护 `cover_photo_id`
+- `src/modules/home/server/procedures.ts` — `home.getCitySets` 读取封面
+- `src/modules/travel/server/procedures.ts` — `travel.getOne` 读取封面
+- `deploy/migrate-cover-photo.js` — 封面图迁移脚本（`--dry-run` 预览，`--log-dir` 指定日志路径）
+
+**迁移脚本用法**：
+```bash
+node deploy/migrate-cover-photo.js --dry-run          # 预览
+node deploy/migrate-cover-photo.js                    # 执行
+tail /opt/photo/logs/migrate-cover-photo.log           # 查看历史迁移记录
+```
+
+---
+
+## 4. 后续观察项
 
 | 项目 | 观察内容 | 预期 |
 |------|---------|------|
