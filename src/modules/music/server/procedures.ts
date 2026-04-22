@@ -39,18 +39,18 @@ export const musicRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit, offset, search } = input;
 
-      let query = ctx.db.select().from(music);
+      const conditions = search
+        ? or(
+            like(music.title, `%${search}%`),
+            like(music.artist, `%${search}%`),
+            like(music.album, `%${search}%`)
+          )
+        : undefined;
 
-      if (search) {
-        const conditions = or(
-          like(music.title, `%${search}%`),
-          like(music.artist, `%${search}%`),
-          like(music.album, `%${search}%`)
-        );
-        query = query.where(conditions);
-      }
-
-      const data = await query
+      const data = await ctx.db
+        .select()
+        .from(music)
+        .where(conditions)
         .orderBy(desc(music.createdAt))
         .limit(limit)
         .offset(offset);
