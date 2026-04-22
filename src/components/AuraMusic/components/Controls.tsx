@@ -516,7 +516,7 @@ const Controls: React.FC<ControlsProps> = ({
               const time = parseFloat((e.target as HTMLInputElement).value);
               doneSeek(time);
             }}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 touch-none"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 "
           />
         </div>
 
@@ -597,7 +597,7 @@ const Controls: React.FC<ControlsProps> = ({
             value={volume}
             onInput={(e) => onVolumeChange(parseFloat((e.target as HTMLInputElement).value))}
             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 touch-none"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 "
           />
         </div>
         <VolumeHighIcon className="w-3.5 h-3.5 text-white/60 fill-current" />
@@ -646,7 +646,7 @@ const VolumePopup: React.FC<VolumePopupProps> = ({
           step="0.01"
           value={volume}
           onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer touch-none"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer "
           style={
             {
               WebkitAppearance: "slider-vertical",
@@ -706,7 +706,7 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({
             step="0.01"
             value={speed}
             onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer touch-none"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer "
             style={{
               WebkitAppearance: "slider-vertical",
               appearance: "slider-vertical",
