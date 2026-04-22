@@ -10,7 +10,7 @@ import { postsGetMany } from "@/modules/blog/types";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface PostsSectionProps {
-  data: postsGetMany;
+  data: postsGetMany["data"];
 }
 
 export const PostsSection = ({ data }: PostsSectionProps) => {

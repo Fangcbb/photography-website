@@ -43,7 +43,7 @@ export const BlogView = () => {
 
         {/* POST LIST  */}
 
-        <PostsSection data={data} />
+        <PostsSection data={data.data} />
 
         {/* CONTACT CARDS  */}
         <div className="w-full grid grid-cols-2 gap-3 mt-3">
