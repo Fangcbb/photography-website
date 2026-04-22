@@ -106,7 +106,7 @@ export default async function HomePage() {
       {/* 实际 UI: client components 通过 useSuspenseQuery 加载完整数据 */}
       <div className="relative z-10 flex flex-col lg:flex-row min-h-screen w-full">
         {/* LEFT CONTENT - Fixed */}
-        <div className="w-full lg:w-1/2 h-[70vh] lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3 rounded-xl">
+        <div className="w-full lg:w-1/2 h-[50vh] sm:h-[60vh] lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3 rounded-xl">
           <Suspense fallback={<SliderViewLoadingStatus />}>
             <ErrorBoundary fallback={<p>Something went wrong</p>}>
               <SliderView />
@@ -116,7 +116,7 @@ export default async function HomePage() {
         {/* Spacer for fixed left content */}
         <div className="hidden lg:block lg:w-1/2" />
         {/* RIGHT CONTENT - Scrollable */}
-        <div className="w-full mt-3 lg:mt-0 lg:w-1/2 space-y-3 pb-3">
+        <div className="w-full mt-3 lg:mt-0 lg:pt-[72px] lg:w-1/2 space-y-3 pb-3">
           <ProfileCard />
           <LatestTravelCard />
           <Suspense fallback={<CitiesViewLoadingStatus />}>

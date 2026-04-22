@@ -17,7 +17,7 @@ const CityCard = ({ cityId, title, coverPhoto }: Props) => {
   return (
     <Link
       href={`/travel/${cityId}`}
-      className="w-full relative group cursor-pointer block"
+      className="w-full relative group cursor-pointer block min-w-0"
     >
       <AspectRatio
         ratio={0.75 / 1}

@@ -14,7 +14,7 @@ export const CitiesView = () => {
   );
 
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
+    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
       {data.map((item) => (
         <CityCard
           key={item.id}
@@ -29,7 +29,7 @@ export const CitiesView = () => {
 
 export const CitiesViewLoadingStatus = () => {
   return (
-    <div className="mt-3 w-full grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
+    <div className="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
       {Array.from({ length: 6 }).map((_, index) => (
         <div key={index} className="w-full relative group cursor-pointer">
           <AspectRatio
