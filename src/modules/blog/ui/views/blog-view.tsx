@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const BlogView = () => {
   const trpc = useTRPC();
-  const { data } = useSuspenseQuery(trpc.blog.getMany.queryOptions());
+  const { data } = useSuspenseQuery(trpc.blog.getMany.queryOptions({}));
 
   return (
     <div className="flex flex-col gap-3 lg:gap-0 lg:flex-row w-full">
