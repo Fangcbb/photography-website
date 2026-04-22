@@ -1,10 +1,9 @@
 import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init";
-import { desc, eq, and } from "drizzle-orm";
+import { desc, eq, and, sql } from "drizzle-orm";
 import { videos } from "@/db/schema";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-// 生成 slug 的辅助函数
 function generateSlug(title: string): string {
   const timestamp = Date.now().toString(36);
   const randomStr = Math.random().toString(36).substring(2, 10);
@@ -13,32 +12,38 @@ function generateSlug(title: string): string {
     .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')
     .replace(/^-|-$/g, '')
     .substring(0, 30);
-  return `${titleSlug}-${timestamp}-${randomStr}`;
+  return titleSlug + "-" + timestamp + "-" + randomStr;
 }
 
 export const videoRouter = createTRPCRouter({
-  // 获取公开视频列表（按拍摄时间排序，null 值排在后面）
   getMany: baseProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(50).default(20),
+        offset: z.number().min(0).default(0),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { limit } = input;
+      const { limit, offset } = input;
 
-      // 先按 dateTimeOriginal 排序，再按 updatedAt 排序
+      const [countResult] = await ctx.db
+        .select({ count: sql`count(*)::int` })
+        .from(videos)
+        .where(eq(videos.visibility, "public"));
+
+      const total = countResult?.count ?? 0;
+
       const data = await ctx.db
         .select()
         .from(videos)
         .where(eq(videos.visibility, "public"))
         .orderBy(desc(videos.createdAt))
-        .limit(limit);
+        .limit(limit)
+        .offset(offset);
 
-      return data;
+      return { data, total };
     }),
 
-  // 获取单个视频（公开）
   getOne: baseProcedure
     .input(
       z.object({
@@ -55,7 +60,6 @@ export const videoRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      // 增加观看次数
       await ctx.db
         .update(videos)
         .set({ viewCount: data.viewCount + 1 })
@@ -64,7 +68,6 @@ export const videoRouter = createTRPCRouter({
       return data;
     }),
 
-  // 获取所有视频（后台管理）
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const data = await ctx.db
       .select()
@@ -74,7 +77,6 @@ export const videoRouter = createTRPCRouter({
     return data;
   }),
 
-  // 创建视频
   create: protectedProcedure
     .input(
       z.object({
@@ -121,7 +123,6 @@ export const videoRouter = createTRPCRouter({
       return video;
     }),
 
-  // 更新视频
   update: protectedProcedure
     .input(
       z.object({
@@ -150,7 +151,6 @@ export const videoRouter = createTRPCRouter({
       return video;
     }),
 
-  // 删除视频
   delete: protectedProcedure
     .input(
       z.object({
