@@ -24,7 +24,7 @@ const CityCard = ({ cityId, title, coverPhoto }: Props) => {
         className="overflow-hidden rounded-lg relative"
       >
         <BlurImage
-          src={keyToUrl(coverPhoto.url, "fangb")}
+          src={keyToUrl(coverPhoto.url, "hanll")}
           alt={coverPhoto.title}
           fill
           sizes="(max-width: 767px) 100vw, (max-width: 1535px) 50vw, 33vw"
