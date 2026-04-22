@@ -71,6 +71,7 @@ const App: React.FC = () => {
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [dragOffsetX, setDragOffsetX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDraggingLyrics, setIsDraggingLyrics] = useState(false);
   const mobileViewportRef = useRef<HTMLDivElement>(null);
   // Track actual container width via ResizeObserver (avoids window.innerWidth mismatch on mobile)
   const containerWidthRef = useRef(0);
@@ -283,6 +284,7 @@ const App: React.FC = () => {
           duration={duration}
           trackId={currentSong?.id || "no-song"}
           onSeek={handleSeek}
+          setIsDraggingLyrics={setIsDraggingLyrics}
           title={currentSong?.title || dict.app.welcome}
           artist={currentSong?.artist || dict.app.selectSong}
           audioRef={audioRef}
@@ -337,6 +339,7 @@ const App: React.FC = () => {
         audioRef={audioRef}
         isPlaying={playState === PlayState.PLAYING}
         currentTime={currentTime}
+        isDraggingLyrics={isDraggingLyrics}
         onSeekRequest={handleSeek}
         matchStatus={matchStatus}
       />
@@ -477,3 +480,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

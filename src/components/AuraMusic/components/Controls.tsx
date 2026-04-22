@@ -53,6 +53,7 @@ interface ControlsProps {
   isBuffering: boolean;
   playlistPanel?: React.ReactNode;
   onArtistClick?: (artist: string) => void;
+  setIsDraggingLyrics?: (v: boolean) => void;
 };
 
 const Controls: React.FC<ControlsProps> = ({
@@ -85,6 +86,7 @@ const Controls: React.FC<ControlsProps> = ({
   isBuffering,
   playlistPanel,
   onArtistClick,
+  setIsDraggingLyrics,
 }) => {
   const { dict } = useI18n();
   const volumeContainerRef = useRef<HTMLDivElement>(null);
@@ -131,6 +133,7 @@ const Controls: React.FC<ControlsProps> = ({
     setIsWaitingForSeek(false);
     setSeekTime(interpolatedTime);
     setIsSeeking(true);
+    setIsDraggingLyrics?.(true);
   };
 
   const dragSeek = (time: number) => {
@@ -142,6 +145,7 @@ const Controls: React.FC<ControlsProps> = ({
     clearSeekTimer();
     onSeek(time, false, false);
     setIsSeeking(false);
+    setIsDraggingLyrics?.(false);
     setSeekTime(time);
     setInterpolatedTime(time);
     seekTargetRef.current = time;
@@ -155,6 +159,7 @@ const Controls: React.FC<ControlsProps> = ({
   useEffect(() => {
     clearSeekTimer();
     setIsSeeking(false);
+    setIsDraggingLyrics?.(false);
     setSeekTime(0);
     setIsWaitingForSeek(false);
     seekTargetRef.current = 0;
