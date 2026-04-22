@@ -17,7 +17,7 @@ export const BlogView = () => {
     <div className="flex flex-col gap-3 lg:gap-0 lg:flex-row w-full">
       {/* LEFT CONTENT - Fixed */}
       <div className="w-full h-[50vh] lg:w-1/2 lg:fixed lg:top-0 lg:left-0 md:h-[80vh] lg:h-screen p-0 lg:p-3 group">
-        <LatestPostSection data={data?.[0]} />
+        <LatestPostSection data={data.data?.[0]} />
       </div>
 
       {/* Spacer for fixed left content */}

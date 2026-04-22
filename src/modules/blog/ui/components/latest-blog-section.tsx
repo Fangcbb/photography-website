@@ -9,7 +9,7 @@ import { postsGetMany } from "@/modules/blog/types";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface LatestPostSectionProps {
-  data?: postsGetMany[0];
+  data?: postsGetMany["data"][0] | undefined;
 }
 
 export const LatestPostSection = ({ data }: LatestPostSectionProps) => {
