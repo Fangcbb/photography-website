@@ -51,7 +51,7 @@ export const PostForm = ({ post }: PostFormProps) => {
         await queryClient.invalidateQueries(
           trpc.posts.getMany.queryOptions({})
         );
-        await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions());
+        await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions({}));
         form.reset();
         router.push(`/dashboard/posts/${data.slug}`);
       },
@@ -73,7 +73,7 @@ export const PostForm = ({ post }: PostFormProps) => {
         await queryClient.invalidateQueries(
           trpc.posts.getMany.queryOptions({})
         );
-        await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions());
+        await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions({}));
         form.reset();
         router.push(`/dashboard/posts/${data.slug}`);
       },

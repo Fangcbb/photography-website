@@ -68,12 +68,12 @@ export function CityDetailView({ city }: CityDetailViewProps) {
         await queryClient.invalidateQueries(
           trpc.city.getOne.queryOptions({ city })
         );
-        await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
+        await queryClient.invalidateQueries(trpc.city.getMany.queryOptions({}));
         await queryClient.invalidateQueries(
           trpc.home.getCitySets.queryOptions({ limit: 12 })
         );
         await queryClient.invalidateQueries(
-          trpc.travel.getCitySets.queryOptions()
+          trpc.travel.getCitySets.queryOptions({})
         );
         toast.success("Description updated successfully");
       },
@@ -103,7 +103,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           await queryClient.invalidateQueries(
             trpc.city.getOne.queryOptions({ city })
           );
-          await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
+          await queryClient.invalidateQueries(trpc.city.getMany.queryOptions({}));
           toast.success("Cover photo updated successfully");
         },
         onError: (error) => {

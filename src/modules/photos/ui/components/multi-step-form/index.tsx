@@ -160,7 +160,7 @@ export default function MultiStepForm({
           await queryClient.invalidateQueries(
             trpc.home.getCitySets.queryOptions({ limit: 9 })
           );
-          await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
+          await queryClient.invalidateQueries(trpc.city.getMany.queryOptions({}));
 
           toast.success("Photo uploaded successfully!");
           setIsComplete(true);
