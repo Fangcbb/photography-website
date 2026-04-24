@@ -5,7 +5,7 @@ import {
   LoadingStatus,
 } from "@/modules/travel/ui/views/travel-view";
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "Travel",
