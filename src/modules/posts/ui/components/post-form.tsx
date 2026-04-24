@@ -49,7 +49,7 @@ export const PostForm = ({ post }: PostFormProps) => {
       onSuccess: async (data) => {
         toast.success("Post created successfully");
         await queryClient.invalidateQueries(
-          trpc.posts.getMany.queryOptions()
+          trpc.posts.getMany.queryOptions({})
         );
         await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions());
         form.reset();
@@ -71,7 +71,7 @@ export const PostForm = ({ post }: PostFormProps) => {
           trpc.posts.getOne.queryOptions({ slug: data.slug })
         );
         await queryClient.invalidateQueries(
-          trpc.posts.getMany.queryOptions()
+          trpc.posts.getMany.queryOptions({})
         );
         await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions());
         form.reset();

@@ -37,7 +37,7 @@ export function VisibilityToggle({
         onSuccess: async () => {
           // Invalidate queries to refetch photos list
           await queryClient.invalidateQueries(
-            trpc.photos.getMany.queryOptions()
+            trpc.photos.getMany.queryOptions({})
           );
           toast.success(
             `Photo is now ${newValue === "public" ? "public" : "private"}`

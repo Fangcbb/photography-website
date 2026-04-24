@@ -78,7 +78,7 @@ export function PhotoForm({
       onSuccess: async () => {
         toast.success("Photo created");
         await queryClient.invalidateQueries(
-          trpc.photos.getMany.queryOptions()
+          trpc.photos.getMany.queryOptions({})
         );
         await queryClient.invalidateQueries(
           trpc.home.getManyLikePhotos.queryOptions()
