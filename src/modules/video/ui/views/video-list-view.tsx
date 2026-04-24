@@ -16,17 +16,23 @@ import { useState, useRef, useEffect } from "react";
 const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (seconds?: number) => string }) => {
   const [isHovering, setIsHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hasStartedPlay = useRef(false);
 
   useEffect(() => {
-    if (isHovering && videoRef.current) {
-      videoRef.current.play().catch(() => {
-        // 自动播放可能被浏览器阻止，忽略错误
-      });
-    } else if (!isHovering && videoRef.current) {
+    if (!videoRef.current) return;
+
+    if (isHovering && !hasStartedPlay.current) {
+      hasStartedPlay.current = true;
+      videoRef.current.src = keyToUrl(video.videoUrl);
+      videoRef.current.load();
+      videoRef.current.play().catch(() => {});
+    } else if (!isHovering && hasStartedPlay.current) {
+      hasStartedPlay.current = false;
       videoRef.current.pause();
-      videoRef.current.currentTime = 0;
+      videoRef.current.removeAttribute("src");
+      videoRef.current.load();
     }
-  }, [isHovering]);
+  }, [isHovering, video.videoUrl]);
 
   return (
     <Link
@@ -44,12 +50,11 @@ const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (sec
       ) : (
         <video
           ref={videoRef}
-          src={keyToUrl(video.videoUrl)}
           className="w-full h-full object-cover"
           muted
           playsInline
           loop
-          preload="metadata"
+          preload="none"
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
