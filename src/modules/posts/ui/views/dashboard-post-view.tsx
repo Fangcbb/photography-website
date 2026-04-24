@@ -33,7 +33,7 @@ export const DashboardPostView = ({ slug }: { slug: string }) => {
         //   deleteFileMutation.mutate({ key: data.coverImageKey });
         // }
         await queryClient.invalidateQueries(
-          trpc.posts.getMany.queryOptions({})
+          trpc.posts.getMany.queryOptions()
         );
         router.push("/dashboard/posts");
       },

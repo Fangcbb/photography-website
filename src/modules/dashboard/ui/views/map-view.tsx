@@ -25,7 +25,7 @@ import {
 export const MapView = () => {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
-    trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions({})
+    trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions()
   );
 
   const chartConfig = {

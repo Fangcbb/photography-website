@@ -8,7 +8,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 export function CityListView() {
   const trpc = useTRPC();
-  const { data: cities } = useSuspenseQuery(trpc.city.getMany.queryOptions({}));
+  const { data: cities } = useSuspenseQuery(trpc.city.getMany.queryOptions());
 
   if (!cities || cities.length === 0) {
     return (

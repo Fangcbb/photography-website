@@ -16,7 +16,7 @@ export const DashboardVideosView = () => {
   const queryClient = useQueryClient();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
-  const { data: videos } = useSuspenseQuery(trpc.video.getAll.queryOptions({}));
+  const { data: videos } = useSuspenseQuery(trpc.video.getAll.queryOptions());
 
   const deleteMutation = useMutation(
     trpc.video.delete.mutationOptions({
