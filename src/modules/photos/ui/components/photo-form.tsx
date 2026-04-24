@@ -81,10 +81,10 @@ export function PhotoForm({
           trpc.photos.getMany.queryOptions({})
         );
         await queryClient.invalidateQueries(
-          trpc.home.getManyLikePhotos.queryOptions()
+          trpc.home.getManyLikePhotos.queryOptions({})
         );
         await queryClient.invalidateQueries(
-          trpc.home.getCitySets.queryOptions()
+          trpc.home.getCitySets.queryOptions({})
         );
 
         onCreateSuccess?.();
