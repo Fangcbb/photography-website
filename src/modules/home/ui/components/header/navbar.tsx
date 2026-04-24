@@ -2,11 +2,15 @@ import Logo from "./logo";
 import FlipLink from "@/components/flip-link";
 import { ThemeSwitch } from "@/components/theme-toggle";
 
-const Navbar = () => {
+interface NavbarProps {
+  onMobileMenuToggle?: () => void;
+}
+
+const Navbar = ({ onMobileMenuToggle }: NavbarProps) => {
   return (
     <nav>
       <div className="flex items-center gap-5 pb-3 px-4 relative">
-        <Logo />
+        <Logo onMobileMenuToggle={onMobileMenuToggle} />
         <div className="hidden lg:flex gap-4">
           <FlipLink href="/travel">Travel</FlipLink>
           <FlipLink href="/discover">Discover</FlipLink>
