@@ -303,12 +303,4 @@ header .hamburger-btn {
   }
 }
 
-/* Navbar links container - always hidden, visible from 1024px+ */
-header .navbar-links {
-  display: none !important;
-}
-@media (min-width: 1024px) {
-  header .navbar-links {
-    display: flex !important;
-  }
-}
+
