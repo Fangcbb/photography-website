@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const TravelView = () => {
   const trpc = useTRPC();
-  const { data } = useSuspenseQuery(trpc.travel.getCitySets.queryOptions());
+  const { data } = useSuspenseQuery(trpc.travel.getCitySets.queryOptions({}));
 
   // Initialize with first city directly, no useEffect needed
   const [activeCity, setActiveCity] = useState<CitySetSummary | null>(
