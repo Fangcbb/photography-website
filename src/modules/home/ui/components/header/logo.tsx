@@ -8,25 +8,12 @@ interface LogoProps {
 }
 
 const Logo = ({ onMobileMenuToggle }: LogoProps) => {
-  if (onMobileMenuToggle) {
-    return (
-      <button
-        onClick={onMobileMenuToggle}
-        className="flex gap-2 items-center cursor-pointer"
-        aria-label="Open menu"
-      >
-        <RiCameraLensFill size={18} />
-        <WordRotate
-          label={siteConfig.name}
-          label2={siteConfig.tagline}
-          style="font-medium uppercase"
-        />
-      </button>
-    );
-  }
-
   return (
-    <Link href="/" className="flex gap-2 items-center">
+    <Link
+      href="/"
+      className="flex gap-2 items-center"
+      onClick={onMobileMenuToggle}
+    >
       <RiCameraLensFill size={18} />
       <WordRotate
         label={siteConfig.name}
