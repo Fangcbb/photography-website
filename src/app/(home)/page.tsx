@@ -118,7 +118,7 @@ export default async function HomePage() {
         {/* Spacer for fixed left content */}
         <div className="hidden lg:block lg:w-1/2" />
         {/* RIGHT CONTENT - Scrollable */}
-        <div className="w-full mt-3 lg:mt-0 lg:pt-3 lg:w-1/2 space-y-3 pb-3">
+        <div className="w-full mt-3 lg:mt-0 lg:pt-0 lg:w-1/2 space-y-3 pb-3">
           <ProfileCard />
           <LatestTravelCard />
           <Suspense fallback={<CitiesViewLoadingStatus />}>
