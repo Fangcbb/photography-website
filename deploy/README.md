@@ -25,24 +25,54 @@ bash /opt/scripts/photo-rollback.sh
 
 ## 构建产物结构
 
-项目使用 Next.js `output: "standalone"` 模式。构建后产物位于 `.next/standalone/`：
+项目使用 Next.js `output: "standalone"` 模式。构建后：
+
+1. `npm run build` 在源码目录产出 `.next/standalone/server.js`
+2. postbuild 自动复制 `server.js` 到项目根目录（与 `.next/` 同级）
+3. 最终部署产物（在 release 目录）结构：
 
 ```
-.next/standalone/
-├── server.js              # PM2 启动入口
-├── package.json
+{release}/
+├── server.js              # PM2 启动入口（postbuild 复制到根目录）
 ├── .next/
-│   ├── static/            # SSR 静态资源（由 npm run build 自动复制）
+│   ├── standalone/         # Next.js standalone 产出（仅作备份）
+│   ├── static/             # SSR 静态资源
 │   └── server/             # Next.js SSR chunks
-└── public/                # 静态公共资源（由 npm run build 自动复制）
+└── public/                # 静态公共资源
 ```
 
-**deploy.sh 部署逻辑：**
-1. rsync 源代码（排除 `.git`、`node_modules`、`.next`）
-2. 在服务器执行 `npm run build`（在源代码目录）
-3. 将构建后的 `.next` 整体复制到 release 目录
+### 启动规则（唯一真相）
 
-> ⚠️ 不要在 rsync 时同时复制 `.next/`（会导致嵌套 .next/.next/ 结构）
+| 配置项 | 值 |
+|--------|-----|
+| cwd | /var/www/photo-site/current |
+| script | ./server.js（postbuild 复制到根目录）|
+
+**发布**：切 symlink，**不改 script 路径**。
+**回滚**：切 symlink 到 previous，**不改 script 路径**。
+
+> postbuild 步骤：`cp .next/standalone/server.js .`
+> 这确保 server.js 始终在根目录，与 ecosystem.config.js 的 ./server.js 一致。
+
+```js
+// ecosystem.config.js — 唯一正确配置
+module.exports = {
+  apps: [{
+    name: 'photo',
+    script: './server.js',       // postbuild 复制到根目录
+    cwd: '/var/www/photo-site/current',
+    instances: 1,
+    exec_mode: 'cluster',
+    wait_ready: true,
+    listen_timeout: 30000,
+  }]
+}
+```
+
+## 重要说明
+
+- 所有脚本运行在 **生产服务器** `/opt/scripts/` 目录
+- `docker-compose*.yml` 为容器化方案，本项目目前使用 PM2 + standalone 架构
 
 ## 重要说明
 

@@ -128,9 +128,7 @@ export default function AuraShaderBackground({ coverUrl, playing }: Props) {
           float vignette = smoothstep(0.8, 0.2, length(uv - 0.5));
           finalColor *= mix(1.0, vignette, 0.15);
 
-          // Playing transition
-          vec3 idleColor = uColors[4];
-          finalColor = mix(idleColor, finalColor, uPlaying);
+          // Colors persist regardless of play state - no transition on pause
 
           gl_FragColor = vec4(finalColor, 1.0);
       }

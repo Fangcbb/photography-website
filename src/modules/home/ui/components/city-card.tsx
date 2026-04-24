@@ -17,14 +17,14 @@ const CityCard = ({ cityId, title, coverPhoto }: Props) => {
   return (
     <Link
       href={`/travel/${cityId}`}
-      className="w-full relative group cursor-pointer block"
+      className="w-full relative group cursor-pointer block min-w-0"
     >
       <AspectRatio
         ratio={0.75 / 1}
         className="overflow-hidden rounded-lg relative"
       >
         <BlurImage
-          src={keyToUrl(coverPhoto.url, "fangb")}
+          src={keyToUrl(coverPhoto.url, "hanll")}
           alt={coverPhoto.title}
           fill
           sizes="(max-width: 767px) 100vw, (max-width: 1535px) 50vw, 33vw"

@@ -83,16 +83,26 @@ const page = async () => {
           ))}
         </div>
       )}
-      <div className="sr-only">
-        {seoVideos.map((v) => (
-          <a key={v.id} href={`/blog/${v.slug}`}>
-            {v.thumbnailUrl && (
-              <img src={keyToUrl(v.thumbnailUrl)} alt={v.title} />
-            )}
-            <h2>{v.title}</h2>
-          </a>
-        ))}
-      </div>
+      {seoVideos.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              "itemListElement": seoVideos.map((v, index) => ({
+                "@type": "ListItem",
+                "position": index + 1,
+                "name": v.title,
+                "url": `/blog/${v.slug}`,
+                ...(v.thumbnailUrl && {
+                  "image": keyToUrl(v.thumbnailUrl),
+                }),
+              })),
+            }),
+          }}
+        />
+      )}
 
       {/* 实际页面：客户端 React Query 获取完整数据 */}
       <Suspense fallback={<VideoListLoadingStatus />}>

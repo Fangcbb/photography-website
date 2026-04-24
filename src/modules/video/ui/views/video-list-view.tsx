@@ -68,7 +68,7 @@ const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (sec
 
 export const VideoListView = () => {
   const trpc = useTRPC();
-  const { data: videos } = useSuspenseQuery(trpc.video.getMany.queryOptions({ limit: 20 }));
+  const { data: { data: videos } } = useSuspenseQuery(trpc.video.getMany.queryOptions({ limit: 20 }));
 
   const formatDuration = (seconds?: number) => {
     if (!seconds) return "";

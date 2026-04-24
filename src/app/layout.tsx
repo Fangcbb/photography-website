@@ -5,7 +5,7 @@ import { TRPCReactProvider } from "@/trpc/client";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-import MouseFollowerProvider from "@/components/mouse-follower-provider";
+
 import { siteConfig } from "@/site.config";
 
 const BASE_URL = "https://www.fangc.cc";
@@ -319,7 +319,6 @@ var _hmt = _hmt || [];
             <ThemeProvider attribute="class">
               <Toaster />
               {children}
-              <MouseFollowerProvider />
             </ThemeProvider>
           </TRPCReactProvider>
         </NuqsAdapter>

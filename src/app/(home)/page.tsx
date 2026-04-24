@@ -73,21 +73,40 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* SEO 照片：仅供 Google 索引，对用户不可见 */}
-      <div className="sr-only">
-        {seoPhotos.map((p) => (
-          <a key={p.id} href={`/p/${p.id}`}>
-            <img src={keyToUrl(p.url)} alt={p.title} />
-            <h2>{p.title}</h2>
-            {p.description && <p>{p.description}</p>}
-          </a>
-        ))}
-      </div>
+      {/* JSON-LD structured data for Google SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "Fang Bing Photography",
+            description: "探索方斌的旅行与街头摄影作品",
+            url: "https://www.fangc.cc",
+            author: {
+              "@type": "Person",
+              name: "Fang Bing"
+            },
+            mainEntity: {
+              "@type": "ItemList",
+              itemListElement: seoPhotos.map((p, i) => ({
+                "@type": "Photograph",
+                position: i + 1,
+                name: p.title,
+                description: p.description || "",
+                image: keyToUrl(p.url),
+                url: `https://www.fangc.cc/p/${p.id}`,
+                contentUrl: keyToUrl(p.url),
+              }))
+            }
+          })
+        }}
+      />
 
       {/* 实际 UI: client components 通过 useSuspenseQuery 加载完整数据 */}
       <div className="relative z-10 flex flex-col lg:flex-row min-h-screen w-full">
         {/* LEFT CONTENT - Fixed */}
-        <div className="w-full lg:w-1/2 h-[70vh] lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3 rounded-xl">
+        <div className="w-full lg:w-1/2 h-[50vh] sm:h-[60vh] lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3 rounded-xl">
           <Suspense fallback={<SliderViewLoadingStatus />}>
             <ErrorBoundary fallback={<p>Something went wrong</p>}>
               <SliderView />
@@ -97,7 +116,7 @@ export default async function HomePage() {
         {/* Spacer for fixed left content */}
         <div className="hidden lg:block lg:w-1/2" />
         {/* RIGHT CONTENT - Scrollable */}
-        <div className="w-full mt-3 lg:mt-0 lg:w-1/2 space-y-3 pb-3">
+        <div className="w-full mt-3 lg:mt-0 lg:pt-[72px] lg:w-1/2 space-y-3 pb-3">
           <ProfileCard />
           <LatestTravelCard />
           <Suspense fallback={<CitiesViewLoadingStatus />}>

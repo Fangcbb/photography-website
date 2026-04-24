@@ -1,5 +1,5 @@
 import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init";
-import { desc, eq, and, like, or } from "drizzle-orm";
+import { desc, eq, and, like, or, count, inArray } from "drizzle-orm";
 import { music } from "@/db/schema";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -39,25 +39,27 @@ export const musicRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit, offset, search } = input;
 
-      let query = ctx.db.select().from(music);
+      const conditions = search
+        ? or(
+            like(music.title, `%${search}%`),
+            like(music.artist, `%${search}%`),
+            like(music.album, `%${search}%`)
+          )
+        : undefined;
 
-      if (search) {
-        const conditions = or(
-          like(music.title, `%${search}%`),
-          like(music.artist, `%${search}%`),
-          like(music.album, `%${search}%`)
-        );
-        query = query.where(conditions) as any;
-      }
-
-      const data = await query
+      const data = await ctx.db
+        .select()
+        .from(music)
+        .where(conditions)
         .orderBy(desc(music.createdAt))
         .limit(limit)
         .offset(offset);
 
-      // 获取总数
-      const allMusic = await ctx.db.select().from(music);
-      const total = allMusic.length;
+      // 获取总数 - 使用 COUNT 替代加载所有行
+      const [countResult] = await ctx.db
+        .select({ total: count() })
+        .from(music);
+      const total = countResult.total;
 
       return { data, total };
     }),
@@ -176,9 +178,7 @@ export const musicRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { ids } = input;
 
-      for (const id of ids) {
-        await ctx.db.delete(music).where(eq(music.id, id));
-      }
+      await ctx.db.delete(music).where(inArray(music.id, ids));
 
       return { success: true, message: `${ids.length} music items deleted` };
     }),

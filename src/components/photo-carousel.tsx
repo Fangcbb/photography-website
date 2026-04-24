@@ -121,6 +121,11 @@ const Carousel = ({
           />
         ))}
       </div>
+
+      {/* Mobile Swipe Hint */}
+      <p className="absolute bottom-16 left-1/2 -translate-x-1/2 text-white/50 text-xs pointer-events-none hidden max-[1023px]:block">
+        ← swipe →
+      </p>
     </div>
   );
 };

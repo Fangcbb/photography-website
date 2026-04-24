@@ -19,6 +19,7 @@ interface LyricsViewProps {
   currentTime: number;
   onSeekRequest: (time: number, immediate?: boolean) => void;
   matchStatus: "idle" | "matching" | "success" | "failed";
+  isDraggingLyrics?: boolean;
 }
 
 const LyricsView: React.FC<LyricsViewProps> = ({
@@ -28,6 +29,7 @@ const LyricsView: React.FC<LyricsViewProps> = ({
   currentTime,
   onSeekRequest,
   matchStatus,
+  isDraggingLyrics = false,
 }) => {
   const { dict } = useI18n();
   const [isMobile, setIsMobile] = useState(false);
@@ -433,7 +435,7 @@ const LyricsView: React.FC<LyricsViewProps> = ({
 
       const smoothing = 1 - Math.exp(-dt / tau);
       const nextTime = visualTime + drift * smoothing;
-      const canRewind = drift < -0.25 || Boolean(audioRef.current?.seeking);
+      const canRewind = isDraggingLyrics || drift < -0.25 || Boolean(audioRef.current?.seeking);
       visualTime = canRewind ? nextTime : Math.max(visualTime, nextTime);
     } else {
       // When paused or scrubbing, snap quickly to real time

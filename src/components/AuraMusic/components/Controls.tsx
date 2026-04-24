@@ -53,6 +53,7 @@ interface ControlsProps {
   isBuffering: boolean;
   playlistPanel?: React.ReactNode;
   onArtistClick?: (artist: string) => void;
+  setIsDraggingLyrics?: (v: boolean) => void;
 };
 
 const Controls: React.FC<ControlsProps> = ({
@@ -85,6 +86,7 @@ const Controls: React.FC<ControlsProps> = ({
   isBuffering,
   playlistPanel,
   onArtistClick,
+  setIsDraggingLyrics,
 }) => {
   const { dict } = useI18n();
   const volumeContainerRef = useRef<HTMLDivElement>(null);
@@ -131,6 +133,7 @@ const Controls: React.FC<ControlsProps> = ({
     setIsWaitingForSeek(false);
     setSeekTime(interpolatedTime);
     setIsSeeking(true);
+    setIsDraggingLyrics?.(true);
   };
 
   const dragSeek = (time: number) => {
@@ -142,6 +145,7 @@ const Controls: React.FC<ControlsProps> = ({
     clearSeekTimer();
     onSeek(time, false, false);
     setIsSeeking(false);
+    setIsDraggingLyrics?.(false);
     setSeekTime(time);
     setInterpolatedTime(time);
     seekTargetRef.current = time;
@@ -155,6 +159,7 @@ const Controls: React.FC<ControlsProps> = ({
   useEffect(() => {
     clearSeekTimer();
     setIsSeeking(false);
+    setIsDraggingLyrics?.(false);
     setSeekTime(0);
     setIsWaitingForSeek(false);
     seekTargetRef.current = 0;
@@ -168,48 +173,43 @@ const Controls: React.FC<ControlsProps> = ({
   }, []);
 
   useEffect(() => {
-    if (isSeeking) return;
-
-    // If we are waiting for a seek to complete, check if we've reached the target
-    if (isWaitingForSeek) {
-      const diff = Math.abs(currentTime - seekTargetRef.current);
-      // If we are close enough (within 0.5s), or if enough time has passed (handled by timeout elsewhere),
-      // we consider the seek 'done' and resume normal syncing.
-      // But for now, we ONLY sync if close, otherwise we keep the optimistic value.
-      if (diff < 0.5) {
-        setIsWaitingForSeek(false);
-        setInterpolatedTime(currentTime);
-      }
-      // Else: do nothing, keep interpolatedTime as is (the seek target)
-    } else {
-      // Normal operation: sync with prop
-      setInterpolatedTime(currentTime);
-    }
-
-    if (!isPlaying) return;
-
     let animationFrameId: number;
 
     const animate = () => {
+      const audio = audioRef.current;
       const now = Date.now();
       const dt = (now - progressLastTimeRef.current) / 1000;
       progressLastTimeRef.current = now;
 
-      if (isPlaying && !isSeeking && !isWaitingForSeek) {
-        setInterpolatedTime((prev) => {
-          // Simple linear extrapolation
-          const next = prev + dt * speed;
-          // Clamp to duration
-          return Math.min(next, duration);
-        });
-      } else if (isPlaying && isWaitingForSeek) {
-        // If waiting for seek, we can still extrapolate from the target
-        // to make it feel responsive immediately
+      if (isSeeking) {
         setInterpolatedTime((prev) => {
           const next = prev + dt * speed;
-          return Math.min(next, duration);
+          return Math.min(next, duration || Infinity);
         });
+      } else if (isWaitingForSeek) {
+        if (audio && Number.isFinite(audio.currentTime)) {
+          const diff = Math.abs(audio.currentTime - seekTargetRef.current);
+          if (diff < 0.5) {
+            setIsWaitingForSeek(false);
+          }
+          setInterpolatedTime(audio.currentTime);
+        } else {
+          setInterpolatedTime((prev) => {
+            const next = prev + dt * speed;
+            return Math.min(next, duration || Infinity);
+          });
+        }
+      } else {
+        if (audio && Number.isFinite(audio.currentTime)) {
+          setInterpolatedTime(audio.currentTime);
+        } else if (isPlaying) {
+          setInterpolatedTime((prev) => {
+            const next = prev + dt * speed;
+            return Math.min(next, duration || Infinity);
+          });
+        }
       }
+
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -217,7 +217,7 @@ const Controls: React.FC<ControlsProps> = ({
     animationFrameId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [currentTime, isPlaying, isSeeking, speed, duration, isWaitingForSeek]);
+  }, [audioRef, isPlaying, isSeeking, speed, duration, isWaitingForSeek]);
 
   // Update buffered time range from audio element
   useEffect(() => {
@@ -516,7 +516,7 @@ const Controls: React.FC<ControlsProps> = ({
               const time = parseFloat((e.target as HTMLInputElement).value);
               doneSeek(time);
             }}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 touch-none"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 "
           />
         </div>
 
@@ -597,7 +597,7 @@ const Controls: React.FC<ControlsProps> = ({
             value={volume}
             onInput={(e) => onVolumeChange(parseFloat((e.target as HTMLInputElement).value))}
             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 touch-none"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 "
           />
         </div>
         <VolumeHighIcon className="w-3.5 h-3.5 text-white/60 fill-current" />
@@ -646,7 +646,7 @@ const VolumePopup: React.FC<VolumePopupProps> = ({
           step="0.01"
           value={volume}
           onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer touch-none"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer "
           style={
             {
               WebkitAppearance: "slider-vertical",
@@ -706,7 +706,7 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({
             step="0.01"
             value={speed}
             onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer touch-none"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer "
             style={{
               WebkitAppearance: "slider-vertical",
               appearance: "slider-vertical",
