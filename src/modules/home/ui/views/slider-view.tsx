@@ -36,7 +36,7 @@ export const SliderView = () => {
 
   return (
     <Carousel
-      className="absolute top-0 left-0 w-full h-full rounded-xl"
+      className="absolute top-0 left-0 w-full h-full lg:top-3 lg:left-3 lg:right-3 lg:bottom-3 lg:rounded-xl"
       containerClassName="h-full"
     >
       {photos.map((photo, index) => {
