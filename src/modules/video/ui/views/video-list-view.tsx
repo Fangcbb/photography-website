@@ -16,23 +16,15 @@ import { useState, useRef, useEffect } from "react";
 const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (seconds?: number) => string }) => {
   const [isHovering, setIsHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hasStartedPlay = useRef(false);
 
   useEffect(() => {
-    if (!videoRef.current) return;
-
-    if (isHovering && !hasStartedPlay.current) {
-      hasStartedPlay.current = true;
-      videoRef.current.src = keyToUrl(video.videoUrl);
-      videoRef.current.load();
+    if (isHovering && videoRef.current) {
       videoRef.current.play().catch(() => {});
-    } else if (!isHovering && hasStartedPlay.current) {
-      hasStartedPlay.current = false;
+    } else if (!isHovering && videoRef.current) {
       videoRef.current.pause();
-      videoRef.current.removeAttribute("src");
-      videoRef.current.load();
+      videoRef.current.currentTime = 0;
     }
-  }, [isHovering, video.videoUrl]);
+  }, [isHovering]);
 
   return (
     <Link
@@ -50,11 +42,12 @@ const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (sec
       ) : (
         <video
           ref={videoRef}
+          src={keyToUrl(video.videoUrl)}
           className="w-full h-full object-cover"
           muted
           playsInline
           loop
-          preload="none"
+          preload="metadata"
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

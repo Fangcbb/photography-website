@@ -7,7 +7,19 @@ import { PiArrowUpRight } from "react-icons/pi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { siteConfig } from "@/site.config";
 
-const ProfileCard = () => {
+interface ProfileCardProps {
+  name?: string;
+  role?: string;
+  bio?: string;
+  avatar?: string;
+}
+
+const ProfileCard = ({
+  name = siteConfig.name,
+  role = siteConfig.role,
+  bio = siteConfig.bio,
+  avatar = siteConfig.avatar,
+}: ProfileCardProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
       <div className="col-span-1 md:col-span-2 lg:col-span-1 xl:col-span-2">
@@ -18,19 +30,26 @@ const ProfileCard = () => {
           <div className="flex gap-4 items-center">
             {/* AVATAR  */}
             <Avatar className="size-[60px]">
-              <AvatarImage src={siteConfig.avatar} alt="Avatar" />
-              <AvatarFallback>{siteConfig.initials}</AvatarFallback>
+              <AvatarImage src={avatar} alt="Avatar" />
+              <AvatarFallback>
+                {name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </AvatarFallback>
             </Avatar>
 
             {/* NAME  */}
             <div className="flex flex-col gap-[2px]">
-              <h1 className="text-lg">{siteConfig.name}</h1>
-              <p className="text-sm text-text-muted">{siteConfig.role}</p>
+              <h1 className="text-lg">{name}</h1>
+              <p className="text-sm text-text-muted">{role}</p>
             </div>
           </div>
 
           <div className="lg:mt-4 xl:mt-0">
-            <p className="text-text-muted text-[15px]">{siteConfig.bio}</p>
+            <p className="text-text-muted text-[15px]">{bio}</p>
           </div>
 
           <div className="absolute top-8 right-8 opacity-0 group-hover:top-6 group-hover:right-6 group-hover:opacity-100 transition-all duration-300 ease-in-out">

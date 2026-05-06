@@ -373,3 +373,37 @@ export const musicUpdateSchema = createUpdateSchema(music)
     genre: true,
   })
   .partial();
+
+/***************
+ ****************
+ * About Content *
+ ****************
+ ***************/
+
+export const aboutContent = pgTable("about_content", {
+  id: varchar("id", { length: 50 }).primaryKey().default("default"),
+
+  // Profile
+  name: text("name").notNull().default("Fang Bing"),
+  role: text("role").notNull().default("Photographer"),
+  bio: text("bio").notNull().default(""),
+  avatar: text("avatar").default("/avatar.jpg"),
+
+  // About card
+  aboutHeading: text("about_heading").notNull().default("About"),
+  aboutParagraphs: text("about_paragraphs").array().notNull().default([]),
+
+  // Camera card
+  cameraHeading: text("camera_heading").notNull().default("Camera"),
+  cameraSubheading: text("camera_subheading").notNull().default("Camera Lenses"),
+  cameraDescription: text("camera_description").notNull().default(""),
+
+  // Gear list
+  gear: text("gear").notNull().default("[]"), // JSON array of {brand, model}
+
+  ...timestamps,
+});
+
+export type AboutContent = InferSelectModel<typeof aboutContent>;
+export const aboutContentInsertSchema = createInsertSchema(aboutContent);
+export const aboutContentUpdateSchema = createUpdateSchema(aboutContent).partial();

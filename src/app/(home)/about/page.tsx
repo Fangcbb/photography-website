@@ -10,6 +10,7 @@ import ProfileCard from "../../../modules/home/ui/components/profile-card";
 import CardContainer from "@/components/card-container";
 import VectorCombined from "@/components/vector-combined";
 import { siteConfig } from "@/site.config";
+import { getAboutData } from "@/modules/about/lib/get-about-data";
 
 export const metadata: Metadata = {
   title: "关于我 - 方斌的摄影作品集",
@@ -40,7 +41,16 @@ export const metadata: Metadata = {
   ],
 };
 
-const AboutPage = () => {
+const AboutPage = async () => {
+  const aboutData = await getAboutData();
+
+  let gearList: { brand: string; model: string }[] = [];
+  try {
+    gearList = JSON.parse(aboutData.gear);
+  } catch {
+    gearList = siteConfig.gear;
+  }
+
   return (
     <div className="flex flex-col gap-3 lg:gap-0 lg:flex-row w-full">
       {/* LEFT CONTENT - Fixed */}
@@ -58,18 +68,30 @@ const AboutPage = () => {
       {/* RIGHT CONTENT - Scrollable */}
       <div className="w-full lg:w-1/2 space-y-3 pb-3">
         {/* PROFILE CARD  */}
-        <ProfileCard />
+        <ProfileCard
+          name={aboutData.name}
+          role={aboutData.role}
+          bio={aboutData.bio}
+          avatar={aboutData.avatar}
+        />
 
         {/* ABOUT CARD  */}
-        <AboutCard />
+        <AboutCard
+          heading={aboutData.aboutHeading}
+          paragraphs={aboutData.aboutParagraphs}
+        />
 
         {/* TECH CARD  */}
         <TechMarquee />
 
         {/* CAMERA CARD  */}
-        <CameraCard />
+        <CameraCard
+          heading={aboutData.cameraHeading}
+          subheading={aboutData.cameraSubheading}
+          description={aboutData.cameraDescription}
+        />
 
-        {siteConfig.gear.map((item) => (
+        {gearList.map((item) => (
           <CardContainer key={`${item.brand}-${item.model}`}>
             <div className="flex items-center justify-between p-6">
               <h1 className="text-lg">{item.brand}</h1>

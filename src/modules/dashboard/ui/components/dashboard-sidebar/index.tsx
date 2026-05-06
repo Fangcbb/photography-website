@@ -47,6 +47,11 @@ const data = {
       url: "/dashboard/profile",
       icon: "user",
     },
+    {
+      title: "About",
+      url: "/dashboard/about",
+      icon: "about",
+    },
   ],
   navSecondary: [
     {

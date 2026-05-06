@@ -6,6 +6,7 @@ import {
   IconNotebook,
   IconVideo,
   IconMusic,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 
 interface IconMapProps {
@@ -28,6 +29,8 @@ const IconMap = ({ icon }: IconMapProps) => {
       return <IconNotebook />;
     case "music":
       return <IconMusic />;
+    case "about":
+      return <IconInfoCircle />;
     default:
       return <IconLayoutDashboard />;
   }
