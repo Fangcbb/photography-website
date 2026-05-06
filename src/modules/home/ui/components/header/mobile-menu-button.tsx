@@ -23,7 +23,8 @@ const MobileMenuButton = () => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="hamburger-btn fixed top-3 right-3 z-40 bg-black/30 backdrop-blur-md rounded-full size-10 flex items-center justify-center cursor-pointer select-none"
+        style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
+        className="hamburger-btn fixed right-3 z-40 bg-black/30 backdrop-blur-md rounded-full size-10 flex items-center justify-center cursor-pointer select-none"
         aria-label="Open menu"
       >
         <Menu size={20} color="white" />

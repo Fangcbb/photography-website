@@ -61,7 +61,8 @@ export default function MobileMenu({ isOpen, onClose }: Props) {
               {/* CLOSE BUTTON  */}
               <button
                 onClick={onClose}
-                className="fixed top-3 right-3 z-50 bg-background rounded-full size-10 flex items-center justify-center cursor-pointer select-none"
+                style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
+                className="fixed right-3 z-50 bg-background rounded-full size-10 flex items-center justify-center cursor-pointer select-none"
                 aria-label="Close menu"
               >
                 <X size={20} />

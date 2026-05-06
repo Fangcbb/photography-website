@@ -326,9 +326,3 @@ header .hamburger-btn {
   }
 }
 
-/* iOS safe-area top bar fallback for older iOS */
-@supports (height: constant(safe-area-inset-top)) {
-  #safe-area-top {
-    height: constant(safe-area-inset-top) !important;
-  }
-}

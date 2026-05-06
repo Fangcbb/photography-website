@@ -331,20 +331,6 @@ var _hmt = _hmt || [];
         />
       </head>
       <body className="antialiased system-font" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', WebkitTouchCallout: 'none' }}>
-        {/* iOS safe-area top bar overlay */}
-        <div
-          id="safe-area-top"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "env(safe-area-inset-top, 0px)",
-            background: "var(--background)",
-            zIndex: 2147483647,
-            pointerEvents: "none" as const,
-          }}
-        />
         <NuqsAdapter>
           <TRPCReactProvider>
             <ThemeProvider attribute="class">
