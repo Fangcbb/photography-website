@@ -327,3 +327,28 @@ header .hamburger-btn {
 }
 
 
+
+/* iOS Safari / Edge 顶部安全区遮罩 */
+html,
+body {
+  background: var(--background);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--background);
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+/* 兼容旧版 iOS */
+@supports (height: constant(safe-area-inset-top)) {
+  body::before {
+    height: constant(safe-area-inset-top);
+  }
+}
