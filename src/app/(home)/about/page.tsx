@@ -12,6 +12,8 @@ import VectorCombined from "@/components/vector-combined";
 import { siteConfig } from "@/site.config";
 import { getAboutData } from "@/modules/about/lib/get-about-data";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "关于我 - 方斌的摄影作品集",
   description: "了解更多关于方斌，一位热爱记录生活和旅行美好瞬间的业余摄影师。探索我的摄影旅程、器材和创作过程。",
