@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { TRPCReactProvider } from "@/trpc/client";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { WebVitals } from "@/components/web-vitals";
 
 import { siteConfig } from "@/site.config";
 
@@ -144,38 +143,10 @@ export default function RootLayout({
         <meta name="360-site-verification" content="437a5b0d023cd06a13fff843f6f8c105" />
         
         {/* 百度统计 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?4faa27b9b7ecd733e221e3749511cb5d";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
-            `,
-          }}
-        />
+        <script src="/baidu-hm.js" async />
         
         {/* 百度自动推送 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-(function(){
-  var bp = document.createElement('script');
-  var curProtocol = window.location.protocol.split(':')[0];
-  if (curProtocol === 'https') {
-    bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
-  } else {
-    bp.src = 'http://push.zhanzhang.baidu.com/push.js';
-  }
-  var s = document.getElementsByTagName("script")[0];
-  s.parentNode.insertBefore(bp, s);
-})();
-            `,
-          }}
-        />
+        <script src="/baidu-push.js" async />
         
         {/* 结构化数据 (JSON-LD) - Google SEO */}
         <script
@@ -226,119 +197,15 @@ var _hmt = _hmt || [];
         />
         
         {/* 全站图片保护 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-(function() {
-  // 禁止右键菜单
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
-  });
-  
-  // 禁止选中文字和图片
-  document.addEventListener('selectstart', function(e) {
-    e.preventDefault();
-    return false;
-  });
-  
-  // 禁止拖拽图片
-  document.addEventListener('dragstart', function(e) {
-    if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
-      e.preventDefault();
-      return false;
-    }
-  });
-  
-  // 禁止开发者工具快捷键
-  document.addEventListener('keydown', function(e) {
-    // F12
-    if (e.key === 'F12') {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl+Shift+I (Windows) 或 Cmd+Opt+I (Mac)
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl+Shift+J (Windows) 或 Cmd+Opt+J (Mac)
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl+U (查看源代码)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'U') {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl+S (保存页面)
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      return false;
-    }
-  });
-  
-  // 禁止触摸设备长按保存（但不阻止链接内的图片/视频点击）
-  document.addEventListener('touchstart', function(e) {
-    // 检查点击目标是否在可点击元素内（如链接、按钮）
-    const clickable = e.target.closest('a, button, [role="button"]');
-    if ((e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') && !clickable) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-  
-  // 禁止图片拖拽属性
-  window.addEventListener('DOMContentLoaded', function() {
-    var images = document.getElementsByTagName('img');
-    for (var i = 0; i < images.length; i++) {
-      images[i].setAttribute('draggable', 'false');
-      images[i].setAttribute('oncontextmenu', 'return false');
-    }
-    var videos = document.getElementsByTagName('video');
-    for (var i = 0; i < videos.length; i++) {
-      videos[i].setAttribute('draggable', 'false');
-      videos[i].setAttribute('oncontextmenu', 'return false');
-    }
-  });
-  
-  // 动态添加的图片也禁止拖拽
-  window.addEventListener('DOMContentLoaded', function() {
-    var observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        mutation.addedNodes.forEach(function(node) {
-          if (node.nodeType === 1) {
-            if (node.tagName === 'IMG' || node.tagName === 'VIDEO') {
-              node.setAttribute('draggable', 'false');
-              node.setAttribute('oncontextmenu', 'return false');
-            }
-            var images = node.querySelectorAll ? node.querySelectorAll('img, video') : [];
-            images.forEach(function(img) {
-              img.setAttribute('draggable', 'false');
-              img.setAttribute('oncontextmenu', 'return false');
-            });
-          }
-        });
-      });
-    });
-    if (document.body) {
-      observer.observe(document.body, { childList: true, subtree: true });
-    }
-  });
-})();
-            `,
-          }}
-        />
+        <script src="/image-protect.js" async />
       </head>
       <body className="antialiased system-font" style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', WebkitTouchCallout: 'none' }}>
-        <NuqsAdapter>
-          <TRPCReactProvider>
-            <ThemeProvider attribute="class">
-              <Toaster />
-              {children}
-            </ThemeProvider>
-          </TRPCReactProvider>
-        </NuqsAdapter>
+        <TRPCReactProvider>
+          <ThemeProvider attribute="class">
+            <WebVitals />
+            {children}
+          </ThemeProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   );

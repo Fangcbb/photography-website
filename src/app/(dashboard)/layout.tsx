@@ -3,6 +3,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/modules/dashboard/ui/components/site-header";
 import CreatePhotoModal from "@/modules/photos/ui/components/create-photo-modal";
 import { DashboardSidebar } from "@/modules/dashboard/ui/components/dashboard-sidebar";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: {
@@ -13,6 +15,8 @@ export const metadata: Metadata = {
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
+    <NuqsAdapter>
+    <Toaster />
     <SidebarProvider
       style={
         {
@@ -28,6 +32,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         <CreatePhotoModal />
       </SidebarInset>
     </SidebarProvider>
+    </NuqsAdapter>
   );
 }
 
