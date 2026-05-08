@@ -324,5 +324,14 @@ header .hamburger-btn {
   html.has-custom-cursor select {
     cursor: none !important;
   }
+
+  /* Override cursor dot: +30% size, -40% opacity */
+  .mf-cursor::before {
+    transform: scale(0.26);
+    opacity: 0.6;
+  }
+  .mf-cursor.-pointer::before {
+    transform: scale(0.195);
+  }
 }
 
