@@ -1,0 +1,45 @@
+"use client";
+
+import Link from "next/link";
+import BlurImage from "@/components/blur-image";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { type Photo } from "@/db/schema";
+import VectorTopLeftAnimation from "./vector-top-left-animation";
+import { photoProxyUrl } from "@/lib/photo-url";
+
+interface Props {
+  cityId: string;
+  citySlug: string;
+  title: string;
+  coverPhoto: Photo;
+}
+
+const CityCard = ({ cityId, citySlug, title, coverPhoto }: Props) => {
+  return (
+    <Link
+      href={`/travel/${citySlug}`}
+      className="w-full relative group cursor-pointer block min-w-0"
+    >
+      <AspectRatio
+        ratio={0.75 / 1}
+        className="overflow-hidden rounded-lg relative"
+      >
+        <BlurImage
+          src={photoProxyUrl(coverPhoto.id, "fangb")}
+          alt={coverPhoto.title}
+          fill
+          sizes="(max-width: 767px) 100vw, (max-width: 1535px) 50vw, 33vw"
+          quality={65}
+          className="object-cover lg:group-hover:blur-xs lg:transition-[filter] lg:duration-300 lg:ease-out"
+          blurhash={coverPhoto.blurData}
+        />
+      </AspectRatio>
+
+      <div className="absolute top-0 left-0 z-20">
+        <VectorTopLeftAnimation title={title} />
+      </div>
+    </Link>
+  );
+};
+
+export default CityCard;
