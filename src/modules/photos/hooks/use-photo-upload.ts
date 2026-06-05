@@ -16,7 +16,8 @@ interface UsePhotoUploadProps {
   onUploadSuccess?: (
     url: string,
     exif: TExifData | null,
-    imageInfo: TImageInfo
+    imageInfo: TImageInfo,
+    livePhotoVideoUrl?: string
   ) => void;
 }
 
@@ -35,7 +36,7 @@ export function usePhotoUpload({
     trpc.s3.createPresignedUrl.mutationOptions()
   );
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, livePhotoVideo?: File) => {
     try {
       setIsUploading(true);
 
@@ -46,6 +47,7 @@ export function usePhotoUpload({
       setExif(exifData);
       setImageInfo(imageInfo);
 
+      // 上传主照片
       const { publicUrl } = await s3Client.upload({
         file,
         folder,
@@ -67,9 +69,34 @@ export function usePhotoUpload({
         },
       });
 
+      // 上传 Live Photo 视频（如果有）
+      let livePhotoVideoUrl: string | undefined;
+      if (livePhotoVideo) {
+        const videoFolder = "live-photos";
+        const { publicUrl: videoUrl } = await s3Client.upload({
+          file: livePhotoVideo,
+          folder: videoFolder,
+          onProgress: () => {},
+          getUploadUrl: async ({ filename, contentType, folder }) => {
+            const data = await createPresignedUrl.mutateAsync({
+              filename,
+              contentType,
+              size: livePhotoVideo.size,
+              folder,
+            });
+
+            return {
+              uploadUrl: data.presignedUrl,
+              publicUrl: data.key,
+            };
+          },
+        });
+        livePhotoVideoUrl = videoUrl;
+      }
+
       setUploadedImageUrl(publicUrl);
       toast.success("Photo uploaded successfully!");
-      onUploadSuccess?.(publicUrl, exifData, imageInfo);
+      onUploadSuccess?.(publicUrl, exifData, imageInfo, livePhotoVideoUrl);
     } catch (error) {
       setExif(null);
       setImageInfo(null);

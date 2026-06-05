@@ -18,7 +18,8 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
     header: "Image",
     cell: ({ row }) => {
       const url = row.original.url;
-      const imageUrl = photoProxyUrl(url, "fangb");
+      const photoId = row.original.id;
+      const imageUrl = photoProxyUrl(photoId, "fangb");
 
       return (
         <div className="w-16 h-16 overflow-hidden">

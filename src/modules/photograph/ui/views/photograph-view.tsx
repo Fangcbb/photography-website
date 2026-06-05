@@ -1,12 +1,13 @@
 "use client";
 
 import BlurImage from "@/components/blur-image";
+import { LivePhoto } from "@/components/live-photo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { PhotoPreviewCard } from "@/modules/photos/ui/components/photo-preview-card";
 import { usePhotoNavigation } from "@/modules/photograph/hooks/use-photo-navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
-import { photoProxyUrl } from "@/lib/photo-url";
+import { photoProxyUrl, livePhotoVideoProxyUrl } from "@/lib/photo-url";
 
 interface PhotographViewProps {
   id: string;
@@ -144,22 +145,32 @@ export const PhotographView = ({ id: initialId }: PhotographViewProps) => {
       </div>
 
       {/* 照片主体 */}
-      <PhotoPreviewCard
-        url={currentPhoto.url}
-        photoId={currentPhoto.id}
-        title={currentPhoto.title}
-        imageInfo={imageInfo}
-        make={currentPhoto.make}
-        model={currentPhoto.model}
-        lensModel={currentPhoto.lensModel}
-        focalLength35mm={currentPhoto.focalLength35mm}
-        fNumber={currentPhoto.fNumber}
-        exposureTime={currentPhoto.exposureTime}
-        iso={currentPhoto?.iso}
-        dateTimeOriginal={
-          currentPhoto?.dateTimeOriginal ? currentPhoto.dateTimeOriginal.toString() : undefined
-        }
-      />
+      {/* Live Photo 或普通照片 */}
+      {currentPhoto.isLivePhoto && currentPhoto.livePhotoVideoUrl ? (
+        <LivePhoto
+          photoSrc={photoProxyUrl(currentPhoto.id, "display")}
+          videoSrc={livePhotoVideoProxyUrl(currentPhoto.id)}
+          alt={currentPhoto.title || "Live Photo"}
+          className="w-full h-full rounded-lg"
+        />
+      ) : (
+        <PhotoPreviewCard
+          url={currentPhoto.url}
+          photoId={currentPhoto.id}
+          title={currentPhoto.title}
+          imageInfo={imageInfo}
+          make={currentPhoto.make}
+          model={currentPhoto.model}
+          lensModel={currentPhoto.lensModel}
+          focalLength35mm={currentPhoto.focalLength35mm}
+          fNumber={currentPhoto.fNumber}
+          exposureTime={currentPhoto.exposureTime}
+          iso={currentPhoto?.iso}
+          dateTimeOriginal={
+            currentPhoto?.dateTimeOriginal ? currentPhoto.dateTimeOriginal.toString() : undefined
+          }
+        />
+      )}
     </div>
   );
 };

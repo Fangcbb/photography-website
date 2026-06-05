@@ -129,6 +129,10 @@ export const photos = pgTable(
     gpsAltitude: real("gps_altitude"),
     dateTimeOriginal: timestamp("datetime_original"),
 
+    // Live Photo
+    livePhotoVideoUrl: text("live_photo_video_url"),
+    isLivePhoto: boolean("is_live_photo").default(false),
+
     ...timestamps,
   },
   (t) => [

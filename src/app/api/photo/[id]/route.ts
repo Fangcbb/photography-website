@@ -13,9 +13,13 @@ export async function GET(
   const variant = request.nextUrl.searchParams.get("v") || "display";
 
   try {
-    // 查询照片 URL
+    // 查询照片数据
     const [photo] = await db
-      .select({ url: photos.url })
+      .select({ 
+        url: photos.url,
+        livePhotoVideoUrl: photos.livePhotoVideoUrl,
+        isLivePhoto: photos.isLivePhoto 
+      })
       .from(photos)
       .where(eq(photos.id, id))
       .limit(1);
@@ -26,9 +30,24 @@ export async function GET(
 
     // 构建 COS URL
     const baseUrl = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "";
-    const cosUrl = variant
-      ? `${baseUrl}/${photo.url}/${variant}`
-      : `${baseUrl}/${photo.url}`;
+    let cosUrl: string;
+
+    // Live Photo 视频请求
+    if (variant === "live") {
+      if (!photo.isLivePhoto || !photo.livePhotoVideoUrl) {
+        return new NextResponse("Live Photo video not found", { status: 404 });
+      }
+      cosUrl = `${baseUrl}/${photo.livePhotoVideoUrl}`;
+    } else {
+      // 普通图片请求
+      const encodedKey = photo.url
+        .split("/")
+        .map((segment) => encodeURIComponent(segment))
+        .join("/");
+      cosUrl = variant
+        ? `${baseUrl}/${encodedKey}/${variant}`
+        : `${baseUrl}/${encodedKey}`;
+    }
 
     // 代理请求 COS
     const response = await fetch(cosUrl, {
@@ -38,12 +57,16 @@ export async function GET(
     });
 
     if (!response.ok) {
-      return new NextResponse("Image not found", { status: 404 });
+      return new NextResponse("Resource not found", { status: 404 });
     }
 
     // 转发响应，隐藏 COS 来源
     const headers = new Headers();
-    headers.set("Content-Type", response.headers.get("content-type") || "image/jpeg");
+    const contentType = variant === "live" 
+      ? "video/quicktime" 
+      : (response.headers.get("content-type") || "image/jpeg");
+    
+    headers.set("Content-Type", contentType);
     headers.set("Cache-Control", "public, max-age=31536000, immutable");
     headers.set("X-Content-Type-Options", "nosniff");
 

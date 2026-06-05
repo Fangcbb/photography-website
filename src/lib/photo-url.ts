@@ -13,6 +13,13 @@ export function photoProxyUrl(photoId: string, variant?: string): string {
 }
 
 /**
+ * Live Photo 视频代理 URL
+ */
+export function livePhotoVideoProxyUrl(photoId: string): string {
+  return `/api/photo/${photoId}?v=live`;
+}
+
+/**
  * 生成图片展示 URL（完整 COS 地址）
  * 仅用于 JSON-LD 结构化数据和百度 SEO
  */
