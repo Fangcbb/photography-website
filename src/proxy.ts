@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest) {
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'sha256-eMuh8xiwcX72rRYNAGENurQBAcH7kLlAUQcoOri3BIo='${isDev ? " 'unsafe-eval'" : ""} https://hm.baidu.com https://zz.bdstatic.com https://www.googletagmanager.com https://www.google-analytics.com`,
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' data: blob: https://cnn.fangc.cc https://*.cos.ap-shanghai.myqcloud.com https://*.fangc.cc https://images.unsplash.com`,
+    `img-src 'self' data: blob: https://*.music.126.net https://cnn.fangc.cc https://*.cos.ap-shanghai.myqcloud.com https://*.fangc.cc https://images.unsplash.com`,
     `font-src 'self' data:`,
     `connect-src 'self' https://*.fangc.cc https://*.cos.ap-shanghai.myqcloud.com https://hm.baidu.com`,
     `worker-src 'self' blob:`,
