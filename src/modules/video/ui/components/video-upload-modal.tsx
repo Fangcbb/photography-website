@@ -42,13 +42,7 @@ export const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadingFile, setUploadingFile] = useState<string>("");
 
-  // 获取 S3 上传 URL
-  const createVideoUploadUrl = useMutation(
-    trpc.s3.createPresignedUrl.mutationOptions()
-  );
-  const createThumbnailUploadUrl = useMutation(
-    trpc.s3.createPresignedUrl.mutationOptions()
-  );
+  // SEC-04 收尾：上传已改走 /api/upload 同源代理
 
   // 创建视频记录
   const createVideo = useMutation(

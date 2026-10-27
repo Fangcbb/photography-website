@@ -49,9 +49,7 @@ interface TiptapEditorProps {
 
 const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
   const trpc = useTRPC();
-  const createPresignedUrl = useMutation(
-    trpc.s3.createPresignedUrl.mutationOptions()
-  );
+  // SEC-04 收尾：presigned 通道已下线
 
   const extensions = useMemo(
     () =>
@@ -131,7 +129,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
           },
         }),
       ] as Extension[],
-    [createPresignedUrl]
+    []
   );
 
   const editor = useEditor({

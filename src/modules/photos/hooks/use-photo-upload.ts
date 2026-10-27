@@ -32,9 +32,7 @@ export function usePhotoUpload({
   const [imageInfo, setImageInfo] = useState<TImageInfo | null>(null);
 
   const trpc = useTRPC();
-  const createPresignedUrl = useMutation(
-    trpc.s3.createPresignedUrl.mutationOptions()
-  );
+  // SEC-04 收尾：presigned 通道已下线
 
   const handleUpload = async (file: File, livePhotoVideo?: File) => {
     try {

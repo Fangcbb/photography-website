@@ -43,9 +43,7 @@ const FileUploader = ({
   const [deletedKey, setDeletedKey] = useState<string | null>(null);
 
   const trpc = useTRPC();
-  const createPresignedUrl = useMutation(
-    trpc.s3.createPresignedUrl.mutationOptions()
-  );
+  // SEC-04 收尾：presigned 通道已下线
 
   const deleteFile = useMutation(trpc.s3.deleteFile.mutationOptions());
 
@@ -106,7 +104,7 @@ const FileUploader = ({
         );
       }
     },
-    [createPresignedUrl, onUploadSuccess, folder]
+    [onUploadSuccess, folder]
   );
 
   const onDrop = useCallback(
