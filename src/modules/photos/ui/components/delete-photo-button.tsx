@@ -35,10 +35,16 @@ export function DeletePhotoButton({
       { id: photoId },
       {
         onSuccess: async () => {
-          // Invalidate queries to refetch photos list
-          await queryClient.invalidateQueries(
-            trpc.photos.getMany.queryOptions({})
-          );
+          // Invalidate queries to refetch photos list and derived views
+          await queryClient.invalidateQueries({
+            queryKey: trpc.photos.getMany.queryKey(),
+          });
+          await queryClient.invalidateQueries({
+            queryKey: trpc.city.getMany.queryKey(),
+          });
+          await queryClient.invalidateQueries({
+            queryKey: trpc.home.getCitySets.queryKey(),
+          });
           toast.success("照片删除成功");
         },
         onError: (error) => {

@@ -65,9 +65,17 @@ export async function POST(request: NextRequest) {
   const filename = searchParams.get("filename");
   const folder = searchParams.get("folder") || "photos";
   const contentType = request.headers.get("content-type") || "";
-  const contentLength = Number(request.headers.get("content-length") || 0);
+  const contentLengthHeader = request.headers.get("content-length");
+  const contentLength = Number(contentLengthHeader || 0);
 
   try {
+    if (contentLengthHeader === null || contentLengthHeader === "") {
+      return NextResponse.json(
+        { error: "Length Required" },
+        { status: 411 }
+      );
+    }
+
     // 必须登录 —— 否则等于开放了一个匿名写入 COS 的接口
     const session = await getSession();
     if (!session) {

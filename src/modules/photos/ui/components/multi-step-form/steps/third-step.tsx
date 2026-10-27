@@ -173,11 +173,25 @@ export function ThirdStep({
   ]);
 
   const onSubmit = (data: ThirdStepData) => {
-    // Include current location in submitted data
+    // Include current location in submitted data.
+    // Keep an explicitly selected 0 coordinate; submit undefined when
+    // the user never picked a location (instead of coercing to 0).
+    const latitude =
+      currentLocation.lat !== 0
+        ? currentLocation.lat
+        : initialData?.latitude !== undefined && initialData?.latitude !== null
+          ? initialData.latitude
+          : undefined;
+    const longitude =
+      currentLocation.lng !== 0
+        ? currentLocation.lng
+        : initialData?.longitude !== undefined && initialData?.longitude !== null
+          ? initialData.longitude
+          : undefined;
     onNext({
       ...data,
-      latitude: currentLocation.lat !== 0 ? currentLocation.lat : (initialLatitude ?? 0),
-      longitude: currentLocation.lng !== 0 ? currentLocation.lng : (initialLongitude ?? 0),
+      latitude,
+      longitude,
     });
   };
 

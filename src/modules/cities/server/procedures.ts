@@ -118,6 +118,14 @@ export const cityRouter = createTRPCRouter({
         });
       }
 
+      // 封面必须是公开照片，否则 getMany 的 innerJoin 会把它隐藏掉
+      if (photo.visibility !== "public") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "不能将私有照片设为封面",
+        });
+      }
+
       // Verify the photo belongs to this city
       if (photo.city !== citySet.city) {
         throw new TRPCError({

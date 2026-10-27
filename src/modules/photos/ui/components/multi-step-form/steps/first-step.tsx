@@ -61,8 +61,8 @@ export function FirstStep({
             <>
               <PhotoUploader
                 folder={DEFAULT_PHOTOS_UPLOAD_FOLDER}
-                onUploadSuccess={(url, exif, imageInfo) => {
-                  onUploadSuccess(url, exif, imageInfo);
+                onUploadSuccess={(url, exif, imageInfo, livePhotoVideoUrl) => {
+                  onUploadSuccess(url, exif, imageInfo, livePhotoVideoUrl);
                   form.setValue("url", url, { shouldValidate: true });
                 }}
               />

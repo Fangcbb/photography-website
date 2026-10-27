@@ -54,6 +54,7 @@ export default function MultiStepForm({
 
   // Upload-related state
   const [url, setUrl] = useState<string | null>(null);
+  const [livePhotoVideoUrl, setLivePhotoVideoUrl] = useState<string | undefined>(undefined);
   const [exif, setExif] = useState<TExifData | null>(null);
   const [imageInfo, setImageInfo] = useState<TImageInfo>();
 
@@ -68,11 +69,13 @@ export default function MultiStepForm({
   const handleUploadSuccess = (
     uploadedUrl: string,
     uploadedExif: TExifData | null,
-    uploadedImageInfo: TImageInfo
+    uploadedImageInfo: TImageInfo,
+    uploadedLivePhotoVideoUrl?: string
   ) => {
     setUrl(uploadedUrl);
     setExif(uploadedExif);
     setImageInfo(uploadedImageInfo);
+    setLivePhotoVideoUrl(uploadedLivePhotoVideoUrl);
   };
 
   // Handle re-upload
@@ -81,6 +84,7 @@ export default function MultiStepForm({
     setUrl(null);
     setExif(null);
     setImageInfo(undefined);
+    setLivePhotoVideoUrl(undefined);
   };
 
   // Handle next step
@@ -94,7 +98,11 @@ export default function MultiStepForm({
         url: url || "",
         exif,
         imageInfo,
-        // Pre-fill camera parameters from EXIF
+      };
+      // Pre-fill camera parameters from EXIF only when the user
+      // has not provided a value themselves, so navigating back and
+      // forward does not overwrite manual edits.
+      const exifPrefill: Partial<Record<keyof typeof updatedData, unknown>> = {
         make: exif?.make,
         model: exif?.model,
         lensModel: exif?.lensModel,
@@ -109,6 +117,13 @@ export default function MultiStepForm({
         gpsAltitude: exif?.gpsAltitude,
         dateTimeOriginal: exif?.dateTimeOriginal,
       };
+      for (const [key, value] of Object.entries(exifPrefill)) {
+        if (value === undefined || value === null) continue;
+        const existing = updatedData[key as keyof typeof updatedData];
+        if (existing === undefined || existing === null || existing === "") {
+          (updatedData as Record<string, unknown>)[key] = value;
+        }
+      }
     }
 
     setFormData(updatedData);
@@ -128,6 +143,8 @@ export default function MultiStepForm({
         width: imageInfo?.width || 0,
         height: imageInfo?.height || 0,
         blurData: imageInfo?.blurhash || "",
+        livePhotoVideoUrl,
+        isLivePhoto: !!livePhotoVideoUrl,
         // Add address data from geocoding if available
         country: address?.features?.[0]?.properties?.context?.country?.name,
         countryCode:
@@ -194,6 +211,7 @@ export default function MultiStepForm({
     setUrl(null);
     setExif(null);
     setImageInfo(undefined);
+    setLivePhotoVideoUrl(undefined);
     setAddress(null);
   };
 

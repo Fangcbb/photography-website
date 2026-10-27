@@ -164,9 +164,7 @@ export const citySets = pgTable(
     slug: text("slug").notNull().unique(),
 
     // COVER PHOTO
-    coverPhotoId: uuid("cover_photo_id")
-      .references(() => photos.id)
-      .notNull(),
+    coverPhotoId: uuid("cover_photo_id").references(() => photos.id),
 
     photoCount: integer("photo_count").default(0).notNull(),
 
@@ -210,6 +208,15 @@ export const photosUpdateSchema = createUpdateSchema(photos)
     latitude: true,
     longitude: true,
     visibility: true,
+    make: true,
+    model: true,
+    lensModel: true,
+    focalLength: true,
+    focalLength35mm: true,
+    fNumber: true,
+    iso: true,
+    exposureTime: true,
+    exposureCompensation: true,
   })
   .partial();
 
@@ -223,8 +230,8 @@ export type CitySetSummary = {
   city: string;
   country: string;
   photoCount: number;
-  coverPhotoId: string;
-  coverPhoto: Photo;
+  coverPhotoId: string | null;
+  coverPhoto: Photo | null;
 };
 
 // with photos & cover photo

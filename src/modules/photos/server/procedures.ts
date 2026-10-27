@@ -23,6 +23,19 @@ function escapeLike(str: string): string {
   return str.replace(/[%_\\]/g, "\\$&");
 }
 
+// If the stored URL carries a CDN domain prefix, keep only the path part as the S3 key
+function toS3Key(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) {
+    try {
+      return new URL(url).pathname.replace(/^\/+/, "");
+    } catch {
+      return url;
+    }
+  }
+  return url;
+}
+
 export const photosRouter = createTRPCRouter({
   create: protectedProcedure
     .input(photosInsertSchema)
@@ -46,6 +59,8 @@ export const photosRouter = createTRPCRouter({
             .returning();
 
           if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
+            const isPublic = insertedPhoto.visibility === "public";
+
             await tx
               .insert(citySets)
               .values({
@@ -57,15 +72,17 @@ export const photosRouter = createTRPCRouter({
                   insertedPhoto.country,
                   cityName,
                 ),
-                photoCount: 1,
-                coverPhotoId: insertedPhoto.id,
+                photoCount: isPublic ? 1 : 0,
+                coverPhotoId: isPublic ? insertedPhoto.id : null,
               })
               .onConflictDoUpdate({
                 target: [citySets.country, citySets.city],
                 set: {
                   countryCode: insertedPhoto.countryCode,
-                  photoCount: sql`${citySets.photoCount} + 1`,
-                  coverPhotoId: insertedPhoto.id,
+                  photoCount: sql`${citySets.photoCount} + ${isPublic ? 1 : 0}`,
+                  ...(isPublic
+                    ? { coverPhotoId: insertedPhoto.id }
+                    : {}),
                   updatedAt: new Date(),
                 },
               });
@@ -107,61 +124,81 @@ export const photosRouter = createTRPCRouter({
           });
         }
 
-        // city set related
-        if (photo.country && photo.city) {
-          const [citySet] = await ctx.db
-            .select()
-            .from(citySets)
-            .where(
-              and(
-                eq(citySets.country, photo.country),
-                eq(citySets.city, photo.city),
-              ),
-            );
+        await dualTransaction(async (tx) => {
+          // city set related
+          if (photo.country && photo.city) {
+            const [citySet] = await tx
+              .select()
+              .from(citySets)
+              .where(
+                and(
+                  eq(citySets.country, photo.country),
+                  eq(citySets.city, photo.city),
+                ),
+              );
 
-          if (citySet) {
-            if (citySet.photoCount === 1) {
-              // last photo in city — delete the city set
-              await dualDelete(citySets).where(eq(citySets.id, citySet.id));
-            } else {
-              // find new cover photo if current cover is being deleted
-              const newCoverPhotoId =
-                citySet.coverPhotoId === photo.id
-                  ? (
-                      await ctx.db
-                        .select({ id: photos.id })
-                        .from(photos)
-                        .where(
-                          and(
-                            eq(photos.country, photo.country),
-                            eq(photos.city, photo.city),
-                            eq(photos.visibility, "public"),
-                            sql`${photos.id} != ${photo.id}`,
-                          ),
-                        )
-                        .orderBy(desc(photos.createdAt))
-                        .limit(1)
-                    )[0]?.id
-                  : undefined;
-
-              await dualUpdate(citySets)
-                .set({
-                  photoCount: sql`${citySets.photoCount} - 1`,
-                  ...(newCoverPhotoId ? { coverPhotoId: newCoverPhotoId } : {}),
-                  updatedAt: new Date(),
-                })
+            if (citySet) {
+              // Real-time public photo count for this city (excluding the photo
+              // being deleted) — stored photoCount may have drifted.
+              const [remaining] = await tx
+                .select({ count: count() })
+                .from(photos)
                 .where(
                   and(
-                    eq(citySets.country, photo.country),
-                    eq(citySets.city, photo.city),
+                    eq(photos.country, photo.country),
+                    eq(photos.city, photo.city),
+                    eq(photos.visibility, "public"),
+                    sql`${photos.id} != ${photo.id}`,
                   ),
                 );
+
+              if (remaining.count === 0) {
+                // last public photo in city — delete the city set
+                await dualDelete(citySets).where(eq(citySets.id, citySet.id));
+              } else {
+                // find new cover photo if current cover is being deleted
+                const newCoverPhotoId =
+                  citySet.coverPhotoId === photo.id
+                    ? (
+                        await tx
+                          .select({ id: photos.id })
+                          .from(photos)
+                          .where(
+                            and(
+                              eq(photos.country, photo.country),
+                              eq(photos.city, photo.city),
+                              eq(photos.visibility, "public"),
+                              sql`${photos.id} != ${photo.id}`,
+                            ),
+                          )
+                          .orderBy(desc(photos.createdAt))
+                          .limit(1)
+                      )[0]?.id
+                    : undefined;
+
+                // photoCount is a defensive decrement only — the real-time
+                // count above is the source of truth for the last-photo check.
+                await dualUpdate(citySets)
+                  .set({
+                    photoCount: sql`greatest(${citySets.photoCount} - 1, 0)`,
+                    ...(newCoverPhotoId
+                      ? { coverPhotoId: newCoverPhotoId }
+                      : {}),
+                    updatedAt: new Date(),
+                  })
+                  .where(
+                    and(
+                      eq(citySets.country, photo.country),
+                      eq(citySets.city, photo.city),
+                    ),
+                  );
+              }
             }
           }
-        }
 
-        // delete photo record first, then S3
-        await dualDelete(photos).where(eq(photos.id, id));
+          // delete photo record (S3 deletion happens after the transaction)
+          await dualDelete(photos).where(eq(photos.id, id));
+        });
 
         // S3 delete after DB — orphan file is acceptable, inconsistent DB is not
         try {
@@ -172,6 +209,19 @@ export const photosRouter = createTRPCRouter({
           await s3Client.send(command);
         } catch (error) {
           console.error("S3 delete failed (orphan file):", error);
+        }
+
+        // Live photo video object — best-effort, never blocks deletion
+        if (photo.livePhotoVideoUrl) {
+          try {
+            const command = new DeleteObjectCommand({
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: toS3Key(photo.livePhotoVideoUrl) ?? undefined,
+            });
+            await s3Client.send(command);
+          } catch (error) {
+            console.error("S3 live photo video delete failed:", error);
+          }
         }
 
         return photo;
@@ -193,6 +243,15 @@ export const photosRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST" });
       }
 
+      const [existing] = await ctx.db
+        .select()
+        .from(photos)
+        .where(eq(photos.id, id));
+
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
       const [updatedPhoto] = await dualUpdate(photos)
         .set({
           ...input,
@@ -203,6 +262,93 @@ export const photosRouter = createTRPCRouter({
 
       if (!updatedPhoto) {
         throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      // Keep citySet photoCount in sync when visibility flips.
+      if (
+        updatedPhoto.country &&
+        updatedPhoto.city &&
+        existing.visibility !== updatedPhoto.visibility
+      ) {
+        try {
+          const becamePrivate =
+            existing.visibility === "public" &&
+            updatedPhoto.visibility === "private";
+          const becamePublic =
+            existing.visibility === "private" &&
+            updatedPhoto.visibility === "public";
+
+          if (becamePrivate) {
+            await dualUpdate(citySets)
+              .set({
+                photoCount: sql`greatest(${citySets.photoCount} - 1, 0)`,
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(citySets.country, updatedPhoto.country),
+                  eq(citySets.city, updatedPhoto.city),
+                ),
+              );
+
+            // If this photo was the cover, re-pick the latest public photo;
+            // if none exists, clear the cover reference.
+            const [citySet] = await ctx.db
+              .select({ id: citySets.id })
+              .from(citySets)
+              .where(
+                and(
+                  eq(citySets.country, updatedPhoto.country),
+                  eq(citySets.city, updatedPhoto.city),
+                  eq(citySets.coverPhotoId, updatedPhoto.id),
+                ),
+              );
+
+            if (citySet) {
+              const [newCover] = await ctx.db
+                .select({ id: photos.id })
+                .from(photos)
+                .where(
+                  and(
+                    eq(photos.country, updatedPhoto.country),
+                    eq(photos.city, updatedPhoto.city),
+                    eq(photos.visibility, "public"),
+                    sql`${photos.id} != ${updatedPhoto.id}`,
+                  ),
+                )
+                .orderBy(desc(photos.createdAt))
+                .limit(1);
+
+              await dualUpdate(citySets)
+                .set({
+                  coverPhotoId: newCover?.id ?? null,
+                  updatedAt: new Date(),
+                })
+                .where(
+                  and(
+                    eq(citySets.country, updatedPhoto.country),
+                    eq(citySets.city, updatedPhoto.city),
+                    eq(citySets.coverPhotoId, updatedPhoto.id),
+                  ),
+                );
+            }
+          } else if (becamePublic) {
+            // only increment when the city set already exists
+            await dualUpdate(citySets)
+              .set({
+                photoCount: sql`${citySets.photoCount} + 1`,
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(citySets.country, updatedPhoto.country),
+                  eq(citySets.city, updatedPhoto.city),
+                ),
+              );
+          }
+        } catch (error) {
+          console.error("citySet photoCount sync failed:", error);
+        }
       }
 
       return updatedPhoto;

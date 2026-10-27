@@ -3,6 +3,8 @@ import { desc, eq, and, sql } from "drizzle-orm";
 import { videos } from "@/db/schema";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client } from "@/modules/s3/lib/server-client";
 
 function generateSlug(title: string): string {
   const timestamp = Date.now().toString(36);
@@ -13,6 +15,34 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, '')
     .substring(0, 30);
   return titleSlug + "-" + timestamp + "-" + randomStr;
+}
+
+// 与 photos.remove 一致：带 CDN 域名的 URL 取 path；失败仅 console.error 不阻断
+async function deleteVideoAssets(video: {
+  videoUrl?: string | null;
+  thumbnailUrl?: string | null;
+}) {
+  const keys = [video.videoUrl, video.thumbnailUrl].filter(
+    (v): v is string => typeof v === "string" && v.length > 0,
+  );
+
+  for (const raw of keys) {
+    try {
+      let key = raw;
+      if (/^https?:\/\//i.test(raw)) {
+        const url = new URL(raw);
+        key = url.pathname.replace(/^\/+/, "");
+      }
+      if (!key) continue;
+      const command = new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key,
+      });
+      await s3Client.send(command);
+    } catch (error) {
+      console.error("S3 delete failed (orphan file):", error);
+    }
+  }
 }
 
 export const videoRouter = createTRPCRouter({
@@ -60,12 +90,14 @@ export const videoRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      await ctx.db
+      // 单条原子自增，避免 read-then-write 竞态；返回自增后的新值
+      const [updated] = await ctx.db
         .update(videos)
-        .set({ viewCount: data.viewCount + 1 })
-        .where(eq(videos.id, data.id));
+        .set({ viewCount: sql`${videos.viewCount} + 1` })
+        .where(eq(videos.id, data.id))
+        .returning();
 
-      return data;
+      return { ...data, viewCount: updated?.viewCount ?? data.viewCount + 1 };
     }),
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
@@ -166,6 +198,9 @@ export const videoRouter = createTRPCRouter({
       if (!video) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
+
+      // DB 记录已删除，S3/COS 清理失败可接受孤儿文件
+      await deleteVideoAssets(video);
 
       return video;
     }),

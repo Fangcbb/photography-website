@@ -15,7 +15,8 @@ export const CitiesView = () => {
 
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
-      {data.map((item) => (
+      {data.map((item) =>
+        item.coverPhotoId == null ? null : (
         <CityCard
           key={item.id}
           cityId={item.id}
@@ -23,7 +24,8 @@ export const CitiesView = () => {
           title={item.city}
           coverPhoto={{ id: item.coverPhotoId, title: item.coverPhotoTitle, blurData: item.coverPhotoBlurData }}
         />
-      ))}
+        )
+      )}
     </div>
   );
 };

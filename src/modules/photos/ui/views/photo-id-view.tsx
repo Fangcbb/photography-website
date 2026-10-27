@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import { FramedPhoto } from "@/components/framed-photo";
 import { photosUpdateSchema } from "@/db/schema";
 import { useTRPC } from "@/trpc/client";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -64,10 +65,21 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
     })
   );
 
+  const queryClient = useQueryClient();
   const updateMutation = useMutation(
     trpc.photos.update.mutationOptions({
-      onSuccess: () => {},
-      onError: () => {},
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: trpc.photos.getOne.queryKey({ id }),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: trpc.photos.getMany.queryKey(),
+        });
+        toast.success("保存成功");
+      },
+      onError: (error) => {
+        toast.error(error.message || "保存失败");
+      },
     })
   );
 

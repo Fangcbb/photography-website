@@ -10,6 +10,8 @@ import {
 } from "@/constants";
 import { posts, postsInsertSchema, postsUpdateSchema } from "@/db/schema";
 import { dualInsert, dualUpdate, dualDelete } from "@/db";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client } from "@/modules/s3/lib/server-client";
 
 export const postsRouter = createTRPCRouter({
   create: protectedProcedure
@@ -45,6 +47,27 @@ export const postsRouter = createTRPCRouter({
           code: "NOT_FOUND",
           message: "文章不存在",
         });
+      }
+
+      // S3 delete after DB — orphan file is acceptable, inconsistent DB is not
+      try {
+        const raw = data.coverImage;
+        if (raw && raw.length > 0) {
+          let key = raw;
+          if (/^https?:\/\//i.test(raw)) {
+            const url = new URL(raw);
+            key = url.pathname.replace(/^\/+/, "");
+          }
+          if (key) {
+            const command = new DeleteObjectCommand({
+              Bucket: process.env.S3_BUCKET_NAME,
+              Key: key,
+            });
+            await s3Client.send(command);
+          }
+        }
+      } catch (error) {
+        console.error("S3 delete failed (orphan file):", error);
       }
 
       return data;

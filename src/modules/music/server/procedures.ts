@@ -4,6 +4,36 @@ import { music } from "@/db/schema";
 import { dualInsert, dualUpdate, dualDelete } from "@/db";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client } from "@/modules/s3/lib/server-client";
+
+// 与 photos.remove 一致：带 CDN 域名的 URL 取 path；失败仅 console.error 不阻断
+async function deleteMusicAssets(item: {
+  musicUrl?: string | null;
+  coverUrl?: string | null;
+}) {
+  const keys = [item.musicUrl, item.coverUrl].filter(
+    (v): v is string => typeof v === "string" && v.length > 0,
+  );
+
+  for (const raw of keys) {
+    try {
+      let key = raw;
+      if (/^https?:\/\//i.test(raw)) {
+        const url = new URL(raw);
+        key = url.pathname.replace(/^\/+/, "");
+      }
+      if (!key) continue;
+      const command = new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key,
+      });
+      await s3Client.send(command);
+    } catch (error) {
+      console.error("S3 delete failed (orphan file):", error);
+    }
+  }
+}
 
 export const musicRouter = createTRPCRouter({
   // 获取公开音乐列表
@@ -56,10 +86,11 @@ export const musicRouter = createTRPCRouter({
         .limit(limit)
         .offset(offset);
 
-      // 获取总数 - 使用 COUNT 替代加载所有行
+      // 获取总数 - 使用 COUNT 替代加载所有行，where 与 data 保持一致
       const [countResult] = await ctx.db
         .select({ total: count() })
-        .from(music);
+        .from(music)
+        .where(conditions);
       const total = countResult.total;
 
       return { data, total };
@@ -164,6 +195,9 @@ export const musicRouter = createTRPCRouter({
         });
       }
 
+      // DB 记录已删除，S3/COS 清理失败可接受孤儿文件
+      await deleteMusicAssets(data);
+
       return { success: true, message: "音乐已删除" };
     }),
 
@@ -177,7 +211,14 @@ export const musicRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { ids } = input;
 
-      await dualDelete(music).where(inArray(music.id, ids));
+      const deleted = await dualDelete(music)
+        .where(inArray(music.id, ids))
+        .returning();
+
+      // 循环删除 COS 上的音乐与封面文件
+      for (const item of deleted) {
+        await deleteMusicAssets(item);
+      }
 
       return { success: true, message: `${ids.length} music items deleted` };
     }),

@@ -16,6 +16,7 @@ export const CoverPhoto = ({ citySet, citySets }: CoverPhotoProps) => {
         <div className="relative w-full h-full">
           {citySets?.map((city) => {
             const isActive = city.id === citySet.id;
+            if (!city.coverPhoto) return null;
             return (
               <div
                 key={city.id}
