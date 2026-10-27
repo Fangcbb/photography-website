@@ -56,7 +56,7 @@ export const ResponsiveModal = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={className}
+        className={cn("sm:max-h-[90vh] flex flex-col sm:flex-col", className)}
         onEscapeKeyDown={(event) => {
           if (!dismissible) {
             event.preventDefault();
@@ -73,11 +73,11 @@ export const ResponsiveModal = ({
           }
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="shrink-0">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
-        {children}
+        <div className="overflow-y-auto min-h-0 -mx-1 px-1">{children}</div>
       </DialogContent>
     </Dialog>
   );

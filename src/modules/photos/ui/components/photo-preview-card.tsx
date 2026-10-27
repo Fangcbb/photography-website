@@ -68,7 +68,7 @@ export function PhotoPreviewCard({
         style={{
           maxWidth: `min(65vh * ${aspectRatio}, ${widthConstraint})`,
           aspectRatio: aspectRatio,
-          maxHeight: "65dvh",
+          maxHeight: "50dvh",
         }}
       >
         <BlurImage

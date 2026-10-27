@@ -12,7 +12,7 @@ const CreatePhotoModal = () => {
       open={isOpen}
       onOpenChange={onClose}
       title="创建照片"
-      className="sm:max-w-3xl"
+      className="sm:max-w-3xl w-full"
       dismissible={false}
     >
       <MultiStepForm />
