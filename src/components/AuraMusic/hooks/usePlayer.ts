@@ -701,7 +701,7 @@ export const usePlayer = ({
       return;
     }
 
-    extractColors(currentSong.coverUrl)
+    extractColors(`/api/music/pic?u=${encodeURIComponent(currentSong.coverUrl)}`)
       .then((colors) => {
         if (colors.length > 0) {
           updateSongInQueue(currentSong.id, { colors });
