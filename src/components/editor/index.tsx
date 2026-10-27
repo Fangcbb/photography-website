@@ -115,19 +115,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
               const { publicUrl } = await s3Client.upload({
                 file,
                 folder: "posts",
-                getUploadUrl: async ({ filename, contentType, folder }) => {
-                  const data = await createPresignedUrl.mutateAsync({
-                    filename,
-                    contentType,
-                    size: file.size,
-                    folder,
-                  });
-
-                  return {
-                    uploadUrl: data.presignedUrl,
-                    publicUrl: data.key,
-                  };
-                },
+                // SEC-04 收尾：旧 presigned 通道已下线（服务端 multipart/proxy 限额）
               });
 
               editor.chain().focus().setImage({ src: publicUrl }).run();

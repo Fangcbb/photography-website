@@ -163,6 +163,10 @@ export const PostForm = ({ post }: PostFormProps) => {
                       onUploadSuccess={(key) => {
                         field.onChange(key);
                       }}
+                      // DATA-03 收尾：移除已保存封面时同步清空表单值
+                      onRemove={() => {
+                        field.onChange("");
+                      }}
                       folder="posts"
                       value={field.value}
                     />

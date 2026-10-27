@@ -194,9 +194,11 @@ export function ThirdStep({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+              {/* FORM-01 收尾：位于 form 内，必须显式 type=button，否则点清除会提交表单 */}
               <Button
+                type="button"
                 variant="outline"
-                aria-label="搜索"
+                aria-label="清除搜索"
                 onClick={handleClearSearch}
                 disabled={!searchQuery || isSearching}
               >

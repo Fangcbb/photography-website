@@ -15,12 +15,15 @@ import { CloudUpload, ImageIcon, Upload, XIcon } from "lucide-react";
 
 interface FileUploaderProps {
   onUploadSuccess?: (key: string) => void;
+  // DATA-03 收尾：已保存文件被移除（仅解除引用）时通知父表单清空值
+  onRemove?: () => void;
   folder?: string;
   value?: string;
 }
 
 const FileUploader = ({
   onUploadSuccess,
+  onRemove,
   folder = "uploads",
   value,
 }: FileUploaderProps) => {
@@ -61,19 +64,7 @@ const FileUploader = ({
               prev.map((f) => (f.id === fileId ? { ...f, progress } : f))
             );
           },
-          getUploadUrl: async ({ filename, contentType, folder }) => {
-            const data = await createPresignedUrl.mutateAsync({
-              filename,
-              contentType,
-              size: file.size,
-              folder,
-            });
-
-            return {
-              uploadUrl: data.presignedUrl,
-              publicUrl: data.key,
-            };
-          },
+          // SEC-04 收尾：旧 presigned 通道已下线
         });
 
         setFiles((prev) =>
@@ -203,6 +194,7 @@ const FileUploader = ({
       // 这里只解除引用，物理删除交给服务端延迟回收任务。
       if (key === value) {
         setDeletedKey(key);
+        onRemove?.();
         toast.success("已移除引用，原文件将在后台延迟回收");
         return;
       }

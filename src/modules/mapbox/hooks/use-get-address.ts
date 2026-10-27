@@ -51,12 +51,18 @@ export const useGetAddress = ({ lat, lng }: UseGetLocationProps) => {
   });
 
   useEffect(() => {
+    // FORM-01 收尾：拖动标记时连续触发逆地理，旧响应晚到会把过期地址写入表单。
+    // 用 AbortController + unmounted 标志确保只有最新坐标的响应生效。
+    const controller = new AbortController();
+    let cancelled = false;
+
     const fetchLocation = async () => {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       try {
         const response = await fetch(
-          `/mbapi/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`
+          `/mbapi/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`,
+          { signal: controller.signal }
         );
 
         if (!response.ok) {
@@ -64,8 +70,10 @@ export const useGetAddress = ({ lat, lng }: UseGetLocationProps) => {
         }
 
         const data: MapboxReverseGeocodingResponse = await response.json();
+        if (cancelled) return;
         setState({ data, isLoading: false, error: null });
       } catch (error) {
+        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) return;
         setState({
           data: null,
           isLoading: false,
@@ -76,6 +84,10 @@ export const useGetAddress = ({ lat, lng }: UseGetLocationProps) => {
     };
 
     fetchLocation();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [lat, lng]);
 
   return state;

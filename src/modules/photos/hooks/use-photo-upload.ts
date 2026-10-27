@@ -57,16 +57,10 @@ export function usePhotoUpload({
           setUploadProgress(progress);
         },
         getUploadUrl: async ({ filename, contentType, folder }) => {
-          const data = await createPresignedUrl.mutateAsync({
-            filename,
-            contentType,
-            size: file.size,
-            folder,
-          });
-
+          // SEC-04 收尾：multipart/proxy 均由服务端限额，旧的 presigned 通道已下线
           return {
-            uploadUrl: data.presignedUrl,
-            publicUrl: data.key,
+            uploadUrl: "",
+            publicUrl: "",
           };
         },
       });
@@ -80,17 +74,10 @@ export function usePhotoUpload({
           folder: videoFolder,
           onProgress: () => {},
           getUploadUrl: async ({ filename, contentType, folder }) => {
-            const data = await createPresignedUrl.mutateAsync({
-              filename,
-              contentType,
-              size: livePhotoVideo.size,
-              folder,
-            });
-
-            return {
-              uploadUrl: data.presignedUrl,
-              publicUrl: data.key,
-            };
+          return {
+            uploadUrl: "",
+            publicUrl: "",
+          };
           },
         });
         livePhotoVideoUrl = videoUrl;

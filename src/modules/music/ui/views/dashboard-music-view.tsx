@@ -79,7 +79,7 @@ async function uploadFileToS3(
   file: File,
   _presignedUrl: string,
   onProgress?: (progress: number) => void
-): Promise<void> {
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -92,7 +92,8 @@ async function uploadFileToS3(
 
     xhr.onload = () => {
       if (xhr.status === 200) {
-        resolve();
+        try { resolve(JSON.parse(xhr.responseText).key || ""); }
+        catch { reject(new Error("上传响应缺少 key")); }
       } else {
         let msg = "上传失败";
         try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
@@ -130,13 +131,7 @@ export const DashboardMusicView = () => {
     search: search || undefined,
   }));
 
-  // S3 上传 URL
-  const createMusicUploadUrl = useMutation(
-    trpc.s3.createPresignedUrl.mutationOptions()
-  );
-  const createCoverUploadUrl = useMutation(
-    trpc.s3.createPresignedUrl.mutationOptions()
-  );
+  // SEC-04 收尾：上传改走 /api/upload 同源代理（服务端按 Content-Length 限额），不再需要 presigned
 
   // 创建音乐
   const createMutation = useMutation(
@@ -241,18 +236,9 @@ export const DashboardMusicView = () => {
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         
         setUploadProgress(10);
-        const { presignedUrl, key } = await createMusicUploadUrl.mutateAsync({
-          filename: fileName,
-          contentType: musicFile.type as any,
-          size: musicFile.size,
-          folder: "music",
-        });
-
-        setUploadProgress(30);
-        await uploadFileToS3(musicFile, presignedUrl, (progress) => {
+        const key = await uploadFileToS3(musicFile, "", (progress) => {
           setUploadProgress(30 + progress * 0.4);
         });
-        
         musicKey = key;
         setUploadProgress(70);
       }
@@ -262,17 +248,9 @@ export const DashboardMusicView = () => {
         const ext = coverFile.name.split(".").pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         
-        const { presignedUrl, key } = await createCoverUploadUrl.mutateAsync({
-          filename: fileName,
-          contentType: coverFile.type as any,
-          size: coverFile.size,
-          folder: "music-covers",
-        });
-
-        await uploadFileToS3(coverFile, presignedUrl, (progress) => {
+        const key = await uploadFileToS3(coverFile, "", (progress) => {
           setUploadProgress(70 + progress * 0.2);
         });
-        
         coverKey = key;
         setUploadProgress(90);
       }
