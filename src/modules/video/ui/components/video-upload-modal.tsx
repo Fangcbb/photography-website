@@ -92,14 +92,7 @@ export const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) 
     // 设置当前上传文件
     setUploadingFile(type === "video" ? "视频" : "缩略图");
 
-    // 获取上传 URL
-    const uploadUrlMutation = type === "video" ? createVideoUploadUrl : createThumbnailUploadUrl;
-    const { presignedUrl, key } = await uploadUrlMutation.mutateAsync({
-      filename: fileName,
-      contentType: file.type as any,
-      size: file.size,
-      folder,
-    });
+    // SEC-04 收尾：key 由 /api/upload 响应返回（服务端生成 uuid 并强制限额）
 
     // 使用 XMLHttpRequest 上传文件以跟踪进度
     return new Promise<string>((resolve, reject) => {
@@ -114,7 +107,8 @@ export const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) 
 
       xhr.onload = () => {
         if (xhr.status === 200) {
-          resolve(key);
+          try { resolve(JSON.parse(xhr.responseText).key || ""); }
+          catch { reject(new Error("上传响应缺少 key")); return; }
         } else {
           let msg = `上传 ${type} 失败`;
           try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
