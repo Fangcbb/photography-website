@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "bad url" }, { status: 400 });
   }
   try {
-    const upstream = await fetch(u, {
+    const sized = u + (u.includes("?") ? "&" : "?") + "param=1024y1024";
+    const upstream = await fetch(sized, {
       headers: { "User-Agent": "Mozilla/5.0", Referer: "https://music.163.com" },
       signal: AbortSignal.timeout(15000),
     });
