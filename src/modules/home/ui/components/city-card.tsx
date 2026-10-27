@@ -11,7 +11,7 @@ interface Props {
   cityId: string;
   citySlug: string;
   title: string;
-  coverPhoto: { id: string; title: string; blurData: string };
+  coverPhoto: { id: string; title?: string | null; blurData?: string | null };
 }
 
 const CityCard = ({ cityId, citySlug, title, coverPhoto }: Props) => {
@@ -26,7 +26,7 @@ const CityCard = ({ cityId, citySlug, title, coverPhoto }: Props) => {
       >
         <BlurImage
           src={photoProxyUrl(coverPhoto.id, "fangb")}
-          alt={coverPhoto.title}
+          alt={coverPhoto.title || title}
           fill
           sizes="(max-width: 767px) 100vw, (max-width: 1535px) 50vw, 33vw"
           quality={65}

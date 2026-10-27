@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, baseProcedure } from "@/trpc/init";
-import { desc, eq, and, asc, sql } from "drizzle-orm";
+import { desc, eq, and, asc, sql, inArray } from "drizzle-orm";
 import { citySets, photos } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 
@@ -34,8 +34,8 @@ export const homeRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit } = input;
 
-      // 仅返回封面为公开照片的城市，photoCount 只统计公开照片（防私有照片泄露）
-      const data = await ctx.db
+      // photoCount 只统计公开照片（防私有照片泄露）
+      const sets = await ctx.db
         .select({
           slug: citySets.slug,
           id: citySets.id,
@@ -48,17 +48,61 @@ export const homeRouter = createTRPCRouter({
               and ${photos.visibility} = 'public'
           )`.mapWith(Number),
           coverPhotoId: citySets.coverPhotoId,
-          coverPhotoUrl: photos.url,
-          coverPhotoBlurData: photos.blurData,
-          coverPhotoTitle: photos.title,
         })
         .from(citySets)
-        .innerJoin(photos, and(
-          eq(citySets.coverPhotoId, photos.id),
-          eq(photos.visibility, "public"),
-        ))
         .orderBy(desc(citySets.updatedAt))
         .limit(limit);
+
+      // 组装封面：优先用户指定封面（须为 public），否则回退该城市最新公开照片
+      const coverIds = sets.map((c) => c.coverPhotoId).filter((v): v is string => !!v);
+      const specified = coverIds.length
+        ? await ctx.db
+            .select({
+              id: photos.id,
+              url: photos.url,
+              blurData: photos.blurData,
+              title: photos.title,
+              visibility: photos.visibility,
+            })
+            .from(photos)
+            .where(inArray(photos.id, coverIds))
+        : [];
+      const specMap = new Map(specified.map((p) => [p.id, p]));
+
+      const data = await Promise.all(
+        sets.map(async (c) => {
+          const spec = c.coverPhotoId ? specMap.get(c.coverPhotoId) : undefined;
+          let cover = spec && spec.visibility === "public" ? spec : undefined;
+          if (!cover) {
+            const [latest] = await ctx.db
+              .select({
+                id: photos.id,
+                url: photos.url,
+                blurData: photos.blurData,
+                title: photos.title,
+                visibility: photos.visibility,
+              })
+              .from(photos)
+              .where(
+                and(
+                  eq(photos.city, c.city),
+                  eq(photos.country, c.country),
+                  eq(photos.visibility, "public"),
+                ),
+              )
+              .orderBy(desc(photos.createdAt))
+              .limit(1);
+            cover = latest;
+          }
+          return {
+            ...c,
+            coverPhotoId: cover && cover.id ? cover.id : null,
+            coverPhotoUrl: cover ? cover.url : null,
+            coverPhotoBlurData: cover ? cover.blurData : null,
+            coverPhotoTitle: cover ? cover.title : null,
+          };
+        }),
+      );
 
       return data;
     }),

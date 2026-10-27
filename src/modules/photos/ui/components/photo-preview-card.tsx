@@ -26,6 +26,8 @@ interface PhotoPreviewCardProps {
   exposureTime?: number | null;
   iso?: number | null;
   dateTimeOriginal?: string;
+  /** 弹窗内紧凑模式：限制图片高度，避免弹窗超高（前端全屏页不传，保持大图） */
+  compact?: boolean;
   className?: string;
 }
 
@@ -42,6 +44,7 @@ export function PhotoPreviewCard({
   exposureTime,
   iso,
   dateTimeOriginal,
+  compact = false,
   className,
 }: PhotoPreviewCardProps) {
   // Calculate aspect ratio
@@ -66,9 +69,9 @@ export function PhotoPreviewCard({
       <div
         className="bg-white relative shadow-2xl rounded-lg w-full"
         style={{
-          maxWidth: `min(48vh * ${aspectRatio}, ${widthConstraint})`,
+          maxWidth: `min(${compact ? 48 : 65}vh * ${aspectRatio}, ${widthConstraint})`,
           aspectRatio: aspectRatio,
-          maxHeight: "38dvh",
+          maxHeight: compact ? "38dvh" : "65dvh",
         }}
       >
         <BlurImage

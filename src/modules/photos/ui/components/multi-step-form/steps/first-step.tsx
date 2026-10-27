@@ -90,7 +90,7 @@ export function FirstStep({
               </div>
 
               {/* Image preview */}
-              <div className="relative aspect-[4/3] sm:aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+              <div className="relative w-full overflow-hidden rounded-lg border bg-muted h-[38vh] sm:aspect-video sm:h-auto">
                 <BlurImage
                   blurhash={imageInfo.blurhash}
                   src={keyToUrl(url)}

@@ -22,7 +22,7 @@ export const CitiesView = () => {
           cityId={item.id}
           citySlug={item.slug}
           title={item.city}
-          coverPhoto={{ id: item.coverPhotoId, title: item.coverPhotoTitle, blurData: item.coverPhotoBlurData }}
+          coverPhoto={{ id: item.coverPhotoId, title: item.coverPhotoTitle ?? undefined, blurData: item.coverPhotoBlurData ?? undefined }}
         />
         )
       )}

@@ -50,6 +50,7 @@ export function FourthStep({
                 ? initialData.exif.dateTimeOriginal.toString()
                 : undefined
             }
+            compact
             className="w-full"
           />
         )}

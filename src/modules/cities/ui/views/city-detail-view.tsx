@@ -99,12 +99,21 @@ export function CityDetailView({ city }: CityDetailViewProps) {
       },
       {
         onSuccess: async () => {
-          // Invalidate both queries to refresh data
+          // Invalidate all queries that display or edit the cover
           await queryClient.invalidateQueries(
             trpc.city.getOne.queryOptions({ city })
           );
           await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
-          toast.success("封面照片更新成功");
+          await queryClient.invalidateQueries(
+            trpc.home.getCitySets.queryOptions({ limit: 12 })
+          );
+          await queryClient.invalidateQueries(
+            trpc.home.getCitySets.queryOptions({ limit: 9 })
+          );
+          await queryClient.invalidateQueries(
+            trpc.travel.getCitySets.queryOptions()
+          );
+          toast.success("首页封面已更新");
         },
         onError: (error) => {
           toast.error(error.message || "封面照片更新失败");
@@ -232,9 +241,18 @@ export function CityDetailView({ city }: CityDetailViewProps) {
                 <Button
                   variant="outline"
                   size="icon"
+                  title={
+                    photo.id === cityData.coverPhotoId
+                      ? "点击取消首页封面（回退为最新照片）"
+                      : "设为首页城市封面"
+                  }
                   onClick={() => handleSetCover(photo.id)}
                 >
-                  {photo.id === cityData.coverPhotoId ? <Star /> : <StarOff />}
+                  {photo.id === cityData.coverPhotoId ? (
+                    <Star className="fill-yellow-400 text-yellow-400" />
+                  ) : (
+                    <StarOff />
+                  )}
                 </Button>
                 <Button variant="outline" size="icon">
                   <Heart />

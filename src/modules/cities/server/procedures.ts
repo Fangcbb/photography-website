@@ -5,14 +5,14 @@ import {
   protectedProcedure,
 } from "@/trpc/init";
 import { citySets, photos } from "@/db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 export const cityRouter = createTRPCRouter({
   // Get all city sets
   getMany: baseProcedure.query(async ({ ctx }) => {
-    // 仅返回封面为公开照片的城市，photoCount 只统计公开照片（防私有照片泄露）
-    const data = await ctx.db
+    // photoCount 只统计公开照片（防私有照片泄露）
+    const sets = await ctx.db
       .select({
         id: citySets.id,
         country: citySets.country,
@@ -28,18 +28,62 @@ export const cityRouter = createTRPCRouter({
         coverPhotoId: citySets.coverPhotoId,
         createdAt: citySets.createdAt,
         updatedAt: citySets.updatedAt,
-        coverPhotoUrl: photos.url,
-        coverPhotoBlurData: photos.blurData,
-        coverPhotoTitle: photos.title,
       })
       .from(citySets)
-      .innerJoin(photos, and(
-        eq(citySets.coverPhotoId, photos.id),
-        eq(photos.visibility, "public"),
-      ))
       .orderBy(desc(citySets.updatedAt), desc(citySets.createdAt));
 
-    return data;
+    // 组装封面：优先用户指定的封面（须为 public），否则回退该城市最新公开照片
+    const coverIds = sets.map((c) => c.coverPhotoId).filter((v): v is string => !!v);
+    const specified = coverIds.length
+      ? await ctx.db
+          .select({
+            id: photos.id,
+            url: photos.url,
+            blurData: photos.blurData,
+            title: photos.title,
+            visibility: photos.visibility,
+          })
+          .from(photos)
+          .where(inArray(photos.id, coverIds))
+      : [];
+    const specMap = new Map(specified.map((p) => [p.id, p]));
+
+    const withCovers = await Promise.all(
+      sets.map(async (c) => {
+        const spec = c.coverPhotoId ? specMap.get(c.coverPhotoId) : undefined;
+        let cover = spec && spec.visibility === "public" ? spec : undefined;
+        if (!cover) {
+          const [latest] = await ctx.db
+            .select({
+              id: photos.id,
+              url: photos.url,
+              blurData: photos.blurData,
+              title: photos.title,
+              visibility: photos.visibility,
+            })
+            .from(photos)
+            .where(
+              and(
+                eq(photos.city, c.city),
+                eq(photos.country, c.country),
+                eq(photos.visibility, "public"),
+              ),
+            )
+            .orderBy(desc(photos.createdAt))
+            .limit(1);
+          cover = latest;
+        }
+        return {
+          ...c,
+          coverPhotoId: cover?.id ?? null,
+          coverPhotoUrl: cover?.url ?? null,
+          coverPhotoBlurData: cover?.blurData ?? null,
+          coverPhotoTitle: cover?.title ?? null,
+        };
+      }),
+    );
+
+    return withCovers;
   }),
 
   /**
@@ -132,6 +176,16 @@ export const cityRouter = createTRPCRouter({
           code: "BAD_REQUEST",
           message: "照片不属于该城市",
         });
+      }
+
+      // Toggle：再次点击当前封面 = 取消指定（coverPhotoId 置 NULL，前台回退到最新公开照片）
+      if (citySet.coverPhotoId === photoId) {
+        const [updatedCitySet] = await ctx.db
+          .update(citySets)
+          .set({ coverPhotoId: null, updatedAt: new Date() })
+          .where(eq(citySets.id, cityId))
+          .returning();
+        return updatedCitySet;
       }
 
       // Update the cover photo
