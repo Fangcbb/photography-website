@@ -327,7 +327,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="fNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>光圈</FormLabel>
+                          <FormLabel>Aperture ƒ/</FormLabel>
                           <FormControl>
                             <ApertureSelector
                               value={field.value}
@@ -344,7 +344,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="exposureTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>快门速度</FormLabel>
+                          <FormLabel>Shutter</FormLabel>
                           <FormControl>
                             <ShutterSpeedSelector
                               value={field.value}
@@ -361,7 +361,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="iso"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>感光度</FormLabel>
+                          <FormLabel>ISO</FormLabel>
                           <FormControl>
                             <ISOSelector
                               value={field.value}

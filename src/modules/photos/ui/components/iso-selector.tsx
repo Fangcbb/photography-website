@@ -66,7 +66,7 @@ export function ISOSelector({ value, onChange }: ISOSelectorProps) {
 
       {isCustom && (
         <div className="flex gap-2 items-center">
-          <span className="text-sm text-muted-foreground">感光度</span>
+          <span className="text-sm text-muted-foreground">ISO</span>
           <Input
             type="number"
             placeholder="输入自定义值"

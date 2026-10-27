@@ -187,13 +187,13 @@ export const getPhotoExif = async (file: File): Promise<TExifData | null> => {
     const result = await exifr.parse(file, {
       // Read both IFD0 and Exif IFD
       pick: [
-        "品牌",
-        "型号",
+        "Make",
+        "Model",
         "LensModel",
         "FocalLength",
         "FocalLengthIn35mmFormat",
         "FNumber",
-        "感光度",
+        "ISO",
         "ExposureTime",
         "ExposureCompensation",
         "DateTimeOriginal",

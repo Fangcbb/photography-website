@@ -111,7 +111,7 @@ export function PhotoPreviewCard({
                     <span>
                       {exposureTime && formatExposureTime(exposureTime)}
                     </span>
-                    <span>{iso && "感光度" + iso}</span>
+                    <span>{iso && "ISO " + iso}</span>
                   </div>
                   <div className="flex items-center text-xs text-gray-500">
                     <p>

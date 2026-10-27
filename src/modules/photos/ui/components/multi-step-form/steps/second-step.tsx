@@ -274,7 +274,7 @@ export function SecondStep({
                   name="iso"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>感光度</FormLabel>
+                      <FormLabel>ISO</FormLabel>
                       <FormControl>
                         <ISOSelector
                           value={field.value ?? undefined}
