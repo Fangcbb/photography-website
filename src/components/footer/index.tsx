@@ -40,6 +40,7 @@ const Footer = () => {
           title="Utility"
           links={[
             { title: "Screensaver", href: "/screensaver" },
+            { title: "RSS", href: "/rss.xml" },
           ]}
         />
       </div>
