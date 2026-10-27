@@ -45,7 +45,7 @@ export const ResponsiveModal = ({
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription></DrawerDescription>
           </DrawerHeader>
-          <div className="overflow-y-auto -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch" }}>
+          <div className="overflow-y-auto hide-scrollbar -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch" }}>
             {children}
           </div>
         </DrawerContent>
@@ -77,7 +77,7 @@ export const ResponsiveModal = ({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
-        <div className="overflow-y-auto min-h-0 -mx-1 px-1">{children}</div>
+        <div className="overflow-y-auto hide-scrollbar min-h-0 -mx-1 px-1">{children}</div>
       </DialogContent>
     </Dialog>
   );
