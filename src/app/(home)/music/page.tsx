@@ -1,9 +1,11 @@
 "use client";
+
 import React from "react";
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
+
 
 // Import the wrapper with providers - no SSR needed
-const AuraMusicApp = dynamic(() => import('@/components/AuraMusic/NextApp'), {
+const AuraMusicApp = nextDynamic(() => import('@/components/AuraMusic/NextApp'), {
   ssr: false,
   loading: () => (
     <div className="fixed inset-0 z-[85] bg-[#0a0a0a] flex items-center justify-center text-white/50 text-sm tracking-widest">

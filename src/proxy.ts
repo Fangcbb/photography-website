@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
 
   const cspHeader = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ""} https://hm.baidu.com https://zz.bdstatic.com https://www.googletagmanager.com https://www.google-analytics.com`,
+    `script-src 'self' 'nonce-${nonce}' 'sha256-eMuh8xiwcX72rRYNAGENurQBAcH7kLlAUQcoOri3BIo='${isDev ? " 'unsafe-eval'" : ""} https://hm.baidu.com https://zz.bdstatic.com https://www.googletagmanager.com https://www.google-analytics.com`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: https://cnn.fangc.cc https://*.cos.ap-shanghai.myqcloud.com https://*.fangc.cc https://images.unsplash.com`,
     `font-src 'self' data:`,
