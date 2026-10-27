@@ -198,6 +198,15 @@ const FileUploader = ({
         return;
       }
 
+      // DATA-03：value 是父表单当前已保存引用的对象。立即物理删除会导致
+      // 「替换封面后取消编辑」原图永久丢失（DB 仍指向已删对象）。
+      // 这里只解除引用，物理删除交给服务端延迟回收任务。
+      if (key === value) {
+        setDeletedKey(key);
+        toast.success("已移除引用，原文件将在后台延迟回收");
+        return;
+      }
+
       try {
         setFiles((prev) =>
           prev.map((f) => (f.key === key ? { ...f, isDeleting: true } : f))

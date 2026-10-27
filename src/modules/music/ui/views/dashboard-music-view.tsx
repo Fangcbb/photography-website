@@ -73,10 +73,11 @@ const initialFormData: MusicFormData = {
   visibility: "public",
 };
 
-// 上传文件到 S3
+// 上传文件到 S3 —— SEC-04 修复：走同源代理 /api/upload，
+// 服务端按 Content-Length 强制限额（旧 presigned PUT 签名不含 ContentLength，可绕过大小上限）
 async function uploadFileToS3(
   file: File,
-  presignedUrl: string,
+  _presignedUrl: string,
   onProgress?: (progress: number) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -93,12 +94,14 @@ async function uploadFileToS3(
       if (xhr.status === 200) {
         resolve();
       } else {
-        reject(new Error("上传失败"));
+        let msg = "上传失败";
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+        reject(new Error(msg));
       }
     };
 
     xhr.onerror = () => reject(new Error("上传失败"));
-    xhr.open("PUT", presignedUrl);
+    xhr.open("POST", `/api/upload?filename=${encodeURIComponent(file.name)}&folder=music`);
     xhr.setRequestHeader("Content-Type", file.type);
     xhr.send(file);
   });

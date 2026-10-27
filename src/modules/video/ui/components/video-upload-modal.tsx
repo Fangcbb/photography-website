@@ -122,7 +122,9 @@ export const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) 
         if (xhr.status === 200) {
           resolve(key);
         } else {
-          reject(new Error(`上传 ${type} 失败`));
+          let msg = `上传 ${type} 失败`;
+          try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+          reject(new Error(msg));
         }
       };
 
@@ -130,7 +132,8 @@ export const VideoUploadModal = ({ open, onOpenChange }: VideoUploadModalProps) 
         reject(new Error(`上传 ${type} 失败`));
       };
 
-      xhr.open("PUT", presignedUrl);
+      // SEC-04 修复：走同源代理 /api/upload，服务端按 Content-Length 强制限额
+      xhr.open("POST", `/api/upload?filename=${encodeURIComponent(fileName)}&folder=${encodeURIComponent(folder)}`);
       xhr.setRequestHeader("Content-Type", file.type);
       xhr.send(file);
     });

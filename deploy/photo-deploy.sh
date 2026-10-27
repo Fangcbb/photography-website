@@ -361,7 +361,7 @@ if [ -n "$ZOMBIE_PIDS" ]; then
 fi
 
 NEW_SCRIPT="$NEW_RELEASE/.next/standalone/server.js"
-if ! $PM2 start "$NEW_SCRIPT" \
+if ! HOSTNAME=127.0.0.1 $PM2 start "$NEW_SCRIPT" \
     --name photo \
     --cwd "$NEW_RELEASE" >> "$EXEC_LOG" 2>&1; then
     log "❌ pm2 start 失败，执行回滚！"
