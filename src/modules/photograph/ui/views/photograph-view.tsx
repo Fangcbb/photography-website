@@ -177,7 +177,7 @@ export const PhotographView = ({ id: initialId }: PhotographViewProps) => {
 
 export const LoadingState = () => {
   const aspectRatio = 3 / 2;
-  const containerWidth = `min(65vh * ${aspectRatio}, 90vw)`;
+  const containerWidth = `min(75vh * ${aspectRatio}, 90vw)`;
 
   return (
     <div className="h-screen flex justify-center items-center relative overflow-hidden bg-background">
@@ -192,7 +192,7 @@ export const LoadingState = () => {
           style={{
             maxWidth: containerWidth,
             aspectRatio: aspectRatio,
-            maxHeight: "65dvh",
+            maxHeight: "75dvh",
           }}
         >
           <Skeleton className="w-full h-full rounded-lg" />
