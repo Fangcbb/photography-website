@@ -212,8 +212,8 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
           let rewritten = url;
           if (url.startsWith("https://api.mapbox.com/")) {
             rewritten = url.replace("https://api.mapbox.com/", "/mbapi/");
-          } else if (/^https:\/\/[ab]?\.?tiles\.mapbox\.com\//.test(url)) {
-            rewritten = url.replace(/^https:\/\/[ab]?\.?tiles\.mapbox\.com\//, "/mbtiles/");
+          } else if (/^https:\/\/([a-d]\.)?tiles\.mapbox\.com\//.test(url)) {
+            rewritten = url.replace(/^https:\/\/([a-d]\.)?tiles\.mapbox\.com\//, "/mbtiles/");
           }
           return { url: rewritten };
         }}
