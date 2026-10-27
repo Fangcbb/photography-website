@@ -40,12 +40,14 @@ export const ResponsiveModal = ({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange} dismissible={dismissible}>
-        <DrawerContent className={cn("p-4", className)}>
+        <DrawerContent className={cn("p-4 max-h-[92dvh]", className)}>
           <DrawerHeader>
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription></DrawerDescription>
           </DrawerHeader>
-          {children}
+          <div className="overflow-y-auto -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch" }}>
+            {children}
+          </div>
         </DrawerContent>
       </Drawer>
     );

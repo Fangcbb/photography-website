@@ -56,6 +56,7 @@ export function UploadZone({
       </div>
       <div className="text-center space-y-2">
         <h1 className={cn(isUploading && "opacity-50")}>拖拽照片文件到此处上传</h1>
+        <p className="text-xs text-muted-foreground sm:hidden">或点按下方按钮，从相册选取或直接拍摄</p>
         <p className="text-xs text-muted-foreground">照片在发布前仅自己可见。</p>
         <p className="text-xs text-muted-foreground">
           最大 {IMAGE_SIZE_LIMIT / 1024 / 1024} MB
@@ -72,7 +73,7 @@ export function UploadZone({
           {uploadProgress >= 99 ? "正在确认存储，请稍候…" : `正在上传… ${uploadProgress}%`}
         </Button>
       ) : (
-        <Button type="button" disabled={isUploading} onClick={open}>选择文件</Button>
+        <Button type="button" disabled={isUploading} onClick={open} className="h-12 px-8 text-base">选择照片</Button>
       )}
     </div>
   );

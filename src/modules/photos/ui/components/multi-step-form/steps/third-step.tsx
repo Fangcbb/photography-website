@@ -250,7 +250,7 @@ export function ThirdStep({
           </div>
 
           <FormControl>
-            <div className="h-[400px] w-full rounded-md border overflow-hidden">
+            <div className="h-[45vh] min-h-[260px] sm:h-[400px] sm:min-h-0 w-full rounded-md border overflow-hidden">
               <MapboxComponent
                 draggableMarker
                 styleOverride="mapbox://styles/mapbox/streets-v12"
