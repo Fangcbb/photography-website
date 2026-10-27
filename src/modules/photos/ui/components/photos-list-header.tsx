@@ -31,7 +31,7 @@ export const PhotosListHeader = () => {
     <>
       <div className="py-4 px-4 md:px-8 flex flex-col gap-y-8">
         <div>
-          <h1 className="text-2xl font-bold">Photos</h1>
+          <h1 className="text-2xl font-bold">照片</h1>
           <p className="text-muted-foreground ">
             Here&apos;s a list of your photos
           </p>
@@ -46,14 +46,10 @@ export const PhotosListHeader = () => {
                   <Button variant="outline" size="sm">
                     {filters.orderBy === "desc" ? (
                       <>
-                        <ArrowDownIcon className="h-4 w-4" />
-                        Newest First
-                      </>
+                        <ArrowDownIcon className="h-4 w-4" />最新优先</>
                     ) : (
                       <>
-                        <ArrowUpIcon className="h-4 w-4" />
-                        Oldest First
-                      </>
+                        <ArrowUpIcon className="h-4 w-4" />最早优先</>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
@@ -61,29 +57,21 @@ export const PhotosListHeader = () => {
                   <DropdownMenuItem
                     onClick={() => setFilters({ orderBy: "desc" })}
                   >
-                    <ArrowDownIcon className="mr-2 h-4 w-4" />
-                    Newest First
-                  </DropdownMenuItem>
+                    <ArrowDownIcon className="mr-2 h-4 w-4" />最新优先</DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setFilters({ orderBy: "asc" })}
                   >
-                    <ArrowUpIcon className="mr-2 h-4 w-4" />
-                    Oldest First
-                  </DropdownMenuItem>
+                    <ArrowUpIcon className="mr-2 h-4 w-4" />最早优先</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               {isAnyFilterModified && (
                 <Button onClick={onClearFilters} variant="outline" size="sm">
-                  <XCircle />
-                  Clear
-                </Button>
+                  <XCircle />清空</Button>
               )}
             </div>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
-          <Button variant="default" onClick={modal.onOpen}>
-            Add Photo
-          </Button>
+          <Button variant="default" onClick={modal.onOpen}>添加照片</Button>
         </div>
       </div>
     </>

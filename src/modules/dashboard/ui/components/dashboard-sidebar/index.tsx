@@ -18,57 +18,62 @@ import { getSession } from "@/modules/auth/lib/get-session";
 const data = {
   navMain: [
     {
-      title: "Dashboard",
+      title: "仪表盘",
       url: "/dashboard",
       icon: "dashboard",
     },
     {
-      title: "Cities",
+      title: "城市",
       url: "/dashboard/cities",
       icon: "city",
     },
     {
-      title: "Photos",
+      title: "照片",
       url: "/dashboard/photos",
       icon: "photo",
     },
     {
-      title: "Videos",
+      title: "视频",
       url: "/dashboard/videos",
       icon: "video",
     },
     {
-      title: "Posts",
+      title: "文章",
       url: "/dashboard/posts",
       icon: "post",
     },
     {
-      title: "Profile",
+      title: "个人资料",
       url: "/dashboard/profile",
       icon: "user",
     },
     {
-      title: "About",
+      title: "关于",
       url: "/dashboard/about",
       icon: "about",
     },
     {
-      title: "Maintenance",
+      title: "维护",
       url: "/dashboard/maintenance",
       icon: "maintenance",
+    },
+    {
+      title: "错误日志",
+      url: "/dashboard/logs",
+      icon: "logs",
     },
   ],
   navSecondary: [
     {
-      title: "Settings",
+      title: "设置",
       url: "#",
     },
     {
-      title: "Get Help",
+      title: "帮助",
       url: "#",
     },
     {
-      title: "Search",
+      title: "搜索",
       url: "#",
     },
   ],
@@ -90,7 +95,7 @@ export const DashboardSidebar = async ({
             >
               <Link href="/">
                 <IconLivePhoto />
-                <span className="text-base font-semibold">Photography</span>
+                <span className="text-base font-semibold">摄影</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

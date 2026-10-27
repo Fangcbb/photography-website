@@ -117,11 +117,11 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
         <div className="mb-6 flex items-baseline justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              {data.title || "Untitled photo"}
+              {data.title || "未命名照片"}
             </h1>
             {takenAt && (
               <p className="text-sm text-muted-foreground">
-                Taken on {takenAt}
+                拍摄于 {takenAt}
               </p>
             )}
           </div>
@@ -140,9 +140,9 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>标题</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Photo title" />
+                        <Input {...field} placeholder="照片标题" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -154,13 +154,13 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>描述</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
                           rows={5}
                           className="resize-none"
-                          placeholder="Photo description"
+                          placeholder="照片描述"
                         />
                       </FormControl>
                       <FormMessage />
@@ -175,10 +175,10 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     render={({ field }) => (
                       <FormItem className="flex flex-col justify-between gap-2">
                         <div className="flex items-center justify-between gap-4">
-                          <FormLabel>Visibility</FormLabel>
+                          <FormLabel>可见性</FormLabel>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <span>
-                              {field.value === "public" ? "Public" : "Private"}
+                              {field.value === "public" ? "公开" : "私密"}
                             </span>
                             <FormControl>
                               <Switch
@@ -200,7 +200,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     name="isFavorite"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between gap-4">
-                        <FormLabel>Favorite</FormLabel>
+                        <FormLabel>收藏</FormLabel>
                         <FormControl>
                           <Switch
                             checked={field.value ?? false}
@@ -215,7 +215,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                 {/* Camera parameters */}
                 <div className="space-y-4 border-t pt-4">
                   <div>
-                    <h3 className="text-sm font-semibold">Camera Parameters</h3>
+                    <h3 className="text-sm font-semibold">拍摄参数</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
                       Auto-filled from EXIF when available. You can edit these
                       values.
@@ -228,7 +228,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="make"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Camera Make</FormLabel>
+                          <FormLabel>相机品牌</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="e.g., Canon" />
                           </FormControl>
@@ -242,7 +242,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="model"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Camera Model</FormLabel>
+                          <FormLabel>相机型号</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="e.g., EOS R5" />
                           </FormControl>
@@ -257,7 +257,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     name="lensModel"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Lens Model</FormLabel>
+                        <FormLabel>镜头型号</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -327,7 +327,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="fNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Aperture</FormLabel>
+                          <FormLabel>光圈</FormLabel>
                           <FormControl>
                             <ApertureSelector
                               value={field.value}
@@ -344,7 +344,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="exposureTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Shutter Speed</FormLabel>
+                          <FormLabel>快门速度</FormLabel>
                           <FormControl>
                             <ShutterSpeedSelector
                               value={field.value}
@@ -361,7 +361,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="iso"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ISO</FormLabel>
+                          <FormLabel>感光度</FormLabel>
                           <FormControl>
                             <ISOSelector
                               value={field.value}
@@ -398,7 +398,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     name="latitude"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Latitude</FormLabel>
+                        <FormLabel>纬度</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -431,7 +431,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     name="longitude"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Longitude</FormLabel>
+                        <FormLabel>经度</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -462,7 +462,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
 
                 <div className="flex justify-end pt-2">
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save changes"}
+                    {isSubmitting ? "保存中…" : "保存更改"}
                   </Button>
                 </div>
               </form>
@@ -485,7 +485,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
 
             <div className="bg-card border rounded-xl p-4 shadow-sm">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-medium">Location</h2>
+                <h2 className="text-sm font-medium">位置</h2>
               </div>
               <div className="h-64 w-full rounded-md overflow-hidden border">
                 <Suspense

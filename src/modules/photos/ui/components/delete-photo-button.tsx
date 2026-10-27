@@ -20,7 +20,7 @@ export function DeletePhotoButton({
   const queryClient = useQueryClient();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete Photo",
+    "删除照片",
     `Are you sure you want to delete "${photoTitle}"? This action cannot be undone. The photo will be permanently deleted.`
   );
 
@@ -39,10 +39,10 @@ export function DeletePhotoButton({
           await queryClient.invalidateQueries(
             trpc.photos.getMany.queryOptions({})
           );
-          toast.success("Photo deleted successfully");
+          toast.success("照片删除成功");
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to delete photo");
+          toast.error(error.message || "照片删除失败");
         },
       }
     );
@@ -59,7 +59,7 @@ export function DeletePhotoButton({
           handleDelete();
         }}
         className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-        title="Delete photo"
+        title="删除照片"
       >
         <Trash2 className="size-4" />
       </Button>

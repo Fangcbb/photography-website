@@ -47,7 +47,7 @@ export const PostForm = ({ post }: PostFormProps) => {
   const createPost = useMutation(
     trpc.posts.create.mutationOptions({
       onSuccess: async (data) => {
-        toast.success("Post created successfully");
+        toast.success("文章创建成功");
         await queryClient.invalidateQueries(
           trpc.posts.getMany.queryOptions({})
         );
@@ -56,7 +56,7 @@ export const PostForm = ({ post }: PostFormProps) => {
         router.push(`/dashboard/posts/${data.slug}`);
       },
       onError: (e) => {
-        toast.error("Failed to create post", {
+        toast.error("文章创建失败", {
           description: e.message,
         });
       },
@@ -66,7 +66,7 @@ export const PostForm = ({ post }: PostFormProps) => {
   const updatePost = useMutation(
     trpc.posts.update.mutationOptions({
       onSuccess: async (data) => {
-        toast.success("Post updated successfully");
+        toast.success("文章更新成功");
         await queryClient.invalidateQueries(
           trpc.posts.getOne.queryOptions({ slug: data.slug })
         );
@@ -78,7 +78,7 @@ export const PostForm = ({ post }: PostFormProps) => {
         router.push(`/dashboard/posts/${data.slug}`);
       },
       onError: (e) => {
-        toast.error("Failed to update post", {
+        toast.error("文章更新失败", {
           description: e.message,
         });
       },
@@ -129,9 +129,9 @@ export const PostForm = ({ post }: PostFormProps) => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>标题</FormLabel>
                   <FormControl>
-                    <Input placeholder="Title" {...field} />
+                    <Input placeholder="标题" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,7 +143,7 @@ export const PostForm = ({ post }: PostFormProps) => {
               name="slug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Slug</FormLabel>
+                  <FormLabel>URL 别名</FormLabel>
                   <FormControl>
                     <Input placeholder="post-url-slug" {...field} disabled />
                   </FormControl>
@@ -157,7 +157,7 @@ export const PostForm = ({ post }: PostFormProps) => {
               name="coverImage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cover Image</FormLabel>
+                  <FormLabel>封面图</FormLabel>
                   <FormControl>
                     <FileUploader
                       onUploadSuccess={(key) => {
@@ -177,7 +177,7 @@ export const PostForm = ({ post }: PostFormProps) => {
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Content</FormLabel>
+                  <FormLabel>内容</FormLabel>
                   <FormControl>
                     <TiptapEditor
                       content={field.value || ""}
@@ -194,7 +194,7 @@ export const PostForm = ({ post }: PostFormProps) => {
               name="tags"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tags</FormLabel>
+                  <FormLabel>标签</FormLabel>
                   <FormControl>
                     <TagsInput
                       value={Array.isArray(field.value) ? field.value : []}
@@ -208,7 +208,7 @@ export const PostForm = ({ post }: PostFormProps) => {
 
             <div className="pt-2">
               <Button type="submit" disabled={isPending}>
-                {post ? "Update" : "Create"}
+                {post ? "更新" : "创建"}
               </Button>
             </div>
           </div>
@@ -219,7 +219,7 @@ export const PostForm = ({ post }: PostFormProps) => {
               name="visibility"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Visibility</FormLabel>
+                  <FormLabel>可见性</FormLabel>
                   <FormControl>
                     <Select
                       {...field}
@@ -228,11 +228,11 @@ export const PostForm = ({ post }: PostFormProps) => {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select visibility" />
+                        <SelectValue placeholder="选择可见性" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="private">Private</SelectItem>
+                        <SelectItem value="public">公开</SelectItem>
+                        <SelectItem value="private">私密</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>

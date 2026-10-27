@@ -17,7 +17,7 @@ export function DeletePostButton({ postId, postTitle }: DeletePostButtonProps) {
   const queryClient = useQueryClient();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete Post",
+    "删除文章",
     `Are you sure you want to delete "${postTitle}"? This action cannot be undone. The post will be permanently deleted.`
   );
 
@@ -36,10 +36,10 @@ export function DeletePostButton({ postId, postTitle }: DeletePostButtonProps) {
           await queryClient.invalidateQueries(
             trpc.posts.getMany.queryOptions({})
           );
-          toast.success("Post deleted successfully");
+          toast.success("文章删除成功");
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to delete post");
+          toast.error(error.message || "文章删除失败");
         },
       }
     );
@@ -56,7 +56,7 @@ export function DeletePostButton({ postId, postTitle }: DeletePostButtonProps) {
           handleDelete();
         }}
         className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-        title="Delete post"
+        title="删除文章"
       >
         <Trash2 className="size-4" />
       </Button>

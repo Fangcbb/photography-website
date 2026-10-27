@@ -24,12 +24,12 @@ export const CityView = ({ id, slug }: Props) => {
         <div className="w-full h-[70vh] lg:w-1/2 lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3">
           <div className="w-full h-full relative">
             <BlurImage
-              src={coverPhoto ? photoProxyUrl(coverPhoto.id, "fangb") : "/placeholder.svg"}
+              src={coverPhoto ? photoProxyUrl(coverPhoto.id, "hero") : "/placeholder.svg"}
               alt={cityData.city}
               fill
-              quality={75}
+              quality={85}
               blurhash={coverPhoto?.blurData || ""}
-              sizes="75vw"
+              sizes="(max-width: 1023px) 100vw, 50vw"
               className="object-cover rounded-xl overflow-hidden"
             />
             <div className="absolute right-0 bottom-0">

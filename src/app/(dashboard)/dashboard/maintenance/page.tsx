@@ -72,7 +72,7 @@ export default function MaintenancePage() {
   if (loading) {
     return (
       <div className="py-4 px-4 md:px-8">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">加载中…</p>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function MaintenancePage() {
   return (
     <div className="py-4 px-4 md:px-8 flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Maintenance Mode</h1>
+        <h1 className="text-2xl font-bold">维护模式</h1>
         <p className="text-sm text-muted-foreground">
           One-click toggle to put the site into maintenance mode.
         </p>
@@ -90,7 +90,7 @@ export default function MaintenancePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <IconTool className="size-5" />
-            Site Status
+            站点状态
           </CardTitle>
           <CardDescription>
             When maintenance mode is enabled, all public pages will show a

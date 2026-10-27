@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 export const columns: ColumnDef<photoGetMany[number]>[] = [
   {
     accessorKey: "url",
-    header: "Image",
+    header: "图片",
     cell: ({ row }) => {
       const url = row.original.url;
       const photoId = row.original.id;
@@ -37,11 +37,11 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
   },
   {
     accessorKey: "title",
-    header: "Title",
+    header: "标题",
   },
   {
     accessorKey: "dateTimeOriginal",
-    header: "Taken At",
+    header: "拍摄时间",
     cell: ({ row }) => {
       const takenAt = row.original.dateTimeOriginal;
       if (!takenAt) return <span>-</span>;
@@ -54,7 +54,7 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
   },
   {
     accessorKey: "city",
-    header: "City",
+    header: "城市",
     cell: ({ row }) => {
       const location = row.original.city + ", " + row.original.countryCode;
       return <span>{location}</span>;
@@ -62,10 +62,11 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
   },
   {
     accessorKey: "isFavorite",
-    header: "Favorite",
+    header: "收藏",
     cell: ({ row }) => {
       return (
         <FavoriteToggle
+              key={row.original.id}
           photoId={row.original.id}
           initialValue={row.original.isFavorite}
         />
@@ -74,10 +75,11 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
   },
   {
     accessorKey: "visibility",
-    header: "Visibility",
+    header: "可见性",
     cell: ({ row }) => {
       return (
         <VisibilityToggle
+              key={row.original.id}
           photoId={row.original.id}
           initialValue={row.original.visibility}
         />
@@ -86,7 +88,7 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
   },
   {
     id: "actions",
-    header: "Actions",
+    header: "操作",
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-2">

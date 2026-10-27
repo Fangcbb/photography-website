@@ -51,7 +51,7 @@ export function FavoriteToggle({ photoId, initialValue }: FavoriteToggleProps) {
       {
         onSuccess: () => {
           toast.success(
-            newValue ? "Added to favorites" : "Removed from favorites"
+            newValue ? "已加入收藏" : "已取消收藏"
           );
         },
         onError: (error) => {
@@ -67,7 +67,7 @@ export function FavoriteToggle({ photoId, initialValue }: FavoriteToggleProps) {
               ),
             };
           });
-          toast.error(error.message || "Failed to update favorite status");
+          toast.error(error.message || "收藏状态更新失败");
         },
       }
     );
@@ -83,7 +83,7 @@ export function FavoriteToggle({ photoId, initialValue }: FavoriteToggleProps) {
         "h-8 w-8 transition-colors",
         isFavorite && "text-red-500 hover:text-red-600"
       )}
-      title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      title={isFavorite ? "取消收藏" : "加入收藏"}
     >
       <Heart
         className={cn("size-6 transition-all", isFavorite && "fill-current")}

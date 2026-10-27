@@ -76,8 +76,9 @@ const BlurImageInner = function BlurImageInner({
           setImageLoaded(true);
         }}
         onError={() => {
-          setShowPlaceholder(false);
-          setImageLoaded(true);
+          // 加载失败时保留 blurhash 占位，避免出现纯空白区域
+          // （例如源文件在 COS 上缺失时，仍能看到模糊色块而非空框）
+          setImageLoaded(false);
         }}
         {...props}
       />

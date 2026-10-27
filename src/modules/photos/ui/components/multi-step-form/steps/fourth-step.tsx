@@ -56,10 +56,9 @@ export function FourthStep({
 
         <div className="flex justify-between pt-4">
           <Button type="button" variant="outline" onClick={onBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
+            <ArrowLeft className="mr-2 h-4 w-4" />返回</Button>
           <Button type="submit" disabled={isSubmitting || !isValid}>
-            {isSubmitting ? "Submitting..." : "Submit"}
+            {isSubmitting ? "提交中…" : "提交"}
           </Button>
         </div>
       </form>

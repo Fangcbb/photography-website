@@ -65,8 +65,8 @@ export const musicRouter = createTRPCRouter({
       return { data, total };
     }),
 
-  // 获取单个音乐
-  getOne: baseProcedure
+  // 获取单个音乐（含 musicUrl，仅登录后可用）
+  getOne: protectedProcedure
     .input(
       z.object({
         id: z.string().uuid(),
@@ -81,7 +81,7 @@ export const musicRouter = createTRPCRouter({
       if (!data) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Music not found",
+          message: "音乐不存在",
         });
       }
 
@@ -92,10 +92,10 @@ export const musicRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        title: z.string().min(1, "Title is required"),
+        title: z.string().min(1, "标题不能为空"),
         artist: z.string().optional(),
         album: z.string().optional(),
-        musicUrl: z.string().min(1, "Music URL is required"),
+        musicUrl: z.string().min(1, "音乐链接不能为空"),
         coverUrl: z.string().optional(),
         duration: z.number().optional(),
         fileSize: z.number().optional(),
@@ -113,10 +113,10 @@ export const musicRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().uuid(),
-        title: z.string().min(1, "Title is required").optional(),
+        title: z.string().min(1, "标题不能为空").optional(),
         artist: z.string().optional(),
         album: z.string().optional(),
-        musicUrl: z.string().min(1, "Music URL is required").optional(),
+        musicUrl: z.string().min(1, "音乐链接不能为空").optional(),
         coverUrl: z.string().optional(),
         duration: z.number().optional(),
         fileSize: z.number().optional(),
@@ -138,7 +138,7 @@ export const musicRouter = createTRPCRouter({
       if (!data) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Music not found",
+          message: "音乐不存在",
         });
       }
 
@@ -160,11 +160,11 @@ export const musicRouter = createTRPCRouter({
       if (!data) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Music not found",
+          message: "音乐不存在",
         });
       }
 
-      return { success: true, message: "Music deleted" };
+      return { success: true, message: "音乐已删除" };
     }),
 
   // 批量删除音乐

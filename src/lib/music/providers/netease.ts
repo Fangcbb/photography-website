@@ -1,33 +1,33 @@
 /**
- * 网易云音乐 Provider
+ * 网易云音乐 Provider（替换失效的酷我API）
+ * 通过本地 music-api 服务（@suen/music-api 封装 + 网易web搜索直连）
  */
 import { MusicProvider, UnifiedTrack, SearchResult } from "../types";
 
-const NETEASE_SEARCH_API = process.env.NETEASE_SEARCH_API || "https://api.vkeys.cn/v2/music/netease";
-const NETEASE_LYRIC_API = process.env.NETEASE_LYRIC_API || "https://api.vkeys.cn/v2/music/netease/lyric";
-const NETEASE_PLAY_API = process.env.NETEASE_PLAY_API || "https://api.qijieya.cn/meting/";
+const API = process.env.MUSIC_API_BASE || "http://127.0.0.1:3333/api";
 
 export class NeteaseProvider implements MusicProvider {
   name = "netease";
 
   async search(keyword: string, limit = 20): Promise<SearchResult> {
     try {
-      const response = await fetch(`${NETEASE_SEARCH_API}?word=${encodeURIComponent(keyword)}&limit=${limit}`);
+      const response = await fetch(
+        `${API}/search?keywords=${encodeURIComponent(keyword)}&limit=${limit}`,
+        { signal: AbortSignal.timeout(10000) }
+      );
       const data = await response.json();
-      
-      const tracks: UnifiedTrack[] = (data.data || []).map((item: any) => ({
+      const tracks: UnifiedTrack[] = (data.data?.songs || []).map((item: any) => ({
         id: item.id?.toString() || "",
         mid: item.id?.toString() || "",
-        title: item.song || item.name || "",
-        artist: item.singer || item.artist || "",
+        title: item.name || "",
+        artist: item.artist || "",
         album: item.album || "",
-        cover: item.cover || "",
-        url: item.url || "",
+        cover: item.picUrl || "",
+        url: `/api/music/play?id=${item.id}`,
         lyric: "",
         source: "netease" as const,
-        sourceLabel: "网易",
+        sourceLabel: "网易云",
       }));
-
       return { tracks, source: "netease" };
     } catch (error) {
       console.error("Netease search error:", error);
@@ -37,9 +37,11 @@ export class NeteaseProvider implements MusicProvider {
 
   async getPlayUrl(track: UnifiedTrack): Promise<string> {
     try {
-      const response = await fetch(`${NETEASE_PLAY_API}?id=${track.id}&source=netease`);
+      const response = await fetch(`${API}/url?id=${track.id}&br=320000`, {
+        signal: AbortSignal.timeout(10000),
+      });
       const data = await response.json();
-      return data.url || data.music_url || "";
+      return data.data?.url || "";
     } catch (error) {
       console.error("Netease play url error:", error);
       return "";
@@ -48,9 +50,11 @@ export class NeteaseProvider implements MusicProvider {
 
   async getLyric(track: UnifiedTrack): Promise<string> {
     try {
-      const response = await fetch(`${NETEASE_LYRIC_API}?id=${track.id}`);
+      const response = await fetch(`${API}/lyric2?id=${track.id}`, {
+        signal: AbortSignal.timeout(10000),
+      });
       const data = await response.json();
-      return data.lrc || data.lyric || "";
+      return data.lrc?.lyric || "";
     } catch (error) {
       console.error("Netease lyric error:", error);
       return "";

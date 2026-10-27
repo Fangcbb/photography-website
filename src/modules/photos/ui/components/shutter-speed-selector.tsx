@@ -125,10 +125,10 @@ export function ShutterSpeedSelector({
   };
 
   const displayValue = isCustom
-    ? "Custom"
+    ? "自定义"
     : value
     ? closestSpeed?.label || formatShutterSpeed(value)
-    : "Select shutter speed";
+    : "选择快门速度";
 
   return (
     <div className="space-y-2">
@@ -137,7 +137,7 @@ export function ShutterSpeedSelector({
         onValueChange={handleSelectChange}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Select shutter speed">
+          <SelectValue placeholder="选择快门速度">
             {displayValue}
           </SelectValue>
         </SelectTrigger>
@@ -147,7 +147,7 @@ export function ShutterSpeedSelector({
               {speed.label}
             </SelectItem>
           ))}
-          <SelectItem value="custom">Custom value...</SelectItem>
+          <SelectItem value="custom">自定义值…</SelectItem>
         </SelectContent>
       </Select>
 
@@ -169,9 +169,7 @@ export function ShutterSpeedSelector({
             variant="outline"
             size="sm"
             onClick={() => setIsCustom(false)}
-          >
-            Cancel
-          </Button>
+          >取消</Button>
         </div>
       )}
     </div>

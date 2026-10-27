@@ -86,7 +86,7 @@ export function WallpaperCard({ photo }: WallpaperCardProps) {
           {!error && (
             <img
               src={photo.urls.regular}
-              alt={photo.alt_description || "Wallpaper"}
+              alt={photo.alt_description || "壁纸"}
               loading="lazy"
               onLoad={() => setLoaded(true)}
               onError={() => setError(true)}
@@ -99,7 +99,7 @@ export function WallpaperCard({ photo }: WallpaperCardProps) {
           {/* Error state */}
           {error && (
             <div className="absolute inset-0 bg-muted flex items-center justify-center">
-              <span className="text-xs text-muted-foreground">Failed to load</span>
+              <span className="text-xs text-muted-foreground">加载失败</span>
             </div>
           )}
 

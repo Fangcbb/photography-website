@@ -8,7 +8,7 @@ export const PostsSearchFilter = () => {
   return (
     <div className="relative">
       <Input
-        placeholder="Filter by title"
+        placeholder="按标题筛选"
         value={filters.search}
         className="h-9 w-[200px] pl-7"
         onChange={(e) => setFilters({ search: e.target.value })}

@@ -1,14 +1,27 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createAuthedCaller, buildPhotoInput } from "@/test/helpers";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {
+  createAuthedCaller,
+  buildPhotoInput,
+  cleanupTestData,
+} from "@/test/helpers";
 import { db } from "@/db";
-import { photos, citySets } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { citySets, photos } from "@/db/schema";
+import { buildCitySlug } from "@/modules/photos/server/city-slug";
+import { eq } from "drizzle-orm";
 import { getSession } from "@/modules/auth/lib/get-session";
 
-// Clean up test data before each test
+/**
+ * 只清理本套件造出来的数据（url 以 photos/test- 开头），
+ * 并在此之前断言连接的是 *_test 库。
+ * 历史版本这里是 `db.delete(citySets); db.delete(photos);`（无 where），
+ * 一旦连到生产库就会清空真实照片表。
+ */
 beforeEach(async () => {
-  await db.delete(citySets);
-  await db.delete(photos);
+  await cleanupTestData();
+});
+
+afterEach(async () => {
+  await cleanupTestData();
 });
 
 describe("photos.create", () => {
@@ -68,6 +81,68 @@ describe("photos.create", () => {
       .where(eq(citySets.city, "New York"));
 
     expect(citySet.photoCount).toBe(2);
+  });
+
+  it("should create repeated non-Latin city photos with a stable unique slug", async () => {
+    const caller = createAuthedCaller();
+    const cityInput = {
+      country: "China",
+      countryCode: "CN",
+      city: "南京",
+      region: "江苏",
+    };
+
+    await caller.photos.create(
+      buildPhotoInput({ ...cityInput, url: "photos/test-nanjing-1.jpg" }),
+    );
+    await caller.photos.create(
+      buildPhotoInput({ ...cityInput, url: "photos/test-nanjing-2.jpg" }),
+    );
+
+    const [citySet] = await db
+      .select()
+      .from(citySets)
+      .where(eq(citySets.city, "南京"));
+
+    expect(citySet).toBeDefined();
+    expect(citySet.slug).toMatch(/^city-cn-[a-f0-9]{12}$/);
+    expect(citySet.photoCount).toBe(2);
+  });
+
+  it("should roll back the photo row if city-set slug uniqueness fails", async () => {
+    const caller = createAuthedCaller();
+    const [cover] = await db
+      .insert(photos)
+      .values(buildPhotoInput({ url: "photos/test-slug-collision-cover.jpg" }))
+      .returning();
+
+    const conflictingSlug = buildCitySlug("CN", "China", "南京");
+    await db.insert(citySets).values({
+      country: "Existing Country",
+      countryCode: "EX",
+      city: "Slug Collision Fixture",
+      slug: conflictingSlug,
+      photoCount: 1,
+      coverPhotoId: cover.id,
+    });
+
+    await expect(
+      caller.photos.create(
+        buildPhotoInput({
+          url: "photos/test-slug-collision-photo.jpg",
+          country: "China",
+          countryCode: "CN",
+          city: "南京",
+          region: "江苏",
+        }),
+      ),
+    ).rejects.toThrow("照片创建失败");
+
+    const [rolledBackPhoto] = await db
+      .select({ id: photos.id })
+      .from(photos)
+      .where(eq(photos.url, "photos/test-slug-collision-photo.jpg"));
+    expect(rolledBackPhoto).toBeUndefined();
   });
 
   it("should use region as city name for JP country code", async () => {
@@ -270,6 +345,6 @@ describe("photos.remove", () => {
 
     await expect(
       caller.photos.remove({ id: "00000000-0000-0000-0000-000000000000" }),
-    ).rejects.toThrow("Photo not found");
+    ).rejects.toThrow("照片不存在");
   });
 });

@@ -11,7 +11,7 @@ interface Props {
   cityId: string;
   citySlug: string;
   title: string;
-  coverPhoto: Photo;
+  coverPhoto: { id: string; title: string; blurData: string };
 }
 
 const CityCard = ({ cityId, citySlug, title, coverPhoto }: Props) => {

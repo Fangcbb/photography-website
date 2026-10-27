@@ -29,6 +29,8 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
+    // 用业务 id 作为行 id，避免翻页时同索引行复用组件实例导致开关状态串行
+    getRowId: (row) => String((row as { id?: string | number }).id ?? crypto.randomUUID()),
     getCoreRowModel: getCoreRowModel(),
   });
 

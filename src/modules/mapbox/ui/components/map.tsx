@@ -51,6 +51,7 @@ export interface MapboxProps {
   draggableMarker?: boolean;
   showGeocoder?: boolean;
   showControls?: boolean;
+  styleOverride?: string;
   scrollZoom?: boolean;
   doubleClickZoom?: boolean;
   boxZoom?: boolean;
@@ -81,6 +82,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
       draggableMarker = false,
       showGeocoder = false,
       showControls = true,
+      styleOverride,
       scrollZoom = true,
       doubleClickZoom = true,
       boxZoom = true,
@@ -151,6 +153,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
       const geocoderOptions: GeocoderOptions = {
         accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!,
         mapboxgl: mapboxgl,
+        origin: "/mbapi",
       };
       const geocoder = new MapboxGeocoder(geocoderOptions);
 
@@ -204,7 +207,17 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
         initialViewState={initialViewState}
         style={{ width: "100%", height: "100%" }}
-        mapStyle={MAP_STYLES[theme === "dark" ? "dark" : "light"]}
+        transformRequest={(url: string) => {
+          // 国内直连 Mapbox 不稳定：把 api/tiles 域名改写到本站反代
+          let rewritten = url;
+          if (url.startsWith("https://api.mapbox.com/")) {
+            rewritten = url.replace("https://api.mapbox.com/", "/mbapi/");
+          } else if (/^https:\/\/[ab]?\.?tiles\.mapbox\.com\//.test(url)) {
+            rewritten = url.replace(/^https:\/\/[ab]?\.?tiles\.mapbox\.com\//, "/mbtiles/");
+          }
+          return { url: rewritten };
+        }}
+        mapStyle={styleOverride || MAP_STYLES[theme === "dark" ? "dark" : "light"]}
         interactiveLayerIds={geoJsonData ? ["data"] : undefined}
         onClick={onClick}
         onMove={(evt) => {

@@ -1,0 +1,36 @@
+{
+  "name": "Fang Bing Photography",
+  "short_name": "Fang Photo",
+  "description": "方斌的摄影作品集 - 旅行与街头摄影",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/avatar.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/avatar.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["photography", "portfolio", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "/avatar.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Fang Bing Photography Portfolio"
+    }
+  ]
+}

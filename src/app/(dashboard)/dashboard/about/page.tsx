@@ -52,12 +52,12 @@ export default function AboutDashboardPage() {
       setName(data.name ?? "");
       setRole(data.role ?? "");
       setBio(data.bio ?? "");
-      setAboutHeading(data.aboutHeading ?? "About");
+      setAboutHeading(data.aboutHeading ?? "关于");
       setAboutParagraphs(
         Array.isArray(data.aboutParagraphs) ? data.aboutParagraphs : []
       );
-      setCameraHeading(data.cameraHeading ?? "Camera");
-      setCameraSubheading(data.cameraSubheading ?? "Camera Lenses");
+      setCameraHeading(data.cameraHeading ?? "相机");
+      setCameraSubheading(data.cameraSubheading ?? "镜头");
       setCameraDescription(data.cameraDescription ?? "");
       try {
         setGear(JSON.parse(data.gear ?? "[]"));
@@ -112,7 +112,7 @@ export default function AboutDashboardPage() {
   if (isLoading) {
     return (
       <div className="py-4 px-4 md:px-8">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">加载中…</p>
       </div>
     );
   }
@@ -120,27 +120,27 @@ export default function AboutDashboardPage() {
   return (
     <div className="py-4 px-4 md:px-8 flex flex-col gap-8 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold">About Page</h1>
+        <h1 className="text-2xl font-bold">关于页面</h1>
         <p className="text-sm text-muted-foreground">
-          Edit the content shown on the /about page
+          编辑 /about 页面展示的内容
         </p>
       </div>
 
       {/* Profile Section */}
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Profile</h2>
+        <h2 className="text-lg font-semibold">个人资料</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Name</Label>
+            <Label>姓名</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Role</Label>
+            <Label>身份</Label>
             <Input value={role} onChange={(e) => setRole(e.target.value)} />
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <Label>Bio</Label>
+          <Label>bio</Label>
           <Textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -149,11 +149,11 @@ export default function AboutDashboardPage() {
         </div>
       </section>
 
-      {/* About Card Section */}
+      {/* 关于卡片 Section */}
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">About Card</h2>
+        <h2 className="text-lg font-semibold">关于卡片</h2>
         <div className="flex flex-col gap-2">
-          <Label>Heading</Label>
+          <Label>主标题</Label>
           <Input
             value={aboutHeading}
             onChange={(e) => setAboutHeading(e.target.value)}
@@ -161,7 +161,7 @@ export default function AboutDashboardPage() {
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <Label>Paragraphs</Label>
+            <Label>段落</Label>
             <Button variant="outline" size="sm" onClick={addParagraph}>
               <IconPlus className="size-4 mr-1" />
               Add
@@ -187,19 +187,19 @@ export default function AboutDashboardPage() {
         </div>
       </section>
 
-      {/* Camera Card Section */}
+      {/* 相机卡片 Section */}
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Camera Card</h2>
+        <h2 className="text-lg font-semibold">相机卡片</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Heading</Label>
+            <Label>主标题</Label>
             <Input
               value={cameraHeading}
               onChange={(e) => setCameraHeading(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Subheading</Label>
+            <Label>副标题</Label>
             <Input
               value={cameraSubheading}
               onChange={(e) => setCameraSubheading(e.target.value)}
@@ -207,7 +207,7 @@ export default function AboutDashboardPage() {
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <Label>Description</Label>
+          <Label>描述</Label>
           <Textarea
             value={cameraDescription}
             onChange={(e) => setCameraDescription(e.target.value)}
@@ -219,7 +219,7 @@ export default function AboutDashboardPage() {
       {/* Gear Section */}
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Gear List</h2>
+          <h2 className="text-lg font-semibold">装备清单</h2>
           <Button variant="outline" size="sm" onClick={addGear}>
             <IconPlus className="size-4 mr-1" />
             Add
@@ -228,7 +228,7 @@ export default function AboutDashboardPage() {
         {gear.map((item, i) => (
           <div key={i} className="flex gap-2 items-end">
             <div className="flex flex-col gap-2 w-1/3">
-              {i === 0 && <Label>Brand</Label>}
+              {i === 0 && <Label>品牌</Label>}
               <Input
                 value={item.brand}
                 onChange={(e) => updateGear(i, "brand", e.target.value)}
@@ -236,7 +236,7 @@ export default function AboutDashboardPage() {
               />
             </div>
             <div className="flex flex-col gap-2 flex-1">
-              {i === 0 && <Label>Model</Label>}
+              {i === 0 && <Label>型号</Label>}
               <Input
                 value={item.model}
                 onChange={(e) => updateGear(i, "model", e.target.value)}
@@ -261,7 +261,7 @@ export default function AboutDashboardPage() {
           disabled={updateMutation.isPending}
           className="min-w-32"
         >
-          {updateMutation.isPending ? "Saving..." : "Save Changes"}
+          {updateMutation.isPending ? "保存中…" : "保存更改"}
         </Button>
       </div>
     </div>

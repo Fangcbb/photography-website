@@ -17,11 +17,9 @@ export function SuccessScreen({ onReset }: SuccessScreenProps) {
       <div className="bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full">
         <CheckCircle2 className="text-primary h-8 w-8" />
       </div>
-      <h2 className="mb-2 text-2xl font-bold">Photo uploaded successfully!</h2>
-      <p className="text-muted-foreground mb-6">
-        Your photo has been uploaded successfully.
-      </p>
-      <Button onClick={onReset}>Start Over</Button>
+      <h2 className="mb-2 text-2xl font-bold">照片上传成功！</h2>
+      <p className="text-muted-foreground mb-6">照片上传成功。</p>
+      <Button onClick={onReset}>重新开始</Button>
     </motion.div>
   );
 }

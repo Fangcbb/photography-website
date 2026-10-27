@@ -15,14 +15,14 @@ export const DashboardPostView = ({ slug }: { slug: string }) => {
   const { data } = useSuspenseQuery(trpc.posts.getOne.queryOptions({ slug }));
 
   const [ConfirmationDialog, confirm] = useConfirm(
-    "Delete post",
-    "Are you sure you want to delete this post?"
+    "删除文章",
+    "确定要删除这篇文章吗？"
   );
 
   // const deleteFileMutation = useMutation(
   //   trpc.cloudflare.deleteFile.mutationOptions({
   //     onError: () => {
-  //       toast.error("Failed to delete file");
+  //       toast.error("文件删除失败");
   //     },
   //   })
   // );

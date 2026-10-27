@@ -7,8 +7,8 @@ import {
 } from "@/modules/cities/ui/views/city-list-view";
 
 export const metadata = {
-  title: "City Collection",
-  description: "City Collection",
+  title: "城市收藏",
+  description: "城市收藏",
 };
 
 const CityPage = async () => {
@@ -16,7 +16,7 @@ const CityPage = async () => {
     <>
       <div className="py-4 px-4 md:px-8 flex flex-col gap-y-8">
         <div>
-          <h1 className="text-2xl font-bold">City Collection</h1>
+          <h1 className="text-2xl font-bold">城市收藏</h1>
           <p className="text-muted-foreground ">
             Explore your photos organized by cities you&apos;ve visited
           </p>

@@ -23,7 +23,7 @@ const UserButton = () => {
         <Avatar className="size-9 hover:opacity-80 transition-opacity cursor-pointer">
           <AvatarImage
             src={session?.user.image || "#"}
-            alt="Avatar"
+            alt="头像"
             className="object-cover"
           />
           <AvatarFallback>{session?.user.name.charAt(0)}</AvatarFallback>
@@ -51,9 +51,7 @@ const UserButton = () => {
                 <Loader2 size={15} className="animate-spin" />
               ) : (
                 <div className="flex items-center gap-2">
-                  <LogOut size={16} />
-                  Sign Out
-                </div>
+                  <LogOut size={16} />退出登录</div>
               )}
             </span>
           </button>

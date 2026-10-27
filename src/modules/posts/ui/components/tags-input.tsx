@@ -61,7 +61,7 @@ export const TagsInput = ({ value, onChange }: TagsInputProps) => {
       <input
         className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
         placeholder={
-          value.length === 0 ? "Add tags and press Enter" : "Add more tags"
+          value.length === 0 ? "输入标签后按回车" : "添加更多标签"
         }
         value={inputValue}
         onChange={(event) => setInputValue(event.target.value)}

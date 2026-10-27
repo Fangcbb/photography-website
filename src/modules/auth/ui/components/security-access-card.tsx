@@ -40,12 +40,8 @@ const SecurityAccessCard = (props: {
       {/* Active Sessions Section */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight mb-1">
-            Active Sessions
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Manage devices signed into your account
-          </p>
+          <h2 className="text-xl font-semibold tracking-tight mb-1">活跃会话</h2>
+          <p className="text-sm text-muted-foreground">管理登录过你账号的设备</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -96,9 +92,7 @@ const SecurityAccessCard = (props: {
                               variant="secondary"
                               className="text-xs bg-green-100 text-green-700 border-green-200 px-1.5 py-0.5"
                             >
-                              <Dot className="w-2 h-2 mr-0.5 fill-current" />
-                              Current
-                            </Badge>
+                              <Dot className="w-2 h-2 mr-0.5 fill-current" />当前</Badge>
                           )}
                         </div>
 
@@ -142,8 +136,8 @@ const SecurityAccessCard = (props: {
                           } else {
                             toast.success(
                               isCurrentSession
-                                ? "Signed out successfully"
-                                : "Session terminated successfully"
+                                ? "已成功退出登录"
+                                : "已成功下线该会话"
                             );
                           }
                           router.refresh();
@@ -153,9 +147,9 @@ const SecurityAccessCard = (props: {
                         {isTerminating === session.id ? (
                           <Loader2 size={12} className="animate-spin" />
                         ) : isCurrentSession ? (
-                          "Sign Out"
+                          "退出登录"
                         ) : (
-                          "Terminate"
+                          "下线"
                         )}
                       </Button>
                     </div>

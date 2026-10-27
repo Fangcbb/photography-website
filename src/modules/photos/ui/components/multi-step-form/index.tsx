@@ -162,7 +162,7 @@ export default function MultiStepForm({
           );
           await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
 
-          toast.success("Photo uploaded successfully!");
+          toast.success("照片上传成功！");
           setIsComplete(true);
           setIsSubmitting(false);
 

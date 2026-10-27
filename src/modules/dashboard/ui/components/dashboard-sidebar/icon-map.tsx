@@ -8,6 +8,7 @@ import {
   IconMusic,
   IconInfoCircle,
   IconTool,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
 
 interface IconMapProps {
@@ -34,6 +35,8 @@ const IconMap = ({ icon }: IconMapProps) => {
       return <IconTool />;
     case "about":
       return <IconInfoCircle />;
+    case "logs":
+      return <IconAlertTriangle />;
     default:
       return <IconLayoutDashboard />;
   }

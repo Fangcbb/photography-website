@@ -23,7 +23,7 @@ export const PostsListHeader = () => {
   return (
     <div className="py-4 px-4 md:px-8 flex flex-col gap-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Posts</h1>
+        <h1 className="text-2xl font-bold">文章</h1>
         <p className="text-muted-foreground ">
           Here&apos;s a list of your posts
         </p>
@@ -34,18 +34,14 @@ export const PostsListHeader = () => {
             <PostsSearchFilter />
             {isAnyFilterModified && (
               <Button onClick={onClearFilters} variant="outline" size="sm">
-                <XCircle />
-                Clear
-              </Button>
+                <XCircle />清空</Button>
             )}
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         <Button asChild>
           <Link href="/dashboard/posts/new">
-            <PlusIcon />
-            New Post
-          </Link>
+            <PlusIcon />新建文章</Link>
         </Button>
       </div>
     </div>

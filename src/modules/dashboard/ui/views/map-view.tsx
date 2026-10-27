@@ -30,7 +30,7 @@ export const MapView = () => {
 
   const chartConfig = {
     photoCount: {
-      label: "Photos",
+      label: "照片",
       color: "hsl(var(--chart-1))",
     },
   } satisfies ChartConfig;
@@ -42,7 +42,7 @@ export const MapView = () => {
   const chartData = countriesData
     .slice(0, 10) // Show top 10 countries
     .map((country) => ({
-      country: country.country || "Unknown",
+      country: country.country || "未知",
       countryShort: country.countryCode || "N/A",
       photoCount: country.photoCount,
     }));
@@ -52,13 +52,12 @@ export const MapView = () => {
       <div className="lg:col-span-2 rounded-xl overflow-hidden relative h-[400px] lg:h-full">
         {false && (
           <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10">
-            <div className="text-sm text-muted-foreground">
-              Loading world map data...
-            </div>
+            <div className="text-sm text-muted-foreground">世界地图数据加载中…</div>
           </div>
         )}
         <Mapbox
           id="dashboardMap"
+          styleOverride="mapbox://styles/mapbox/streets-v12"
           showControls={false}
           scrollZoom={false}
           doubleClickZoom={false}
@@ -77,7 +76,7 @@ export const MapView = () => {
         {countriesData && countriesData.length > 0 && (
           <Card className="h-full flex flex-col p-4">
             <CardHeader className="shrink-0 p-0 pb-3">
-              <CardTitle className="text-lg">Countries by Photos</CardTitle>
+              <CardTitle className="text-lg">各国照片数</CardTitle>
               <CardDescription className="text-sm">
                 Top {chartData.length} countries with most photos
               </CardDescription>

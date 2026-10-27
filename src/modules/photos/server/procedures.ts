@@ -13,7 +13,8 @@ import {
   photosUpdateSchema,
   photosInsertSchema,
 } from "@/db/schema";
-import { dualInsert, dualUpdate, dualDelete } from "@/db";
+import { dualUpdate, dualDelete, dualTransaction } from "@/db";
+import { buildCitySlug } from "@/modules/photos/server/city-slug";
 import { TRPCError } from "@trpc/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/modules/s3/lib/server-client";
@@ -27,40 +28,56 @@ export const photosRouter = createTRPCRouter({
     .input(photosInsertSchema)
     .mutation(async ({ ctx, input }) => {
       const values = input;
+      const cityName =
+        values.countryCode === "JP" || values.countryCode === "TW"
+          ? values.region
+          : values.city;
 
       try {
-        const [insertedPhoto] = await dualInsert(photos, values).returning() as any;
+        // Photo + city aggregate must commit or roll back together. The previous
+        // dualInsert/compensating-delete sequence could leave photoCount drift,
+        // and compensation itself could fail. The primary production database
+        // is the source of truth; dualTransaction intentionally wraps its native
+        // transaction (the secondary database is not configured in production).
+        return await dualTransaction(async (tx) => {
+          const [insertedPhoto] = await tx
+            .insert(photos)
+            .values(values)
+            .returning();
 
-        const cityName =
-          values.countryCode === "JP" || values.countryCode === "TW"
-            ? values.region
-            : values.city;
+          if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
+            await tx
+              .insert(citySets)
+              .values({
+                country: insertedPhoto.country,
+                countryCode: insertedPhoto.countryCode,
+                city: cityName,
+                slug: buildCitySlug(
+                  insertedPhoto.countryCode,
+                  insertedPhoto.country,
+                  cityName,
+                ),
+                photoCount: 1,
+                coverPhotoId: insertedPhoto.id,
+              })
+              .onConflictDoUpdate({
+                target: [citySets.country, citySets.city],
+                set: {
+                  countryCode: insertedPhoto.countryCode,
+                  photoCount: sql`${citySets.photoCount} + 1`,
+                  coverPhotoId: insertedPhoto.id,
+                  updatedAt: new Date(),
+                },
+              });
+          }
 
-        if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
-          await dualInsert(citySets, {
-            country: insertedPhoto.country,
-            countryCode: insertedPhoto.countryCode,
-            city: cityName,
-            slug: cityName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-            photoCount: 1,
-            coverPhotoId: insertedPhoto.id,
-          }).onConflictDoUpdate({
-            target: [citySets.country, citySets.city],
-            set: {
-              countryCode: insertedPhoto.countryCode,
-              photoCount: sql`${citySets.photoCount} + 1`,
-              coverPhotoId: insertedPhoto.id,
-              updatedAt: new Date(),
-            },
-          });
-        }
-
-        return insertedPhoto;
+          return insertedPhoto;
+        });
       } catch (error) {
-        console.error("Photo creation error:", error);
+        console.error("照片创建出错：", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create photo",
+          message: "照片创建失败",
         });
       }
     }),
@@ -86,7 +103,7 @@ export const photosRouter = createTRPCRouter({
         if (!photo) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Photo not found",
+            message: "照片不存在",
           });
         }
 
@@ -160,10 +177,10 @@ export const photosRouter = createTRPCRouter({
         return photo;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
-        console.error("Photo deletion error:", error);
+        console.error("照片删除出错：", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete photo",
+          message: "照片删除失败",
         });
       }
     }),

@@ -71,14 +71,14 @@ export const ProfileForm = () => {
         name: name || undefined,
         fetchOptions: {
           onSuccess: () => {
-            toast.success("Profile updated successfully");
+            toast.success("资料更新成功");
             setName("");
             setImage(null);
             setImagePreview(null);
             router.refresh();
           },
           onError: (error) => {
-            toast.error(error.error.message || "Failed to update profile");
+            toast.error(error.error.message || "资料更新失败");
           },
         },
       });
@@ -89,11 +89,11 @@ export const ProfileForm = () => {
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("两次输入的密码不一致");
       return;
     }
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error("密码至少 8 个字符");
       return;
     }
 
@@ -108,10 +108,10 @@ export const ProfileForm = () => {
       if (res.error) {
         toast.error(
           res.error.message ||
-            "Couldn't change your password! Make sure it's correct"
+            "密码修改失败，请确认当前密码是否正确"
         );
       } else {
-        toast.success("Password changed successfully");
+        toast.success("密码修改成功");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -126,21 +126,21 @@ export const ProfileForm = () => {
   return (
     <Tabs defaultValue="profile" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="password">Password</TabsTrigger>
+        <TabsTrigger value="profile">个人资料</TabsTrigger>
+        <TabsTrigger value="password">密码</TabsTrigger>
       </TabsList>
 
       {/* Profile Tab */}
       <TabsContent value="profile" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Edit Profile</CardTitle>
-            <CardDescription>Update your profile information</CardDescription>
+            <CardTitle>编辑资料</CardTitle>
+            <CardDescription>更新你的个人资料</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Profile Picture Section */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Profile Picture</Label>
+              <Label className="text-base font-semibold">头像</Label>
               <div className="flex items-end gap-4">
                 {/* Image Preview */}
                 <div className="relative">
@@ -148,7 +148,7 @@ export const ProfileForm = () => {
                     <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-primary/20">
                       <Image
                         src={imagePreview}
-                        alt="Profile preview"
+                        alt="资料预览"
                         fill
                         className="object-cover"
                       />
@@ -157,16 +157,14 @@ export const ProfileForm = () => {
                     <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-primary/20">
                       <Image
                         src={data.user.image}
-                        alt="Current profile"
+                        alt="当前资料"
                         fill
                         className="object-cover"
                       />
                     </div>
                   ) : (
                     <div className="w-24 h-24 rounded-lg bg-muted border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">
-                        No image
-                      </span>
+                      <span className="text-xs text-muted-foreground">暂无图片</span>
                     </div>
                   )}
                 </div>
@@ -187,9 +185,7 @@ export const ProfileForm = () => {
                       className="w-full"
                       onClick={() => document.getElementById("image")?.click()}
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Choose Image
-                    </Button>
+                      <Upload className="w-4 h-4 mr-2" />选择图片</Button>
                   </div>
                   {imagePreview && (
                     <Button
@@ -202,9 +198,7 @@ export const ProfileForm = () => {
                         setImagePreview(null);
                       }}
                     >
-                      <X className="w-4 h-4 mr-2" />
-                      Remove
-                    </Button>
+                      <X className="w-4 h-4 mr-2" />移除</Button>
                   )}
                 </div>
               </div>
@@ -212,13 +206,11 @@ export const ProfileForm = () => {
 
             {/* Name Section */}
             <div className="space-y-3">
-              <Label htmlFor="name" className="text-base font-semibold">
-                Full Name
-              </Label>
+              <Label htmlFor="name" className="text-base font-semibold">姓名</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder={data?.user.name || "Enter your name"}
+                placeholder={data?.user.name || "输入你的姓名"}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="h-10"
@@ -234,11 +226,9 @@ export const ProfileForm = () => {
             >
               {isUpdatingProfile ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
-                </>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />更新中…</>
               ) : (
-                "Save Changes"
+                "保存更改"
               )}
             </Button>
           </CardContent>
@@ -249,10 +239,8 @@ export const ProfileForm = () => {
       <TabsContent value="password" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>
-              Update your password to keep your account secure
-            </CardDescription>
+            <CardTitle>修改密码</CardTitle>
+            <CardDescription>更新密码以保障账号安全</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Current Password */}
@@ -260,23 +248,19 @@ export const ProfileForm = () => {
               <Label
                 htmlFor="current-password"
                 className="text-base font-semibold"
-              >
-                Current Password
-              </Label>
+              >当前密码</Label>
               <PasswordInput
                 id="current-password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter your current password"
+                placeholder="输入当前密码"
                 className="h-10"
               />
             </div>
 
             {/* New Password */}
             <div className="space-y-3">
-              <Label htmlFor="new-password" className="text-base font-semibold">
-                New Password
-              </Label>
+              <Label htmlFor="new-password" className="text-base font-semibold">新密码</Label>
               <PasswordInput
                 id="new-password"
                 value={newPassword}
@@ -291,14 +275,12 @@ export const ProfileForm = () => {
               <Label
                 htmlFor="confirm-password"
                 className="text-base font-semibold"
-              >
-                Confirm Password
-              </Label>
+              >确认新密码</Label>
               <PasswordInput
                 id="confirm-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your new password"
+                placeholder="确认新密码"
                 className="h-10"
               />
             </div>
@@ -315,9 +297,7 @@ export const ProfileForm = () => {
               <Label
                 htmlFor="sign-out-devices"
                 className="text-sm font-medium cursor-pointer flex-1 mb-0"
-              >
-                Sign out from all other devices
-              </Label>
+              >退出其他所有设备</Label>
             </div>
 
             {/* Change Password Button */}
@@ -334,11 +314,9 @@ export const ProfileForm = () => {
             >
               {isChangingPassword ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Changing...
-                </>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />更改中…</>
               ) : (
-                "Change Password"
+                "修改密码"
               )}
             </Button>
           </CardContent>

@@ -2,10 +2,10 @@ import { z } from "zod";
 
 export const postFormSchema = z.object({
   title: z.string().min(1, {
-    message: "Title is required",
+    message: "标题不能为空",
   }),
   slug: z.string().min(1, {
-    message: "Slug is required",
+    message: "URL 别名不能为空",
   }),
   content: z.string().optional(),
   visibility: z.enum(["public", "private"]),

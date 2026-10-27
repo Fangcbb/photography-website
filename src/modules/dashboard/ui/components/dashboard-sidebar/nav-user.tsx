@@ -89,22 +89,16 @@ export function NavUser({ user }: Props) {
             <DropdownMenuGroup>
               <Link href="/dashboard/profile">
                 <DropdownMenuItem>
-                  <IconUserCircle />
-                  Profile
-                </DropdownMenuItem>
+                  <IconUserCircle />个人资料</DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/">
-                <IconHomeShare />
-                Exit Dashboard
-              </Link>
+                <IconHomeShare />退出后台</Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
-              <IconLogout />
-              Log out
-            </DropdownMenuItem>
+              <IconLogout />退出登录</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

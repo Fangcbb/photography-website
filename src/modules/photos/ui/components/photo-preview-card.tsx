@@ -1,6 +1,7 @@
 "use client";
 
 import { photoProxyUrl } from "@/lib/photo-url";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 import BlurImage from "@/components/blur-image";
 import { BrandsLogo } from "@/components/brands-logo";
@@ -71,8 +72,8 @@ export function PhotoPreviewCard({
         }}
       >
         <BlurImage
-          src={photoId ? photoProxyUrl(photoId, "display") : "/placeholder.svg"}
-          alt={title || "Photo preview"}
+          src={photoId ? photoProxyUrl(photoId, "display") : keyToUrl(url, "display")}
+          alt={title || "照片预览"}
           width={imageInfo.width}
           height={imageInfo.height}
           blurhash={imageInfo.blurhash}
@@ -110,7 +111,7 @@ export function PhotoPreviewCard({
                     <span>
                       {exposureTime && formatExposureTime(exposureTime)}
                     </span>
-                    <span>{iso && "ISO" + iso}</span>
+                    <span>{iso && "感光度" + iso}</span>
                   </div>
                   <div className="flex items-center text-xs text-gray-500">
                     <p>

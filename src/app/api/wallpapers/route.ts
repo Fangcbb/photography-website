@@ -1,80 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync } from "fs";
-import { join } from "path";
 
-const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
-const UNSPLASH_API = "https://api.unsplash.com";
+export const revalidate = 60;
 
-function getTopic(): string {
-  try {
-    // Read topic from shared config file
-    const configPath = join(process.cwd(), ".wallpaper-topic");
-    const topic = readFileSync(configPath, "utf-8").trim();
-    return topic || "wallpapers";
-  } catch {
-    return "wallpapers";
-  }
-}
+// Picsum Photos（免费、无需 key，图片来自 Unsplash）
+// 作为 Unsplash API 的替代（原 UNSPLASH_ACCESS_KEY 未配置，接口失效）
+const PICSUM_LIST = "https://picsum.photos/v2/list";
 
-async function fetchFromUnsplash(page: number, perPage: number) {
-  if (!UNSPLASH_ACCESS_KEY) {
-    throw new Error("UNSPLASH_ACCESS_KEY not configured");
-  }
-
-  const topic = getTopic();
-  const url = new URL(`${UNSPLASH_API}/topics/${topic}/photos`);
-  url.searchParams.set("page", String(page));
-  url.searchParams.set("per_page", String(perPage));
-  url.searchParams.set("order_by", "latest");
-
-  const res = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
-      "Accept-Version": "v1",
-    },
-    next: { revalidate: 3600 },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error("Unsplash API error:", res.status, text);
-    throw new Error(`Unsplash API error: ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  // Topics API returns array directly, Search API returns {results: []}
-  const photos = Array.isArray(data) ? data : data.results || [];
-
-  return {
-    photos: photos.map((photo: Record<string, unknown>) => ({
-      id: photo.id,
-      width: photo.width,
-      height: photo.height,
-      blur_hash: photo.blur_hash,
-      description: photo.description,
-      alt_description: photo.alt_description,
-      urls: {
-        raw: (photo.urls as Record<string, string>).raw,
-        full: (photo.urls as Record<string, string>).full,
-        regular: (photo.urls as Record<string, string>).regular,
-        small: (photo.urls as Record<string, string>).small,
-        thumb: (photo.urls as Record<string, string>).thumb,
-      },
-      links: {
-        html: (photo.links as Record<string, string>).html,
-      },
-      user: {
-        name: (photo.user as Record<string, unknown>).name,
-        username: (photo.user as Record<string, unknown>).username,
-        links: {
-          html: (photo.user as Record<string, Record<string, string>>).links
-            .html,
-        },
-      },
-    })),
-    total: data.total,
-  };
+function picsumImage(id: string, w: number, h: number) {
+  return `/api/wallpapers/image/id/${id}/${w}/${h}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -86,14 +19,71 @@ export async function GET(request: NextRequest) {
       Math.max(1, parseInt(searchParams.get("per_page") || "20", 10))
     );
 
-    const result = await fetchFromUnsplash(page, perPage);
+    // Picsum 每页固定 100 条，按页计算起点
+    const listPage = Math.floor(((page - 1) * perPage) / 100) + 1;
+    const start = ((page - 1) * perPage) % 100;
 
+    const res = await fetch(`${PICSUM_LIST}?page=${listPage}&limit=100`, {
+      signal: AbortSignal.timeout(10000),
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Picsum API error: ${res.status}`);
+    }
+
+    const list: Array<{
+      id: string;
+      author: string;
+      width: number;
+      height: number;
+      url: string;
+      download_url: string;
+    }> = await res.json();
+
+    const slice = list.slice(start, start + perPage);
+
+    const photos = slice.map((p) => {
+      const w = 1920;
+      const h = Math.round((p.height / p.width) * 1920);
+      return {
+        id: p.id,
+        width: p.width,
+        height: p.height,
+        blur_hash: null,
+        description: `Photo by ${p.author}`,
+        alt_description: `Photo by ${p.author}`,
+        urls: {
+          raw: picsumImage(p.id, w, h),
+          full: picsumImage(p.id, w, h),
+          regular: picsumImage(p.id, 1280, Math.round((p.height / p.width) * 1280)),
+          small: picsumImage(p.id, 640, Math.round((p.height / p.width) * 640)),
+          thumb: picsumImage(p.id, 400, Math.round((p.height / p.width) * 400)),
+        },
+        links: {
+          html: p.url,
+        },
+        user: {
+          name: p.author,
+          username: p.author,
+          links: {
+            html: p.url,
+          },
+        },
+      };
+    });
+
+    // Picsum 总量约 1000 张
     return NextResponse.json({
-      photos: result.photos,
-      total: result.total,
+      photos,
+      total: 1000,
       page,
       perPage,
-      topic: getTopic(),
+      topic: "wallpapers",
+    }, {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      },
     });
   } catch (error) {
     console.error("Wallpapers API error:", error);

@@ -11,7 +11,7 @@ const CreatePhotoModal = () => {
     <ResponsiveModal
       open={isOpen}
       onOpenChange={onClose}
-      title="Create Photo"
+      title="创建照片"
       className="sm:max-w-3xl"
       dismissible={false}
     >

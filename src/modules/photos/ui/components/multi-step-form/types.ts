@@ -23,7 +23,7 @@ function parseExposureTime(value: string | number | null | undefined): number | 
 export const firstStepSchema = z.object({
   url: z
     .string()
-    .min(1, { message: "Please upload a photo before proceeding" }),
+    .min(1, { message: "请先上传照片再继续" }),
 });
 
 export type FirstStepData = z.infer<typeof firstStepSchema>;
@@ -31,8 +31,8 @@ export type FirstStepData = z.infer<typeof firstStepSchema>;
 // Helper to accept number or empty string
 // Accept string or undefined for all fields (form submits strings)
 export const secondStepSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
-  description: z.string().min(1, { message: "Description is required" }),
+  title: z.string().min(1, { message: "标题不能为空" }),
+  description: z.string().min(1, { message: "描述不能为空" }),
   visibility: z.enum(["private", "public"]).default("private"),
   latitude: z.union([z.number(), z.string()]).optional().transform(v => typeof v === "string" ? parseFloat(v) || undefined : v),
   longitude: z.union([z.number(), z.string()]).optional().transform(v => typeof v === "string" ? parseFloat(v) || undefined : v),
@@ -118,22 +118,22 @@ export const INITIAL_FORM_VALUES: Partial<PhotoFormData> = {
 export const STEP_CONFIG = [
   {
     id: "upload",
-    title: "Upload",
-    description: "Upload your photo",
+    title: "上传",
+    description: "上传照片",
   },
   {
     id: "metadata",
-    title: "Metadata",
-    description: "Add metadata to your photo",
+    title: "元数据",
+    description: "为照片添加元数据",
   },
   {
     id: "location",
-    title: "Location",
-    description: "Add location to your photo",
+    title: "位置",
+    description: "为照片添加位置",
   },
   {
     id: "preview",
-    title: "Preview",
-    description: "Preview your photo",
+    title: "预览",
+    description: "预览照片",
   },
 ];

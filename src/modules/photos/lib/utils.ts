@@ -187,13 +187,13 @@ export const getPhotoExif = async (file: File): Promise<TExifData | null> => {
     const result = await exifr.parse(file, {
       // Read both IFD0 and Exif IFD
       pick: [
-        "Make",
-        "Model",
+        "品牌",
+        "型号",
         "LensModel",
         "FocalLength",
         "FocalLengthIn35mmFormat",
         "FNumber",
-        "ISO",
+        "感光度",
         "ExposureTime",
         "ExposureCompensation",
         "DateTimeOriginal",
@@ -226,7 +226,7 @@ export const getPhotoExif = async (file: File): Promise<TExifData | null> => {
     if (Object.keys(exifData).length === 0) return null;
     return exifData;
   } catch (error) {
-    console.error("Error reading EXIF data:", error);
+    console.error("读取 EXIF 出错：", error);
     return null;
   }
 };
@@ -238,11 +238,11 @@ export const getPhotoExif = async (file: File): Promise<TExifData | null> => {
  */
 export const getImageInfo = async (file: File): Promise<TImageInfo> => {
   if (!file) {
-    throw new Error("No file provided");
+    throw new Error("未提供文件");
   }
 
   if (!file.type.startsWith("image/")) {
-    throw new Error("Invalid file type. Only images are allowed");
+    throw new Error("文件类型无效，仅支持图片");
   }
 
   try {
@@ -254,7 +254,7 @@ export const getImageInfo = async (file: File): Promise<TImageInfo> => {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) {
-      throw new Error("Failed to get canvas context");
+      throw new Error("获取画布上下文失败");
     }
 
     ctx.drawImage(img, 0, 0, 32, 32);
@@ -269,7 +269,7 @@ export const getImageInfo = async (file: File): Promise<TImageInfo> => {
     );
 
     if (!blurhash) {
-      throw new Error("Failed to generate blurhash");
+      throw new Error("生成模糊占位图失败");
     }
 
     const imageInfo: TImageInfo = {

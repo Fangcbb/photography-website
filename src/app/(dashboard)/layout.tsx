@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
   title: {
     template: "%s - Dashboard",
-    default: "Dashboard",
+    default: "仪表盘",
   },
 };
 

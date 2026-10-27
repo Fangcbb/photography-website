@@ -76,7 +76,7 @@ export function PhotoForm({
   const createPhoto = useMutation(
     trpc.photos.create.mutationOptions({
       onSuccess: async () => {
-        toast.success("Photo created");
+        toast.success("照片已创建");
         await queryClient.invalidateQueries(
           trpc.photos.getMany.queryOptions({})
         );
@@ -167,9 +167,9 @@ export function PhotoForm({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>标题</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Photo title" />
+                    <Input {...field} placeholder="照片标题" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -181,13 +181,13 @@ export function PhotoForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>描述</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       rows={5}
                       className="resize-none"
-                      placeholder="Photo description"
+                      placeholder="照片描述"
                     />
                   </FormControl>
                   <FormMessage />
@@ -200,11 +200,11 @@ export function PhotoForm({
               name="visibility"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Visibility</FormLabel>
+                  <FormLabel>可见性</FormLabel>
                   <FormControl>
                     <select {...field} className="w-full p-2 border rounded-md">
-                      <option value="private">Private</option>
-                      <option value="public">Public</option>
+                      <option value="private">私密</option>
+                      <option value="public">公开</option>
                     </select>
                   </FormControl>
                   <FormMessage />
@@ -214,7 +214,7 @@ export function PhotoForm({
 
             {/* Location Fields */}
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>位置</FormLabel>
               <FormControl>
                 <div className="h-[300px] w-full rounded-md overflow-hidden border">
                   <Suspense
@@ -255,7 +255,7 @@ export function PhotoForm({
                 name="latitude"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Latitude</FormLabel>
+                    <FormLabel>纬度</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -282,7 +282,7 @@ export function PhotoForm({
                 name="longitude"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Longitude</FormLabel>
+                    <FormLabel>经度</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -322,7 +322,7 @@ export function PhotoForm({
               <div className="p-4 flex flex-col gap-y-6">
                 <div className="flex justify-between items-center gap-x-2">
                   <div className="flex flex-col">
-                    <p className="text-sm text-muted-foreground">Photo link</p>
+                    <p className="text-sm text-muted-foreground">照片链接</p>
                     <div className="flex items-center gap-x-2">
                       <a href={url} target="_blank" rel="noopener noreferrer">
                         <p className="line-clamp-1 text-sm text-blue-500">
@@ -351,10 +351,8 @@ export function PhotoForm({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Favorite</FormLabel>
-                    <FormDescription>
-                      Mark this photo as favorite
-                    </FormDescription>
+                    <FormLabel className="text-base">收藏</FormLabel>
+                    <FormDescription>收藏这张照片</FormDescription>
                   </div>
                   <FormControl>
                     <Checkbox
@@ -368,7 +366,7 @@ export function PhotoForm({
           </div>
         </div>
         <div className="flex items-center justify-end mt-6">
-          <Button type="submit">Save</Button>
+          <Button type="submit">保存</Button>
         </div>
       </form>
     </Form>

@@ -71,9 +71,9 @@ export function SecondStep({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>标题</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Photo title" />
+                    <Input {...field} placeholder="照片标题" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -86,10 +86,10 @@ export function SecondStep({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel>Visibility</FormLabel>
+                    <FormLabel>可见性</FormLabel>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">
-                        {field.value === "public" ? "Public" : "Private"}
+                        {field.value === "public" ? "公开" : "私密"}
                       </span>
                       <FormControl>
                         <Switch
@@ -111,13 +111,13 @@ export function SecondStep({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>描述</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       rows={5}
                       className="resize-none"
-                      placeholder="Photo description"
+                      placeholder="照片描述"
                     />
                   </FormControl>
                   <FormMessage />
@@ -128,11 +128,11 @@ export function SecondStep({
             {/* Camera Parameters Section */}
             <div className="space-y-4 border-t pt-4">
               <div>
-                <h3 className="text-sm font-semibold">Camera Parameters</h3>
+                <h3 className="text-sm font-semibold">拍摄参数</h3>
                 <p className="text-xs text-muted-foreground mt-1">
                   {exif
-                    ? "Auto-filled from EXIF data. You can edit these values."
-                    : "No EXIF data found. Please fill in manually."}
+                    ? "已从 EXIF 自动填充，可手动修改。"
+                    : "未找到 EXIF 信息，请手动填写。"}
                 </p>
               </div>
 
@@ -142,7 +142,7 @@ export function SecondStep({
                   name="make"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Camera Make</FormLabel>
+                      <FormLabel>相机品牌</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="e.g., Canon" />
                       </FormControl>
@@ -156,7 +156,7 @@ export function SecondStep({
                   name="model"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Camera Model</FormLabel>
+                      <FormLabel>相机型号</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="e.g., EOS R5" />
                       </FormControl>
@@ -171,7 +171,7 @@ export function SecondStep({
                 name="lensModel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lens Model</FormLabel>
+                    <FormLabel>镜头型号</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="e.g., RF 24-70mm f/2.8L" />
                     </FormControl>
@@ -240,7 +240,7 @@ export function SecondStep({
                   name="fNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Aperture</FormLabel>
+                      <FormLabel>光圈</FormLabel>
                       <FormControl>
                         <ApertureSelector
                           value={field.value ?? undefined}
@@ -257,7 +257,7 @@ export function SecondStep({
                   name="exposureTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Shutter Speed</FormLabel>
+                      <FormLabel>快门速度</FormLabel>
                       <FormControl>
                         <ShutterSpeedSelector
                           value={field.value ?? undefined}
@@ -274,7 +274,7 @@ export function SecondStep({
                   name="iso"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ISO</FormLabel>
+                      <FormLabel>感光度</FormLabel>
                       <FormControl>
                         <ISOSelector
                           value={field.value ?? undefined}
@@ -309,10 +309,8 @@ export function SecondStep({
 
         <div className="flex justify-between pt-4">
           <Button type="button" variant="outline" onClick={onBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
-          <Button type="submit" disabled={isSubmitting || !(isValid || manualIsValid)}>
-            Next <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" />返回</Button>
+          <Button type="submit" disabled={isSubmitting || !(isValid || manualIsValid)}>下一步<ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </form>

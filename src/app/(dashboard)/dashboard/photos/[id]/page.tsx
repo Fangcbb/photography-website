@@ -21,8 +21,8 @@ const Page = async ({ params }: Props) => {
   const { id } = await params;
 
   return (
-      <ErrorBoundary fallback={<p>Something went wrong</p>}>
-        <Suspense fallback={<p>Loading...</p>}>
+      <ErrorBoundary fallback={<p>出了点问题</p>}>
+        <Suspense fallback={<p>加载中…</p>}>
           <PhotoIdView id={id} />
         </Suspense>
       </ErrorBoundary>

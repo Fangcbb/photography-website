@@ -36,7 +36,7 @@ export default function MouseFollowerProvider() {
     if (cursor.el) {
       cursor.el.classList.add("-exclusion");
       // Ensure cursor stays above all modals and popups (z-index: 250 -> 10001)
-      cursor.el.style.zIndex = "10001";
+      (cursor.el as HTMLElement).style.zIndex = "10001";
     }
 
     return () => {

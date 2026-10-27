@@ -65,15 +65,11 @@ const EmptyStatus = () => {
         <EmptyMedia variant="icon">
           <IconPhotoOff />
         </EmptyMedia>
-        <EmptyTitle>No photos found</EmptyTitle>
-        <EmptyDescription>
-          You have no photos. Upload some photos to get started.
-        </EmptyDescription>
+        <EmptyTitle>未找到照片</EmptyTitle>
+        <EmptyDescription>还没有照片，上传几张开始吧。</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button variant="outline" size="sm" onClick={modal.onOpen}>
-          Add Photos
-        </Button>
+        <Button variant="outline" size="sm" onClick={modal.onOpen}>添加照片</Button>
       </EmptyContent>
     </Empty>
   );
@@ -89,13 +85,11 @@ export const ErrorStatus = () => {
           <EmptyMedia variant="icon">
             <IconAlertTriangle />
           </EmptyMedia>
-          <EmptyTitle>Something went wrong</EmptyTitle>
-          <EmptyDescription>Please try again later.</EmptyDescription>
+          <EmptyTitle>出了点问题</EmptyTitle>
+          <EmptyDescription>请稍后重试。</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" onClick={resetBoundary}>
-            Try again
-          </Button>
+          <Button variant="outline" size="sm" onClick={resetBoundary}>重试</Button>
         </EmptyContent>
       </Empty>
     </div>
@@ -109,13 +103,13 @@ export const LoadingStatus = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="pl-6 w-[510px]">Photos</TableHead>
-              <TableHead>Visibility</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Views</TableHead>
-              <TableHead className="text-right">Comments</TableHead>
-              <TableHead className="text-right pr-6">Likes</TableHead>
+              <TableHead className="pl-6 w-[510px]">照片</TableHead>
+              <TableHead>可见性</TableHead>
+              <TableHead>状态</TableHead>
+              <TableHead>日期</TableHead>
+              <TableHead className="text-right">浏览</TableHead>
+              <TableHead className="text-right">评论</TableHead>
+              <TableHead className="text-right pr-6">点赞</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -39,6 +39,8 @@ export function usePhotoUpload({
   const handleUpload = async (file: File, livePhotoVideo?: File) => {
     try {
       setIsUploading(true);
+      setUploadProgress(0);
+      setUploadedImageUrl(null);
 
       const [exifData, imageInfo] = await Promise.all([
         getPhotoExif(file),
@@ -95,16 +97,16 @@ export function usePhotoUpload({
       }
 
       setUploadedImageUrl(publicUrl);
-      toast.success("Photo uploaded successfully!");
+      toast.success("照片上传成功！");
       onUploadSuccess?.(publicUrl, exifData, imageInfo, livePhotoVideoUrl);
     } catch (error) {
       setExif(null);
       setImageInfo(null);
       setUploadedImageUrl(null);
 
-      console.error("Upload error:", error);
+      console.error("上传错误：", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to upload photo"
+        error instanceof Error ? error.message : "照片上传失败"
       );
     } finally {
       setIsUploading(false);

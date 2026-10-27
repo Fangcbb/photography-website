@@ -1,8 +1,10 @@
 /**
- * 音频代理 API - 解决 CORS 问题（流式传输）
+ * 音频代理 API - 网易云直链流式代理
  * GET /api/music/play?id=xxx
  */
 import { NextRequest, NextResponse } from "next/server";
+
+const API = process.env.MUSIC_API_BASE || "http://127.0.0.1:3333/api";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -13,36 +15,50 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 酷我音频 URL
-    const audioUrl = `https://kw-api.cenguigui.cn/?id=${id}&type=song&level=exhigh&format=mp3`;
-    
-    // 流式获取音频
-    const response = await fetch(audioUrl);
-    
-    if (!response.ok) {
-      return NextResponse.json({ error: "Failed to fetch audio" }, { status: 500 });
+    // 从本地 music-api 获取网易直链
+    const urlRes = await fetch(`${API}/url?id=${id}&br=320000`, {
+      signal: AbortSignal.timeout(10000),
+    });
+    const urlData = await urlRes.json();
+    const audioUrl = urlData.data?.url;
+
+    if (!audioUrl) {
+      return NextResponse.json(
+        { error: "Song unavailable (possibly VIP or no copyright)" },
+        { status: 404 }
+      );
     }
 
-    // 获取原始 URL（重定向后的 URL）
-    const audioUrlFinal = response.url || audioUrl;
-    
-    // 流式传输响应
+    // 流式获取音频（http直链需要转发）
+    const range = request.headers.get("range");
+    const upstreamHeaders: Record<string, string> = { "User-Agent": "Mozilla/5.0" };
+    if (range) upstreamHeaders["Range"] = range;
+    const response = await fetch(audioUrl, {
+      headers: upstreamHeaders,
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "Failed to fetch audio" },
+        { status: 502 }
+      );
+    }
+
     const headers = new Headers();
     headers.set("Content-Type", "audio/mpeg");
     headers.set("Access-Control-Allow-Origin", "*");
     headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
     headers.set("Access-Control-Allow-Headers", "Content-Type, Range");
-    headers.set("Cache-Control", "public, max-age=3600");
-    headers.set("X-Audio-Url", audioUrlFinal);
-    
-    // 支持 Range 请求（播放器 seek 时需要）
+    headers.set("Cache-Control", "no-store");
+
     if (response.headers.has("content-range")) {
       headers.set("Content-Range", response.headers.get("content-range") || "");
     }
     if (response.headers.has("accept-ranges")) {
       headers.set("Accept-Ranges", response.headers.get("accept-ranges") || "bytes");
     }
-    
+
     return new NextResponse(response.body, {
       headers,
       status: response.status,
@@ -59,6 +75,6 @@ export async function OPTIONS() {
   headers.set("Access-Control-Allow-Origin", "*");
   headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type, Range");
-  
+
   return new NextResponse(null, { status: 200, headers });
 }

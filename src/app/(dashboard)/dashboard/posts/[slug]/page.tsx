@@ -26,8 +26,8 @@ const Page = async ({ params }: Props) => {
   const decodedSlug = decodeURIComponent(slug);
 
   return (
-      <ErrorBoundary fallback={<p>Something went wrong</p>}>
-        <Suspense fallback={<p>Loading...</p>}>
+      <ErrorBoundary fallback={<p>出了点问题</p>}>
+        <Suspense fallback={<p>加载中…</p>}>
           <PostView slug={decodedSlug} />
         </Suspense>
       </ErrorBoundary>

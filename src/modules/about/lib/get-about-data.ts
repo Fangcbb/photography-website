@@ -5,17 +5,17 @@ import { eq } from "drizzle-orm";
 const DEFAULT_ABOUT = {
   id: "default",
   name: "Fang Bing",
-  role: "Photographer",
+  role: "摄影师",
   bio: "我是方斌，一名业余摄影师。在业余时间，我喜欢用镜头记录生活和旅行中的美好瞬间。对我来说，摄影是一种排解孤独的方式。希望你能喜欢我的照片。",
   avatar: "/avatar.jpg",
-  aboutHeading: "About",
+  aboutHeading: "关于",
   aboutParagraphs: [
     "To me, photography is defined by content, not equipment or specs. Its value lies not in high pixels or soft bokeh, but in the emotions, stories, and vision a photograph carries.",
     "Gear sets the upper limit of image quality, but the depth and soul of a work are always decided by the eye and mind behind the lens. The person behind the camera matters more than the camera itself.",
     "I respect the role of good equipment, but reject gear-obsession. No one remembers a photo for its camera brand—but people never forget a powerful story.",
   ],
-  cameraHeading: "Camera",
-  cameraSubheading: "Camera Lenses",
+  cameraHeading: "相机",
+  cameraSubheading: "镜头",
   cameraDescription:
     "I have a passion for photography and camera lenses. I use a variety of lenses to capture the beauty of nature and people in their different moments.",
   gear: JSON.stringify([

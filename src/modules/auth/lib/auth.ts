@@ -29,7 +29,7 @@ export const auth = betterAuth({
       // 彻底禁用注册接口（但保留登录功能）
       if (ctx.path.endsWith("/sign-up/email")) {
         throw new APIError("FORBIDDEN", {
-          message: "Registration is disabled.",
+          message: "已停用注册。",
         });
       }
     }),

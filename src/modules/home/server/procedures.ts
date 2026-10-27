@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, baseProcedure } from "@/trpc/init";
-import { desc, eq, and, asc } from "drizzle-orm";
+import { desc, eq, and, asc, sql } from "drizzle-orm";
 import { citySets, photos } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 
@@ -34,22 +34,31 @@ export const homeRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit } = input;
 
-      const data = await ctx.db.query.citySets.findMany({
-        with: {
-          coverPhoto: true,
-          // photos 未使用，不取回来减轻首页负担
-        },
-        columns: {
-          slug: true,
-          id: true,
-          city: true,
-          country: true,
-          photoCount: true,
-          coverPhotoId: true,
-        },
-        orderBy: [desc(citySets.updatedAt)],
-        limit: limit,
-      });
+      // 仅返回封面为公开照片的城市，photoCount 只统计公开照片（防私有照片泄露）
+      const data = await ctx.db
+        .select({
+          slug: citySets.slug,
+          id: citySets.id,
+          city: citySets.city,
+          country: citySets.country,
+          photoCount: sql<number>`(
+            select count(*) from ${photos}
+            where ${photos.city} = ${citySets.city}
+              and ${photos.country} = ${citySets.country}
+              and ${photos.visibility} = 'public'
+          )`.mapWith(Number),
+          coverPhotoId: citySets.coverPhotoId,
+          coverPhotoUrl: photos.url,
+          coverPhotoBlurData: photos.blurData,
+          coverPhotoTitle: photos.title,
+        })
+        .from(citySets)
+        .innerJoin(photos, and(
+          eq(citySets.coverPhotoId, photos.id),
+          eq(photos.visibility, "public"),
+        ))
+        .orderBy(desc(citySets.updatedAt))
+        .limit(limit);
 
       return data;
     }),

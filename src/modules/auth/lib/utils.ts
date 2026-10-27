@@ -8,7 +8,7 @@ export const formatLastActive = (createdAt: Date) => {
     (now.getTime() - date.getTime()) / (1000 * 60)
   );
 
-  if (diffInMinutes < 1) return "Active now";
+  if (diffInMinutes < 1) return "当前在线";
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
   if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
   return `${Math.floor(diffInMinutes / 1440)}d ago`;
@@ -39,12 +39,12 @@ export const getDeviceDescription = (
   const device = parser.getDevice();
 
   if (deviceType === "mobile") {
-    return `${device.vendor || "Mobile"} ${device.model || "Device"}`;
+    return `${device.vendor || "移动端"} ${device.model || "设备"}`;
   }
 
   if (deviceType === "tablet") {
-    return `${device.vendor || "Tablet"} ${device.model || "Device"}`;
+    return `${device.vendor || "平板"} ${device.model || "设备"}`;
   }
 
-  return `${browser.name || "Browser"} on ${os.name || "Desktop"}`;
+  return `${browser.name || "浏览器"} on ${os.name || "桌面端"}`;
 };

@@ -10,8 +10,8 @@ import {
 } from "@/modules/posts/ui/views/dashboard-posts-view";
 
 export const metadata = {
-  title: "Posts",
-  description: "Posts",
+  title: "文章",
+  description: "文章",
 };
 
 type Props = {

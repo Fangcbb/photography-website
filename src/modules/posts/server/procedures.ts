@@ -25,7 +25,7 @@ export const postsRouter = createTRPCRouter({
       if (existingPost.length > 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Post with this slug already exists",
+          message: "该 URL 别名已存在",
         });
       }
 
@@ -43,7 +43,7 @@ export const postsRouter = createTRPCRouter({
       if (!data) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Post not found",
+          message: "文章不存在",
         });
       }
 
@@ -82,7 +82,7 @@ export const postsRouter = createTRPCRouter({
       if (!data) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Post not found",
+          message: "文章不存在",
         });
       }
 

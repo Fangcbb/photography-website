@@ -56,7 +56,7 @@ export const useGetAddress = ({ lat, lng }: UseGetLocationProps) => {
 
       try {
         const response = await fetch(
-          `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`
+          `/mbapi/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`
         );
 
         if (!response.ok) {

@@ -39,7 +39,7 @@ export const travelRouter = createTRPCRouter({
       if (!citySet) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "City not found",
+          message: "城市不存在",
         });
       }
 
@@ -69,7 +69,7 @@ export const travelRouter = createTRPCRouter({
       if (!citySet) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "City not found",
+          message: "城市不存在",
         });
       }
 

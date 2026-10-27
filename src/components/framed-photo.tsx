@@ -7,7 +7,6 @@ import { photoProxyUrl } from "@/lib/photo-url";
 interface FramedPhotoProps {
   src: string;
   photoId?: string;
-  photoId?: string;
   alt?: string;
   blurhash: string;
   width?: number;

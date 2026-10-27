@@ -62,10 +62,8 @@ const EmptyStatus = () => {
         <EmptyMedia variant="icon">
           <IconNotebookOff />
         </EmptyMedia>
-        <EmptyTitle>No posts found</EmptyTitle>
-        <EmptyDescription>
-          You have no posts. Create some posts to get started.
-        </EmptyDescription>
+        <EmptyTitle>未找到文章</EmptyTitle>
+        <EmptyDescription>还没有文章，写一篇开始吧。</EmptyDescription>
       </EmptyHeader>
       <EmptyContent></EmptyContent>
     </Empty>
@@ -73,7 +71,7 @@ const EmptyStatus = () => {
 };
 
 export const ErrorStatus = () => {
-  return <div>Something went wrong</div>;
+  return <div>出了点问题</div>;
 };
 
 export const LoadingStatus = () => {
@@ -83,9 +81,9 @@ export const LoadingStatus = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="pl-6">Title</TableHead>
-              <TableHead>Visibility</TableHead>
-              <TableHead className="text-right pr-6">Actions</TableHead>
+              <TableHead className="pl-6">标题</TableHead>
+              <TableHead>可见性</TableHead>
+              <TableHead className="text-right pr-6">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

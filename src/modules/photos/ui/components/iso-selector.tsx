@@ -50,8 +50,8 @@ export function ISOSelector({ value, onChange }: ISOSelectorProps) {
         onValueChange={handleSelectChange}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Select ISO">
-            {isCustom ? "Custom" : value ? `ISO ${value}` : "Select ISO"}
+          <SelectValue placeholder="选择 ISO">
+            {isCustom ? "自定义" : value ? `ISO ${value}` : "选择 ISO"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
@@ -60,16 +60,16 @@ export function ISOSelector({ value, onChange }: ISOSelectorProps) {
               ISO {iso}
             </SelectItem>
           ))}
-          <SelectItem value="custom">Custom value...</SelectItem>
+          <SelectItem value="custom">自定义值…</SelectItem>
         </SelectContent>
       </Select>
 
       {isCustom && (
         <div className="flex gap-2 items-center">
-          <span className="text-sm text-muted-foreground">ISO</span>
+          <span className="text-sm text-muted-foreground">感光度</span>
           <Input
             type="number"
-            placeholder="Enter custom value"
+            placeholder="输入自定义值"
             value={value ?? ""}
             onChange={handleCustomChange}
             className="flex-1"
@@ -79,9 +79,7 @@ export function ISOSelector({ value, onChange }: ISOSelectorProps) {
             variant="outline"
             size="sm"
             onClick={() => setIsCustom(false)}
-          >
-            Cancel
-          </Button>
+          >取消</Button>
         </div>
       )}
     </div>

@@ -3,7 +3,7 @@
  * GET /api/music/search?keyword=xxx
  */
 import { NextRequest, NextResponse } from "next/server";
-import { kuwoProvider } from "@/lib/music/providers/kuwo";
+import { neteaseProvider } from "@/lib/music/providers/netease";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -16,13 +16,13 @@ export async function GET(request: NextRequest) {
 
   try {
     // 只使用酷我音乐
-    const result = await kuwoProvider.search(keyword, limit);
+    const result = await neteaseProvider.search(keyword, limit);
 
     return NextResponse.json({
       success: true,
       data: {
         tracks: result.tracks,
-        sources: ["kuwo"],
+        sources: ["netease"],
         total: result.tracks.length,
       },
     });

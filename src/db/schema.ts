@@ -52,7 +52,9 @@ export const session = pgTable("session", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id),
-});
+}, (t) => [
+  index("session_user_id_idx").on(t.userId),
+]);
 
 export const account = pgTable("account", {
   id: text("id").primaryKey(),
@@ -70,7 +72,9 @@ export const account = pgTable("account", {
   password: text("password"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+}, (t) => [
+  index("account_user_id_idx").on(t.userId),
+]);
 
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
@@ -79,7 +83,9 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
-});
+}, (t) => [
+  index("verification_identifier_idx").on(t.identifier),
+]);
 
 /***************
  ****************
@@ -138,6 +144,10 @@ export const photos = pgTable(
   (t) => [
     index("year_idx").on(sql`DATE_TRUNC('year', ${t.dateTimeOriginal})`),
     index("city_idx").on(t.city),
+    index("photos_visibility_idx").on(t.visibility),
+    index("photos_is_favorite_idx").on(t.isFavorite),
+    index("photos_country_idx").on(t.country),
+    index("photos_created_at_idx").on(t.createdAt),
   ]
 );
 
@@ -163,7 +173,10 @@ export const citySets = pgTable(
     // META DATA
     ...timestamps,
   },
-  (t) => [uniqueIndex("unique_city_set").on(t.country, t.city)]
+  (t) => [
+    uniqueIndex("unique_city_set").on(t.country, t.city),
+    index("city_sets_country_idx").on(t.country),
+  ]
 );
 
 // Soft relations
@@ -252,6 +265,7 @@ export const posts = pgTable(
     index("category_idx").on(t.categoryId),
     index("tags_idx").on(t.tags),
     index("slug_idx").on(t.slug),
+    index("posts_visibility_idx").on(t.visibility),
   ]
 );
 
@@ -305,6 +319,7 @@ export const videos = pgTable(
   (t) => [
     index("video_slug_idx").on(t.slug),
     index("video_tags_idx").on(t.tags),
+    index("videos_visibility_idx").on(t.visibility),
   ]
 );
 
@@ -343,20 +358,24 @@ export const music = pgTable(
     title: text("title").notNull(),
     artist: text("artist"),
     album: text("album"),
-    
+
     // 音乐文件信息
     musicUrl: text("music_url").notNull(),           // 音乐文件 URL（COS）
     coverUrl: text("cover_url"),                     // 唱片封面 URL（同名 jpg）
     duration: integer("duration"),                   // 时长（秒）
     fileSize: integer("file_size"),                  // 文件大小（字节）
-    
+
     // 元数据
     visibility: musicVisibility("visibility").default("public").notNull(),
     genre: text("genre"),                            // 流派
     playCount: integer("play_count").default(0).notNull(),
-    
+
     ...timestamps,
-  }
+  },
+  (t) => [
+    index("music_visibility_idx").on(t.visibility),
+    index("music_play_count_idx").on(t.playCount),
+  ]
 );
 
 // Types

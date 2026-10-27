@@ -46,7 +46,7 @@ export function VisibilityToggle({
         onError: (error) => {
           // Revert on error
           setVisibility(newValue === "public" ? "private" : "public");
-          toast.error(error.message || "Failed to update visibility");
+          toast.error(error.message || "可见性更新失败");
         },
       }
     );
@@ -66,10 +66,10 @@ export function VisibilityToggle({
         checked={visibility === "public"}
         onCheckedChange={handleToggle}
         disabled={updatePost.isPending}
-        aria-label="Toggle visibility"
+        aria-label="切换可见性"
       />
       <span className="text-sm text-muted-foreground min-w-[50px]">
-        {visibility === "public" ? "Public" : "Private"}
+        {visibility === "public" ? "公开" : "私密"}
       </span>
     </div>
   );

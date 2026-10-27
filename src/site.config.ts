@@ -79,8 +79,8 @@ bio: "我是方斌，一名业余摄影师。在业余时间，我喜欢用镜�
    * Create your own at https://studio.mapbox.com/
    */
   mapbox: {
-    lightStyle: "mapbox://styles/ecarry/cldmhu6tr000001n33ujbxf7j",
-    darkStyle: "mapbox://styles/ecarry/clp8hcmd300km01qx78rt0xaw",
+    lightStyle: "mapbox://styles/mapbox/light-v11",
+    darkStyle: "mapbox://styles/mapbox/dark-v11",
   },
 
   // Note: Next.js image optimization is disabled (next.config.ts: unoptimized: true).

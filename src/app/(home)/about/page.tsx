@@ -73,7 +73,7 @@ const AboutPage = async () => {
   try {
     gearList = JSON.parse(aboutData.gear);
   } catch {
-    gearList = siteConfig.gear;
+    gearList = [...siteConfig.gear];
   }
 
   return (

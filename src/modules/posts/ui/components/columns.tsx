@@ -11,14 +11,15 @@ import { Button } from "@/components/ui/button";
 export const columns: ColumnDef<PostGetMany[number]>[] = [
   {
     accessorKey: "title",
-    header: "Title",
+    header: "标题",
   },
   {
     accessorKey: "visibility",
-    header: "Visibility",
+    header: "可见性",
     cell: ({ row }) => {
       return (
         <VisibilityToggle
+              key={row.original.id}
           photoId={row.original.id}
           initialValue={row.original.visibility}
         />
@@ -27,7 +28,7 @@ export const columns: ColumnDef<PostGetMany[number]>[] = [
   },
   {
     id: "actions",
-    header: "Actions",
+    header: "操作",
     cell: ({ row }) => {
       return (
         <>

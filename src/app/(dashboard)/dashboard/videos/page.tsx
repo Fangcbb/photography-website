@@ -7,7 +7,7 @@ import {
 } from "@/modules/video/ui/views/dashboard-videos-view";
 
 export const metadata = {
-  title: "Videos",
+  title: "视频",
   description: "Video Management",
 };
 

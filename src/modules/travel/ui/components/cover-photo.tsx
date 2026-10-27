@@ -14,23 +14,31 @@ export const CoverPhoto = ({ citySet, citySets }: CoverPhotoProps) => {
       <div className="w-full h-full relative rounded-xl overflow-hidden">
         {/* Cover photo */}
         <div className="relative w-full h-full">
-          {citySets?.map((city) => (
-            <div
-              key={city.id}
-              className={`absolute inset-0 transition-opacity duration-300 ${
-                city.id === citySet.id ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
-            >
-              <BlurImage
-                src={photoProxyUrl(city.coverPhoto.id, "fangb")}
-                alt={city.city}
-                fill
-                blurhash={city.coverPhoto.blurData}
-                sizes="75vw"
-                className="object-cover"
-              />
-            </div>
-          ))}
+          {citySets?.map((city) => {
+            const isActive = city.id === citySet.id;
+            return (
+              <div
+                key={city.id}
+                className={`absolute inset-0 transition-opacity duration-300 ${
+                  isActive ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
+              >
+                <BlurImage
+                  // 当前城市用大图保证全屏封面清晰，其余城市只需占位级分辨率
+                  src={photoProxyUrl(
+                    city.coverPhoto.id,
+                    isActive ? "hero" : "fangb"
+                  )}
+                  alt={city.city}
+                  fill
+                  quality={isActive ? 85 : 80}
+                  blurhash={city.coverPhoto.blurData}
+                  sizes="(max-width: 1023px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
+            );
+          })}
         </div>
 
         <div className="absolute right-0 bottom-0 z-10">

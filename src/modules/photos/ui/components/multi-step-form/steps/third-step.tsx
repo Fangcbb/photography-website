@@ -99,19 +99,19 @@ export function ThirdStep({
     setIsSearching(true);
     try {
       const response = await fetch(
-        `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(
+        `/mbapi/search/geocode/v6/forward?q=${encodeURIComponent(
           searchQuery
         )}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&limit=10`
       );
 
       if (!response.ok) {
-        throw new Error("Search failed");
+        throw new Error("搜索失败");
       }
 
       const data = await response.json();
       setSearchResults(data.features || []);
     } catch (error) {
-      console.error("Search error:", error);
+      console.error("搜索出错：", error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -145,8 +145,8 @@ export function ThirdStep({
 
   // Memoize map values to reduce re-renders
   const mapValues = useMemo(() => {
-    const longitude = currentLocation.lng || initialLongitude;
-    const latitude = currentLocation.lat || initialLatitude;
+    const longitude = currentLocation.lng !== 0 ? currentLocation.lng : (initialLongitude ?? 0);
+    const latitude = currentLocation.lat !== 0 ? currentLocation.lat : (initialLatitude ?? 0);
 
     return {
       markers:
@@ -176,8 +176,8 @@ export function ThirdStep({
     // Include current location in submitted data
     onNext({
       ...data,
-      latitude: currentLocation.lat || initialLatitude,
-      longitude: currentLocation.lng || initialLongitude,
+      latitude: currentLocation.lat !== 0 ? currentLocation.lat : (initialLatitude ?? 0),
+      longitude: currentLocation.lng !== 0 ? currentLocation.lng : (initialLongitude ?? 0),
     });
   };
 
@@ -185,18 +185,18 @@ export function ThirdStep({
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <FormItem>
-          <FormLabel>Search for a place</FormLabel>
+          <FormLabel>搜索地点</FormLabel>
           {/* Search Input */}
           <div className="relative mb-2">
             <ButtonGroup>
               <Input
-                placeholder="Search..."
+                placeholder="搜索…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Button
                 variant="outline"
-                aria-label="Search"
+                aria-label="搜索"
                 onClick={handleClearSearch}
                 disabled={!searchQuery || isSearching}
               >
@@ -237,6 +237,7 @@ export function ThirdStep({
             <div className="h-[400px] w-full rounded-md border overflow-hidden">
               <MapboxComponent
                 draggableMarker
+                styleOverride="mapbox://styles/mapbox/streets-v12"
                 markers={mapValues.markers}
                 initialViewState={mapValues.viewState}
                 onMarkerDragEnd={(markerId, lngLat) => {
@@ -259,7 +260,7 @@ export function ThirdStep({
                       currentLocation.lat,
                       currentLocation.lng
                     )
-                  : "Drag the marker to set location"}
+                  : "拖动标记点设置位置"}
               </span>
             </div>
             {addressData?.features?.[0] && (
@@ -272,10 +273,8 @@ export function ThirdStep({
 
         <div className="flex justify-between pt-4">
           <Button type="button" variant="outline" onClick={onBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
-          </Button>
-          <Button type="submit" disabled={isSubmitting || !isValid}>
-            Next <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" />返回</Button>
+          <Button type="submit" disabled={isSubmitting || !isValid}>下一步<ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </form>

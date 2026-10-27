@@ -90,7 +90,7 @@ const FileUploader = ({
           )
         );
 
-        toast.success("File uploaded successfully");
+        toast.success("文件上传成功");
         // new successful upload, clear any previously deleted key marker
         setDeletedKey(null);
         onUploadSuccess?.(publicUrl);
@@ -110,7 +110,7 @@ const FileUploader = ({
 
         toast.error(
           `Failed to upload ${file.name}: ${
-            error instanceof Error ? error.message : "Unknown error"
+            error instanceof Error ? error.message : "未知错误"
           }`
         );
       }
@@ -167,11 +167,11 @@ const FileUploader = ({
       );
 
       if (tooManyFiles) {
-        toast.error("Too many files");
+        toast.error("文件过多");
       }
 
       if (fileInvalidType) {
-        toast.error("File type is not supported");
+        toast.error("不支持的文件类型");
       }
     }
   }, []);
@@ -194,7 +194,7 @@ const FileUploader = ({
       const fileToDelete = files.find((f) => f.key === key);
 
       if (fileToDelete?.uploading) {
-        toast.error("Cannot delete file while uploading");
+        toast.error("上传中无法删除文件");
         return;
       }
 
@@ -217,14 +217,14 @@ const FileUploader = ({
         // remember which key was deleted so we don't keep showing it via `value`
         setDeletedKey(key);
 
-        toast.success("File deleted successfully");
+        toast.success("文件删除成功");
       } catch (error) {
         setFiles((prev) =>
           prev.map((f) => (f.key === key ? { ...f, isDeleting: false } : f))
         );
 
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete file"
+          error instanceof Error ? error.message : "文件删除失败"
         );
       }
     },
@@ -262,14 +262,14 @@ const FileUploader = ({
               <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <ImageIcon className="size-5" />
-                  <span className="text-sm">Loading image...</span>
+                  <span className="text-sm">图片加载中…</span>
                 </div>
               </div>
             )}
 
             <img
               src={displayImageUrl}
-              alt="Preview"
+              alt="预览"
               className={cn(
                 "h-full w-full object-cover transition-opacity duration-300",
                 imageLoading ? "opacity-0" : "opacity-100"
@@ -290,9 +290,7 @@ const FileUploader = ({
                     className="bg-white/90 text-gray-900 hover:bg-white"
                     type="button"
                   >
-                    <Upload className="mr-1 size-4" />
-                    Change Image
-                  </Button>
+                    <Upload className="mr-1 size-4" />更换图片</Button>
                   {(value || currentFile?.key) && (
                     <Button
                       onClick={() =>
@@ -304,9 +302,7 @@ const FileUploader = ({
                       size="sm"
                       type="button"
                     >
-                      <XIcon className="mr-1 size-4" />
-                      Remove
-                    </Button>
+                      <XIcon className="mr-1 size-4" />移除</Button>
                   )}
                 </div>
               </div>
@@ -359,25 +355,21 @@ const FileUploader = ({
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Upload Cover Image</h3>
-              <p className="text-sm text-muted-foreground">
-                Drag and drop an image here, or click to browse
-              </p>
+              <h3 className="text-lg font-semibold">上传封面图</h3>
+              <p className="text-sm text-muted-foreground">拖拽图片到此处，或点击选择</p>
             </div>
 
             <Button variant="outline" size="sm" type="button">
-              <ImageIcon className="mr-1 size-4" />
-              Browse Files
-            </Button>
+              <ImageIcon className="mr-1 size-4" />浏览文件</Button>
           </div>
         )}
       </div>
 
       {hasError && (
         <Alert variant="destructive" className="mt-2">
-          <AlertTitle>Upload failed</AlertTitle>
+          <AlertTitle>上传失败</AlertTitle>
           <AlertDescription>
-            <p>Something went wrong while uploading. Please try again.</p>
+            <p>上传出了点问题，请重试。</p>
           </AlertDescription>
         </Alert>
       )}

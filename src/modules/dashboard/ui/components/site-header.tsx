@@ -28,7 +28,7 @@ export function SiteHeader() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              <BreadcrumbLink href="/dashboard">仪表盘</BreadcrumbLink>
             </BreadcrumbItem>
             {pathname
               .split("/")

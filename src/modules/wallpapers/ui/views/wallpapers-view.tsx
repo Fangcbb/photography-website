@@ -45,10 +45,10 @@ export function WallpapersView() {
         setError(null);
 
         const res = await fetch(
-          `/api/wallpapers?page=${pageNum}&per_page=20`
+          `/api/wallpapers?page=${pageNum}&per_page=20&cb=${Date.now()}`
         );
 
-        if (!res.ok) throw new Error("Failed to fetch wallpapers");
+        if (!res.ok) throw new Error("壁纸获取失败");
 
         const data = await res.json();
 
@@ -60,7 +60,7 @@ export function WallpapersView() {
 
         setHasMore(data.photos.length === 20);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong");
+        setError(err instanceof Error ? err.message : "出了点问题");
       } finally {
         setLoading(false);
         setLoadingMore(false);

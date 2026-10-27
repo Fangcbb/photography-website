@@ -21,7 +21,7 @@ export const CitiesView = () => {
           cityId={item.id}
           citySlug={item.slug}
           title={item.city}
-          coverPhoto={item.coverPhoto}
+          coverPhoto={{ id: item.coverPhotoId, title: item.coverPhotoTitle, blurData: item.coverPhotoBlurData }}
         />
       ))}
     </div>

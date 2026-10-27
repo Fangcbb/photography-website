@@ -75,10 +75,10 @@ export function CityDetailView({ city }: CityDetailViewProps) {
         await queryClient.invalidateQueries(
           trpc.travel.getCitySets.queryOptions()
         );
-        toast.success("Description updated successfully");
+        toast.success("描述更新成功");
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to update description");
+        toast.error(error.message || "描述更新失败");
       },
     })
   );
@@ -104,10 +104,10 @@ export function CityDetailView({ city }: CityDetailViewProps) {
             trpc.city.getOne.queryOptions({ city })
           );
           await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
-          toast.success("Cover photo updated successfully");
+          toast.success("封面照片更新成功");
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to update cover photo");
+          toast.error(error.message || "封面照片更新失败");
         },
       }
     );
@@ -121,7 +121,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
             <MapPin className="h-10 w-10 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold">City not found</h3>
+            <h3 className="text-xl font-semibold">城市不存在</h3>
             <p className="text-muted-foreground text-sm">
               The city you&apos;re looking for doesn&apos;t exist or may have
               been removed.
@@ -129,9 +129,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           </div>
           <Link href="/dashboard/cities">
             <Button variant="outline" className="min-w-[140px]">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Cities
-            </Button>
+              <ArrowLeft className="mr-2 h-4 w-4" />返回城市</Button>
           </Link>
         </div>
       </div>
@@ -146,9 +144,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           <div className="mb-6">
             <Link href="/dashboard/cities">
               <Button variant="ghost" className="mb-4 -ml-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Cities
-              </Button>
+                <ArrowLeft className="mr-2 h-4 w-4" />返回城市</Button>
             </Link>
           </div>
           {/* Header Section */}
@@ -190,13 +186,11 @@ export function CityDetailView({ city }: CityDetailViewProps) {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-medium">
-                          City Description
-                        </FormLabel>
+                        <FormLabel className="text-base font-medium">城市描述</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Add a description for this city..."
+                            placeholder="为这个城市写点介绍…"
                             className="min-h-[100px] resize-none"
                             rows={4}
                           />
@@ -212,8 +206,8 @@ export function CityDetailView({ city }: CityDetailViewProps) {
                       className="min-w-[100px]"
                     >
                       {updateDescription.isPending
-                        ? "Saving..."
-                        : "Save Description"}
+                        ? "保存中…"
+                        : "保存描述"}
                     </Button>
                   </div>
                 </form>
@@ -282,12 +276,10 @@ export function CityDetailLoadingView() {
 export function CityDetailErrorView() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center px-4 md:px-8">
-      <p className="text-destructive mb-2">Failed to load city details</p>
+      <p className="text-destructive mb-2">城市详情加载失败</p>
       <Link href="/dashboard/cities">
         <Button variant="outline" className="mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Cities
-        </Button>
+          <ArrowLeft className="mr-2 h-4 w-4" />返回城市</Button>
       </Link>
     </div>
   );

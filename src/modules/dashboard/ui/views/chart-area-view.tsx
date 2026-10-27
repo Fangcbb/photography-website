@@ -30,11 +30,11 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const description = "Monthly photo count chart";
+export const description = "每月照片数量图表";
 
 const chartConfig = {
   photos: {
-    label: "Photos",
+    label: "照片",
     color: "var(--primary)",
   },
 } satisfies ChartConfig;
@@ -98,14 +98,13 @@ export function ChartAreaView() {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Photo Activity</CardTitle>
+        <CardTitle>照片动态</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            {totalPhotos.toLocaleString()} photos taken in the last {years} year
-            {years > 1 ? "s" : ""}
+            {years} 年内共拍摄 {totalPhotos.toLocaleString()} 张照片
             {peakMonth && (
               <span className="ml-2 text-muted-foreground">
-                • Peak: {peakMonth.month} ({peakMonth.count} photos)
+                • 高峰：{peakMonth.month}（{peakMonth.count} 张）
               </span>
             )}
           </span>
@@ -121,17 +120,17 @@ export function ChartAreaView() {
             variant="outline"
             className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
           >
-            <ToggleGroupItem value="1y">1 Year</ToggleGroupItem>
-            <ToggleGroupItem value="3y">3 Years</ToggleGroupItem>
-            <ToggleGroupItem value="5y">5 Years</ToggleGroupItem>
+            <ToggleGroupItem value="1y">近 1 年</ToggleGroupItem>
+            <ToggleGroupItem value="3y">近 3 年</ToggleGroupItem>
+            <ToggleGroupItem value="5y">近 5 年</ToggleGroupItem>
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
               className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
               size="sm"
-              aria-label="Select a value"
+              aria-label="选择一个值"
             >
-              <SelectValue placeholder="3 Years" />
+              <SelectValue placeholder="近 3 年" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="1y" className="rounded-lg">
@@ -195,7 +194,7 @@ export function ChartAreaView() {
                   }}
                   formatter={(value) => [
                     `${value} photo${value !== 1 ? "s" : ""}`,
-                    "Photos",
+                    "照片",
                   ]}
                   indicator="dot"
                 />
@@ -218,7 +217,7 @@ export const ChartAreaLoading = () => {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Photo Activity</CardTitle>
+        <CardTitle>照片动态</CardTitle>
         <CardDescription>
           <Skeleton className="h-4 w-24" />
         </CardDescription>
@@ -230,17 +229,17 @@ export const ChartAreaLoading = () => {
             variant="outline"
             className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
           >
-            <ToggleGroupItem value="1y">1 Year</ToggleGroupItem>
-            <ToggleGroupItem value="3y">3 Years</ToggleGroupItem>
-            <ToggleGroupItem value="5y">5 Years</ToggleGroupItem>
+            <ToggleGroupItem value="1y">近 1 年</ToggleGroupItem>
+            <ToggleGroupItem value="3y">近 3 年</ToggleGroupItem>
+            <ToggleGroupItem value="5y">近 5 年</ToggleGroupItem>
           </ToggleGroup>
           <Select value={"3y"} onValueChange={() => {}}>
             <SelectTrigger
               className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
               size="sm"
-              aria-label="Select a value"
+              aria-label="选择一个值"
             >
-              <SelectValue placeholder="3 Years" />
+              <SelectValue placeholder="近 3 年" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="1y" className="rounded-lg">

@@ -24,7 +24,7 @@ export function SectionCardsView() {
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Total Photos</CardDescription>
+          <CardDescription>照片总数</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.totalPhotos.toLocaleString()}
           </CardTitle>
@@ -46,20 +46,19 @@ export function SectionCardsView() {
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
             {stats.thisYearPercentChange >= 0
-              ? "Growth this year"
-              : "Decline this year"}{" "}
+              ? "今年增长"
+              : "今年下降"}{" "}
             <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
             {Math.abs(stats.thisYearPercentChange)}%{" "}
-            {stats.thisYearPercentChange >= 0 ? "increase" : "decrease"} vs last
-            year
+            较去年{stats.thisYearPercentChange >= 0 ? "上升" : "下降"}
           </div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>This Year Photos</CardDescription>
+          <CardDescription>今年照片</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.thisYearPhotos.toLocaleString()}
           </CardTitle>
@@ -81,20 +80,19 @@ export function SectionCardsView() {
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
             {stats.thisYearPercentChange >= 0
-              ? "Year-over-year growth"
-              : "Year-over-year decline"}{" "}
+              ? "同比增长"
+              : "同比下降"}{" "}
             <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
             {Math.abs(stats.thisYearPercentChange)}%{" "}
-            {stats.thisYearPercentChange >= 0 ? "increase" : "decrease"} vs last
-            year
+            较去年{stats.thisYearPercentChange >= 0 ? "上升" : "下降"}
           </div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Countries Visited</CardDescription>
+          <CardDescription>到访国家</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.totalCountries}
           </CardTitle>
@@ -116,20 +114,19 @@ export function SectionCardsView() {
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
             {stats.countriesPercentChange >= 0
-              ? "New countries"
-              : "Countries decreased"}{" "}
+              ? "新增国家"
+              : "国家减少"}{" "}
             <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
             {Math.abs(stats.countriesPercentChange)}%{" "}
-            {stats.countriesPercentChange >= 0 ? "increase" : "decrease"} vs
-            last year
+            较去年{stats.countriesPercentChange >= 0 ? "上升" : "下降"}
           </div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Total Cities</CardDescription>
+          <CardDescription>城市总数</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.totalCities}
           </CardTitle>
@@ -150,13 +147,12 @@ export function SectionCardsView() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            {stats.citiesPercentChange >= 0 ? "New cities" : "Cities decreased"}{" "}
+            {stats.citiesPercentChange >= 0 ? "新增城市" : "城市减少"}{" "}
             <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
             {Math.abs(stats.citiesPercentChange)}%{" "}
-            {stats.citiesPercentChange >= 0 ? "increase" : "decrease"} vs last
-            year
+            较去年{stats.citiesPercentChange >= 0 ? "上升" : "下降"}
           </div>
         </CardFooter>
       </Card>

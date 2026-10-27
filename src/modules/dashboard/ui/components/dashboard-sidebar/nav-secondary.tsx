@@ -28,7 +28,7 @@ export function NavSecondary({
               <SidebarMenuButton asChild>
                 <a href={item.url}>
                   <span>{item.title}</span>
-                  <Badge variant="secondary">Todo</Badge>
+                  <Badge variant="secondary">待办</Badge>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -22,9 +22,9 @@ const ProfilePage = async () => {
   return (
     <div className="py-4 px-4 md:px-8 flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-bold">Profile & Security</h1>
+        <h1 className="text-2xl font-bold">资料与安全</h1>
         <p className="text-sm text-muted-foreground">
-          Manage your profile, password, and active sessions
+          管理你的资料、密码和活跃会话
         </p>
       </div>
 

@@ -4,10 +4,12 @@ import "./globals.css";
 import { TRPCReactProvider } from "@/trpc/client";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WebVitals } from "@/components/web-vitals";
+import { ErrorReporter } from "@/components/error-reporter";
 
 import { siteConfig } from "@/site.config";
 
 const BASE_URL = "https://www.fangc.cc";
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata: Metadata = {
   // 基本信息
@@ -59,13 +61,13 @@ export const metadata: Metadata = {
   authors: [{ name: siteConfig.name, url: BASE_URL }],
   creator: siteConfig.name,
   publisher: siteConfig.name,
-  
+
   // URL 相关
   metadataBase: new URL(BASE_URL),
   alternates: {
     canonical: BASE_URL,
   },
-  
+
   // Open Graph (Facebook, LinkedIn, 微信等)
   openGraph: {
     type: "website",
@@ -83,7 +85,7 @@ export const metadata: Metadata = {
       },
     ],
   },
-  
+
   // Twitter Card
   twitter: {
     card: "summary_large_image",
@@ -92,7 +94,7 @@ export const metadata: Metadata = {
     images: [`${BASE_URL}${siteConfig.avatar}`],
     creator: "@fangcarry",
   },
-  
+
   // robots
   robots: {
     index: true,
@@ -105,7 +107,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  
+
   // 其他
   category: "photography",
   classification: "Photography Portfolio",
@@ -143,19 +145,53 @@ export default function RootLayout({
           title="Fang Bing Photography RSS Feed"
           href="/rss.xml"
         />
-        
+
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+
+        {/* 顶栏品牌图标直连 COS，提前建连减少首屏延迟 */}
+        <link rel="preconnect" href="https://cnn.fangc.cc" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://cnn.fangc.cc" />
+
         {/* 百度站长平台验证 */}
         <meta name="baidu-site-verification" content="codeva-eJn3oeosAt" />
-        
+
         {/* 360搜索引擎验证 */}
         <meta name="360-site-verification" content="437a5b0d023cd06a13fff843f6f8c105" />
-        
+
+        {/* Google Analytics 4 */}
+        {GA_ID && (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${GA_ID}', {
+                    send_page_view: true,
+                    transport_type: 'beacon',
+                    custom_map: {
+                      'metric_name': 'dimension1',
+                      'metric_rating': 'dimension2',
+                    }
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
+
         {/* 百度统计 */}
         <script src="/baidu-hm.js" async />
-        
+
         {/* 百度自动推送 */}
         <script src="/baidu-push.js" async />
-        
+
         {/* 结构化数据 (JSON-LD) - Google SEO + 百度富摘要 */}
         <script
           type="application/ld+json"
@@ -227,7 +263,7 @@ export default function RootLayout({
             }),
           }}
         />
-        
+
         {/* 全站图片保护 */}
         <script src="/image-protect.js" async />
       </head>
@@ -235,6 +271,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <ThemeProvider attribute="class">
             <WebVitals />
+            <ErrorReporter />
             {children}
           </ThemeProvider>
         </TRPCReactProvider>

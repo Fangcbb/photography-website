@@ -99,22 +99,21 @@ run_health_check() {
         EXIT_CODE=1
     fi
 
-    # ---- 校验 2: BUILD_TIMESTAMP ----
-    # 从 symlink 读取（因为 PM2 cwd 可能已经不一致）
-    PM2_LOADED_TS=""
-    PM2_LOADED_COMMIT=""
-    if [ -n "$SYMLINK_REAL" ] && [ -f "$SYMLINK_REAL/BUILD_TIMESTAMP" ]; then
-        PM2_LOADED_TS=$(cat "$SYMLINK_REAL/BUILD_TIMESTAMP" 2>/dev/null || echo "")
-        PM2_LOADED_COMMIT=$(cat "$SYMLINK_REAL/GIT_COMMIT" 2>/dev/null || echo "")
-    fi
+    # ---- 校验 2: BUILD 一致性（OPS-01 修复） ----
+    # 旧实现从 current symlink 读文件再与自身比较——"自比自"恒 PASS。
+    # 现在通过 HTTP 询问运行中进程实际加载的 buildId（/api/health），
+    # 与磁盘 current 的 BUILD_ID 比对，真正检测「代码没切过去」的假发布。
+    RUNNING_BUILD_ID=$(curl -fsS --max-time 5 "http://127.0.0.1:3000/api/health" 2>/dev/null \
+        | python3 -c "import sys,json;print(json.load(sys.stdin).get(\"buildId\",\"unknown\"))" 2>/dev/null || echo "")
+    DISK_BUILD_ID=$(cat "$SITE_DIR/current/.next/BUILD_ID" 2>/dev/null || echo "")
 
-    if [ "$PM2_LOADED_TS" = "$BUILD_TS" ]; then
+    if [ -n "$RUNNING_BUILD_ID" ] && [ "$RUNNING_BUILD_ID" = "$DISK_BUILD_ID" ]; then
         V2="PASS"
-        V2_MSG="BUILD_TIMESTAMP ($PM2_LOADED_TS) 一致"
+        V2_MSG="BUILD_ID 一致 (running=$RUNNING_BUILD_ID)"
         [ "$CALLER" = "deploy" ] && log "  ✅ [校验 2/3] $V2_MSG"
     else
         V2="FAIL"
-        V2_MSG="BUILD_TIMESTAMP 不一致: PM2=$PM2_LOADED_TS, expected=$BUILD_TS"
+        V2_MSG="BUILD_ID 不一致或进程无响应: running=$RUNNING_BUILD_ID, disk=$DISK_BUILD_ID"
         [ "$CALLER" = "deploy" ] && log "  ❌ [校验 2/3] $V2_MSG"
         EXIT_CODE=1
     fi

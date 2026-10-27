@@ -1,20 +1,33 @@
 import type { NextConfig } from "next";
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   reactCompiler: true,
-  // Image optimization is disabled — images are served directly from COS via CDN.
-  // CosImage component uses <img> tags pointing to cnn.fangc.cc URLs.
-  // This avoids Next.js image optimization overhead for large photo assets.
   images: {
     unoptimized: true,
   },
-  // TEMPORARY: ignore TypeScript errors during build to allow deployment
-  // TODO: fix all tRPC queryOptions type errors properly
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // 禁用生产环境 source map
+  productionBrowserSourceMaps: false,
 };
 
-export default nextConfig;
+const withPWAConfig = withPWA({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  cacheStartUrl: true,
+  dynamicStartUrl: true,
+  reloadOnOnline: true,
+  extendDefaultRuntimeCaching: true,
+  fallbacks: {
+    document: "/~offline",
+  },
+  workboxOptions: {
+    cleanupOutdatedCaches: true,
+    skipWaiting: true,
+    clientsClaim: true,
+  },
+});
+
+export default withPWAConfig(nextConfig);

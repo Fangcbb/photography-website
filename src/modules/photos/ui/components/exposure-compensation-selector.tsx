@@ -78,10 +78,10 @@ export function ExposureCompensationSelector({
   };
 
   const displayValue = isCustom
-    ? "Custom"
+    ? "自定义"
     : value !== undefined
     ? formatEV(closestEV ?? value)
-    : "Select EV";
+    : "选择 EV";
 
   return (
     <div className="space-y-2">
@@ -92,7 +92,7 @@ export function ExposureCompensationSelector({
         onValueChange={handleSelectChange}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Select exposure compensation">
+          <SelectValue placeholder="选择曝光补偿">
             {displayValue}
           </SelectValue>
         </SelectTrigger>
@@ -102,7 +102,7 @@ export function ExposureCompensationSelector({
               {formatEV(ev)}
             </SelectItem>
           ))}
-          <SelectItem value="custom">Custom value...</SelectItem>
+          <SelectItem value="custom">自定义值…</SelectItem>
         </SelectContent>
       </Select>
 
@@ -124,9 +124,7 @@ export function ExposureCompensationSelector({
             variant="outline"
             size="sm"
             onClick={() => setIsCustom(false)}
-          >
-            Cancel
-          </Button>
+          >取消</Button>
         </div>
       )}
     </div>

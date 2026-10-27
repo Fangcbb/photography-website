@@ -43,7 +43,7 @@ export function FirstStep({
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error("复制失败：", err);
     }
   };
 
@@ -79,16 +79,14 @@ export function FirstStep({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-green-600 text-sm">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Photo uploaded successfully</span>
+                  <span>照片上传成功</span>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => onReupload(url)}
-                >
-                  Re-upload
-                </Button>
+                >重新上传</Button>
               </div>
 
               {/* Image preview */}
@@ -96,7 +94,7 @@ export function FirstStep({
                 <BlurImage
                   blurhash={imageInfo.blurhash}
                   src={keyToUrl(url)}
-                  alt="Uploaded photo"
+                  alt="已上传照片"
                   fill
                   className="object-contain w-full h-full"
                   unoptimized
@@ -105,7 +103,7 @@ export function FirstStep({
 
               {/* URL with copy button */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Image URL</label>
+                <label className="text-sm font-medium">图片链接</label>
                 <InputGroup>
                   <InputGroupInput
                     value={keyToUrl(url)}
@@ -116,7 +114,7 @@ export function FirstStep({
                     <InputGroupButton
                       onClick={handleCopyUrl}
                       size="icon-xs"
-                      aria-label="Copy URL"
+                      aria-label="复制链接"
                     >
                       {isCopied ? (
                         <Check className="h-3.5 w-3.5" />
@@ -132,8 +130,7 @@ export function FirstStep({
         </div>
 
         <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={!isStepValid}>
-            Next <ArrowRight className="ml-2 h-4 w-4" />
+          <Button type="submit" disabled={!isStepValid}>下一步<ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </form>

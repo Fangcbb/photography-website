@@ -49,8 +49,8 @@ export function ApertureSelector({ value, onChange }: ApertureSelectorProps) {
         onValueChange={handleSelectChange}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Select aperture">
-            {isCustom ? "Custom" : value ? `f/${value}` : "Select aperture"}
+          <SelectValue placeholder="选择光圈">
+            {isCustom ? "自定义" : value ? `f/${value}` : "选择光圈"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
@@ -59,7 +59,7 @@ export function ApertureSelector({ value, onChange }: ApertureSelectorProps) {
               f/{f}
             </SelectItem>
           ))}
-          <SelectItem value="custom">Custom value...</SelectItem>
+          <SelectItem value="custom">自定义值…</SelectItem>
         </SelectContent>
       </Select>
 
@@ -69,7 +69,7 @@ export function ApertureSelector({ value, onChange }: ApertureSelectorProps) {
           <Input
             type="number"
             step="0.1"
-            placeholder="Enter custom value"
+            placeholder="输入自定义值"
             value={value ?? ""}
             onChange={handleCustomChange}
             className="flex-1"
@@ -79,9 +79,7 @@ export function ApertureSelector({ value, onChange }: ApertureSelectorProps) {
             variant="outline"
             size="sm"
             onClick={() => setIsCustom(false)}
-          >
-            Cancel
-          </Button>
+          >取消</Button>
         </div>
       )}
     </div>

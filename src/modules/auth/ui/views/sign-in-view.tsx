@@ -24,7 +24,7 @@ import { authClient } from "../../lib/auth-client";
 const signInSchema = z.object({
   email: z.email(),
   password: z.string().min(1, {
-    message: "Password is required",
+    message: "请输入密码",
   }),
 });
 
@@ -73,10 +73,8 @@ export const SignInView = () => {
             >
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center">
-                  <h1 className="text-2xl font-bold">Welcome back</h1>
-                  <p className="text-muted-foreground text-balance">
-                    Sign in to your account
-                  </p>
+                  <h1 className="text-2xl font-bold">欢迎回来</h1>
+                  <p className="text-muted-foreground text-balance">登录你的账号</p>
                 </div>
 
                 <div className="grid gap-3">
@@ -85,7 +83,7 @@ export const SignInView = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>邮箱</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="your.email@example.com"
@@ -104,7 +102,7 @@ export const SignInView = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>密码</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="* * * * * * * *"
@@ -125,7 +123,7 @@ export const SignInView = () => {
                 )}
                 <Button type="submit" className="w-full" disabled={pending}>
                   {pending && <Spinner />}
-                  Sign In
+                  登录
                 </Button>
               </div>
             </form>

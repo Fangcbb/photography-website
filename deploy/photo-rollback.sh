@@ -116,12 +116,19 @@ log "current 已切换到: $PREVIOUS_REAL"
 # ============================================================
 log_section "3. PM2 重启"
 
-log "重启 PM2 photo (cluster restart)..."
-if ! $PM2 restart photo >> "$EXEC_LOG" 2>&1; then
+# OPS-01 修复：PM2 以绝对路径 .next/standalone/server.js 启动，
+# `pm2 restart` 不会重新解析 symlink 指向的新代码。必须 delete + start --cwd。
+log "PM2 delete + start 切换到 $PREVIOUS_REAL ..."
+$PM2 delete photo >> "$EXEC_LOG" 2>&1 || true
+if ! $PM2 start "$PREVIOUS_REAL/.next/standalone/server.js" \
+    --name photo \
+    --time \
+    --cwd "$PREVIOUS_REAL" >> "$EXEC_LOG" 2>&1; then
     log "❌ PM2 启动失败，请立即手动检查！"
     exit 1
 fi
-log "PM2 photo 已重启（等待服务就绪...）"
+$PM2 save >> "$EXEC_LOG" 2>&1 || true
+log "PM2 photo 已切换重启（等待服务就绪...）"
 sleep 5
 
 # ============================================================

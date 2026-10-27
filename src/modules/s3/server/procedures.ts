@@ -37,13 +37,14 @@ const VIDEO_SIZE_LIMIT = 500 * 1024 * 1024; // 500MB
 const AUDIO_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
 /**
- * Generate a public URL for accessing uploaded photos
- * Uses React cache to memoize results and improve performance
- * @param filename - The name of the uploaded file
- * @param folder - The folder where the file is stored
- * @returns The complete public URL for accessing the file
- * @throws Error if S3_PUBLIC_URL is not configured
+ * 预签名 URL 有效期。
+ *
+ * 原值 6 分钟对大文件偏紧：一张 20MB 的图在 2Mbps 上行带宽下需要 80 秒，
+ * 叠加慢网/弱网抖动很容易在传输途中过期，表现为「上传时网络出错」。
+ * 放宽到 15 分钟，与前端 XHR 的 5 分钟超时配合使用。
  */
+const PRESIGNED_URL_TTL_SECONDS = 60 * 15;
+
 export const s3Router = createTRPCRouter({
   createPresignedUrl: protectedProcedure
     .input(
@@ -57,6 +58,27 @@ export const s3Router = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const { filename, contentType, size, folder } = input;
+
+        // 按类型做服务端大小兜底校验（客户端已校验，这里防止绕过）
+        if (
+          (ALLOWED_IMAGE_CONTENT_TYPES as readonly string[]).includes(contentType) &&
+          size > IMAGE_SIZE_LIMIT
+        ) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `图片不能超过 ${IMAGE_SIZE_LIMIT / 1024 / 1024}MB（当前 ${(size / 1024 / 1024).toFixed(1)}MB）`,
+          });
+        }
+        if (
+          (ALLOWED_AUDIO_CONTENT_TYPES as readonly string[]).includes(contentType) &&
+          size > AUDIO_SIZE_LIMIT
+        ) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `音频不能超过 100MB（当前 ${(size / 1024 / 1024).toFixed(1)}MB）`,
+          });
+        }
+
         const uuid = crypto.randomUUID();
         // Lowercase the extension so /fangb (Tencent CI) can process it
         const safeFilename = filename.replace(/(\.[^.]+)$/, (ext) => ext.toLowerCase());
@@ -64,22 +86,31 @@ export const s3Router = createTRPCRouter({
           ? `${folder}/${uuid}-${safeFilename}`
           : `${uuid}-${safeFilename}`;
 
+        /**
+         * 注意：这里刻意**不传 ContentLength**。
+         *
+         * 一旦把长度写进签名，浏览器实际上传的字节数必须与签名时声明的完全一致，
+         * 否则 COS 返回 403 SignatureDoesNotMatch。任何细微差异（文件在签名后
+         * 被重新编码、File 对象被包装、Live Photo 拆分成两个 File 等）都会导致
+         * 上传失败。大小限制已在上面按类型校验，无需依赖签名绑定长度。
+         */
         const command = new PutObjectCommand({
           Bucket: process.env.S3_BUCKET_NAME,
           Key: key,
           ContentType: contentType,
-          ContentLength: size,
         });
 
         const presignedUrl = await getSignedUrl(s3Client, command, {
-          expiresIn: 60 * 6, // 6 minutes
+          expiresIn: PRESIGNED_URL_TTL_SECONDS,
         });
 
         return {
           presignedUrl,
           key,
+          expiresIn: PRESIGNED_URL_TTL_SECONDS,
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         if (error instanceof Error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
@@ -88,7 +119,7 @@ export const s3Router = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to generate upload URL",
+          message: "生成上传地址失败",
         });
       }
     }),
@@ -115,7 +146,7 @@ export const s3Router = createTRPCRouter({
         }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to delete file",
+          message: "文件删除失败",
         });
       }
     }),

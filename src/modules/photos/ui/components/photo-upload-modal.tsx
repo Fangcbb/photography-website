@@ -18,7 +18,7 @@ export const PhotoUploadModal = ({open, onOpenChange}: PhotoUploadModalProps) =>
   return (
     <>
       <ResponsiveModal
-        title="Upload a photo"
+        title="上传照片"
         open={isUploading || open}
         onOpenChange={onOpenChange}
         className={isMobile

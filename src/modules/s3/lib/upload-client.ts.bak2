@@ -1,0 +1,198 @@
+import { IMAGE_SIZE_LIMIT } from "@/constants";
+
+export const ALLOWED_CONTENT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/avif",
+] as const;
+
+export type AllowedContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
+
+/**
+ * 浏览器直传 COS 的超时时间。
+ *
+ * 原值 60 秒对大图不够：一张 20MB 的图在 2Mbps 上行带宽下需要约 80 秒。
+ * 放宽到 5 分钟，仍短于预签名 URL 的 15 分钟有效期。
+ */
+const UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
+
+interface UploadToS3Options {
+  file: File;
+  folder: string;
+  onProgress?: (progress: number) => void;
+  getUploadUrl: (input: {
+    filename: string;
+    contentType: AllowedContentType;
+    folder: string;
+  }) => Promise<{ uploadUrl: string; publicUrl: string }>;
+}
+
+interface UploadToS3Result {
+  publicUrl: string;
+}
+
+class UploadError extends Error {
+  constructor(
+    message: string,
+    public cause?: unknown,
+  ) {
+    super(message);
+    this.name = "UploadError";
+  }
+}
+
+export class S3Client {
+  /**
+   * generate a unique filename
+   */
+  private generateUniqueFilename(originalFilename: string): string {
+    const timestamp = Date.now();
+    const extension = originalFilename.split(".").pop() || "";
+    const baseName = originalFilename.replace(`.${extension}`, "");
+    return `${baseName}-${timestamp}.${extension}`;
+  }
+
+  /**
+   * validate file
+   */
+  private validateFile(file: File) {
+    const MAX_FILE_SIZE = IMAGE_SIZE_LIMIT;
+    if (file.size > MAX_FILE_SIZE) {
+      throw new UploadError(
+        `文件大小 ${(file.size / 1024 / 1024).toFixed(1)}MB 超过 ${MAX_FILE_SIZE / 1024 / 1024}MB 上限`,
+      );
+    }
+
+    if (!ALLOWED_CONTENT_TYPES.includes(file.type as AllowedContentType)) {
+      throw new UploadError(
+        `不支持的文件格式「${file.type || "未知"}」。支持：JPEG / PNG / WebP / HEIC / HEIF / AVIF`,
+      );
+    }
+  }
+
+  /**
+   * XMLHttpRequest upload with progress
+   *
+   * 关于错误处理：XHR 的 `onerror` 不携带任何原因信息，浏览器出于安全考虑
+   * 也不会暴露细节。常见真实原因有：CORS 预检失败、连接被重置、DNS 解析失败、
+   * 代理/扩展拦截、证书问题。这里把可能原因写进提示，便于排查；
+   * 同时把 HTTP 状态码错误与网络错误区分开（前者走 onload 的 status 判断）。
+   */
+  private async uploadWithProgress(
+    file: File,
+    uploadUrl: string,
+    onProgress?: (progress: number) => void,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          onProgress?.(progress);
+        }
+      });
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          // 尝试从 COS 的 XML 错误体里提取可读信息
+          let detail = "";
+          try {
+            const m = String(xhr.responseText || "").match(/<Message>([^<]+)<\/Message>/);
+            if (m) detail = `：${m[1]}`;
+          } catch {
+            /* ignore */
+          }
+          reject(
+            new UploadError(`上传失败（HTTP ${xhr.status}）${detail}`, {
+              status: xhr.status,
+              response: xhr.response,
+            }),
+          );
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(
+          new UploadError(
+            "上传时网络中断，请检查网络连接后重试（若持续失败，可能是浏览器扩展拦截了到 COS 的请求）",
+          ),
+        );
+      };
+
+      xhr.ontimeout = () => {
+        reject(
+          new UploadError(
+            `上传超时（超过 ${UPLOAD_TIMEOUT_MS / 60000} 分钟）。图片较大或网络较慢，请重试`,
+          ),
+        );
+      };
+
+      xhr.onabort = () => {
+        reject(new UploadError("上传已取消"));
+      };
+
+      xhr.timeout = UPLOAD_TIMEOUT_MS;
+
+      xhr.open("PUT", uploadUrl);
+      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.send(file);
+    });
+  }
+
+  /**
+   * Upload file to COS via presigned URL
+   */
+  async upload({
+    file,
+    folder,
+    onProgress,
+    getUploadUrl,
+  }: UploadToS3Options): Promise<UploadToS3Result> {
+    this.validateFile(file);
+
+    const uniqueFilename = this.generateUniqueFilename(file.name);
+
+    // 网络抖动时自动重试一次（重新签名，避免沿用已失效的 URL）
+    const MAX_ATTEMPTS = 2;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const { uploadUrl, publicUrl } = await getUploadUrl({
+          filename: uniqueFilename,
+          contentType: file.type as AllowedContentType,
+          folder,
+        });
+
+        await this.uploadWithProgress(file, uploadUrl, onProgress);
+        return { publicUrl };
+      } catch (error) {
+        lastError = error;
+
+        const isNetworkError =
+          error instanceof UploadError &&
+          (error.message.includes("网络中断") || error.message.includes("超时"));
+
+        // 只在网络类错误时重试；签名/格式/大小错误重试无意义
+        if (!isNetworkError || attempt === MAX_ATTEMPTS) break;
+
+        onProgress?.(0);
+        await new Promise((r) => setTimeout(r, 800));
+      }
+    }
+
+    if (lastError instanceof UploadError) throw lastError;
+    throw new UploadError(
+      "文件上传失败",
+      lastError instanceof Error ? lastError : undefined,
+    );
+  }
+}
+
+export const s3Client = new S3Client();

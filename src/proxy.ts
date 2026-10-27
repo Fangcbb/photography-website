@@ -25,6 +25,8 @@ export async function proxy(request: NextRequest) {
     `img-src 'self' data: blob: https://cnn.fangc.cc https://*.cos.ap-shanghai.myqcloud.com https://*.fangc.cc https://images.unsplash.com`,
     `font-src 'self' data:`,
     `connect-src 'self' https://*.fangc.cc https://*.cos.ap-shanghai.myqcloud.com https://hm.baidu.com`,
+    `worker-src 'self' blob:`,
+    `child-src 'self' blob:`,
     `frame-ancestors 'self'`,
   ]
     .join("; ")
