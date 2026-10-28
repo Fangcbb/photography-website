@@ -5,6 +5,7 @@ import { s3Client } from "@/modules/s3/lib/server-client";
 import { getSession } from "@/modules/auth/lib/get-session";
 import { log } from "@/lib/logger";
 import { IMAGE_SIZE_LIMIT } from "@/constants";
+import { CI_PROCESS_LIMIT, SHARP_CAPABLE, compressOversizeImage } from "@/modules/s3/lib/compress-oversize";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -110,19 +111,40 @@ export async function POST(request: NextRequest) {
 
     const uuid = crypto.randomUUID();
     const safeFilename = filename.replace(/(\.[^.]+)$/, (ext) => ext.toLowerCase());
-    const key = `${folder}/${uuid}-${safeFilename}`;
+    let key = `${folder}/${uuid}-${safeFilename}`;
+    let uploadContentType = contentType;
+    let uploadLength = contentLength;
 
-    // 流式转发，避免把大文件整个读进内存
-    const body = Readable.fromWeb(request.body as Parameters<typeof Readable.fromWeb>[0]);
+    // 大图保险：超过万象 32MB 处理上限的照片，先压缩再入库（6000 长边 / q85）
+    let body: Readable | Buffer;
+    if (isImage && contentLength > CI_PROCESS_LIMIT && SHARP_CAPABLE.has(contentType)) {
+      const raw = Buffer.from(await request.arrayBuffer());
+      const { out } = await compressOversizeImage(raw);
+      key = key.replace(/(\.[^.]+)$/, ".c.jpg");
+      uploadContentType = "image/jpeg";
+      uploadLength = out.length;
+      body = out;
+      void log({
+        level: "info",
+        source: "upload",
+        path: key,
+        code: "OVERSIZE_COMPRESSED",
+        message: `大图自动压缩 ${(contentLength / 1048576).toFixed(1)}MB -> ${(out.length / 1048576).toFixed(1)}MB`,
+        meta: { contentType, originalSize: contentLength, compressedSize: out.length },
+      });
+    } else {
+      // 流式转发，避免把大文件整个读进内存
+      body = Readable.fromWeb(request.body as Parameters<typeof Readable.fromWeb>[0]);
+    }
 
     await s3Client.send(
       new PutObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
         Key: key,
-        ContentType: contentType,
+        ContentType: uploadContentType,
         Body: body,
         // 流式上传必须声明长度，否则 SDK 无法确定分块
-        ContentLength: contentLength || undefined,
+        ContentLength: uploadLength || undefined,
         CacheControl: "public, max-age=31536000",
       })
     );
@@ -130,10 +152,10 @@ export async function POST(request: NextRequest) {
     void log({
       level: "info",
       source: "upload",
-      message: `代理上传成功 ${(contentLength / 1024 / 1024).toFixed(2)}MB，耗时 ${Date.now() - started}ms`,
+      message: `代理上传成功 ${(uploadLength / 1024 / 1024).toFixed(2)}MB，耗时 ${Date.now() - started}ms`,
       path: key,
       code: "OK",
-      meta: { contentType, size: contentLength, via: "proxy" },
+      meta: { contentType, size: uploadLength, via: "proxy" },
     });
 
     return NextResponse.json({ key });

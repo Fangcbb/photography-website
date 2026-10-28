@@ -6,6 +6,7 @@ import { getSession } from "@/modules/auth/lib/get-session";
 import { log } from "@/lib/logger";
 import { UPLOAD_CHUNK_SIZE } from "@/modules/s3/lib/upload-limits";
 import { verifyUploadToken, expectedPartSize, UploadValidationError, type UploadSession } from "@/modules/s3/lib/upload-session";
+import { CI_PROCESS_LIMIT, SHARP_CAPABLE, replaceWithCompressed } from "@/modules/s3/lib/compress-oversize";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -54,10 +55,24 @@ export async function POST(request: NextRequest) {
       MultipartUpload: { Parts: sorted.map(p => ({ PartNumber: p.partNumber, ETag: p.etag })) },
     }));
     if (!(await isComplete(upload))) throw new Error("合并后文件大小校验未通过");
+
+    // 大图保险：合并后超过万象 32MB 处理上限的照片，压缩并替换对象（6000 长边 / q85）
+    let finalKey = key;
+    const ext = key.toLowerCase().match(/\.(jpe?g|png|webp)$/);
+    const sharpCapable = !!ext;
+    if (upload.size > CI_PROCESS_LIMIT && (sharpCapable || SHARP_CAPABLE.size === 0)) {
+      finalKey = await replaceWithCompressed(key);
+      await log({
+        level: "info", source: "upload", path: finalKey, code: "OVERSIZE_COMPRESSED",
+        message: `大图自动压缩 ${(upload.size / 1048576).toFixed(1)}MB`,
+        meta: { originalKey: key, originalSize: upload.size },
+      });
+    }
+
     await log({ level: "info", source: "upload", message: `分片上传完成，共 ${count} 片，耗时 ${Date.now() - started}ms`,
-      path: key, code: "MULTIPART_COMPLETE", meta: { parts: count, size: upload.size, elapsed: Date.now() - started },
+      path: finalKey, code: "MULTIPART_COMPLETE", meta: { parts: count, size: upload.size, elapsed: Date.now() - started },
     });
-    return NextResponse.json({ key });
+    return NextResponse.json({ key: finalKey });
   } catch (error) {
     // COS 合并成功但响应/随后校验瞬时失败，也先检查原对象而不是重传全文件。
     if (upload && !(error instanceof UploadValidationError)) {
@@ -85,7 +100,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     const known = error instanceof UploadValidationError;
-    await log({ level: "warn", source: "upload", code: "MULTIPART_ABORT_FAILED", message: `取消分片上传失败：${error instanceof Error ? error.message : String(error)}` });
+    await log({ level: known ? "warn" : "error", source: "upload", code: "MULTIPART_ABORT_FAILED", message: `取消分片上传失败：${error instanceof Error ? error.message : String(error)}` });
     return NextResponse.json({ error: known ? error.message : "清理未完成分片失败" }, { status: known ? error.status : 500 });
   }
 }
