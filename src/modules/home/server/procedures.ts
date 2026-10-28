@@ -41,11 +41,12 @@ export const homeRouter = createTRPCRouter({
           id: citySets.id,
           city: citySets.city,
           country: citySets.country,
+          // 裸列名引用恒真陷阱：必须显式表名
           photoCount: sql<number>`(
-            select count(*) from ${photos}
-            where ${photos.city} = ${citySets.city}
-              and ${photos.country} = ${citySets.country}
-              and ${photos.visibility} = 'public'
+            select count(*) from photos p
+            where p.city = city_sets.city
+              and p.country = city_sets.country
+              and p.visibility = 'public'
           )`.mapWith(Number),
           coverPhotoId: citySets.coverPhotoId,
         })
