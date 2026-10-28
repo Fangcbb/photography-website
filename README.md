@@ -58,10 +58,7 @@ Everything is designed around one constraint: **originals are huge** (3–18 MB 
   </tr>
   <tr>
     <td width="50%"><img src="screenshots/about.webp" alt="About page"><br><sub><b>About</b> — full-bleed portrait, gear list, stack badges</sub></td>
-    <td width="50%">
-      <sub><b>Admin dashboard</b> — stats, photo/post/video/city CRUD, error logs.<br><br>
-      Screenshot intentionally omitted: the dashboard needs a live session, so it is not captured in CI-style screenshot runs.</sub>
-    </td>
+    <td width="50%"><img src="screenshots/dashboard.webp" alt="Admin dashboard"><br><sub><b>Admin dashboard</b> — stats, photo activity, country breakdown, CRUD for photos / posts / videos / cities, error logs</sub></td>
   </tr>
 </table>
 

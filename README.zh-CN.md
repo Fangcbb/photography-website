@@ -58,10 +58,7 @@
   </tr>
   <tr>
     <td width="50%"><img src="screenshots/about.webp" alt="关于页"><br><sub><b>关于</b> —— 全幅人像、器材清单、技术栈</sub></td>
-    <td width="50%">
-      <sub><b>后台仪表盘</b> —— 统计、照片/文章/视频/城市管理、错误日志。<br><br>
-      此处不放截图：后台需要登录态，不在自动截图流程里。你可以自己登录 <a href="https://www.fangc.cc/dashboard">/dashboard</a> 查看。</sub>
-    </td>
+    <td width="50%"><img src="screenshots/dashboard.webp" alt="后台仪表盘"><br><sub><b>后台仪表盘</b> —— 统计、照片动态、国家分布，以及照片 / 文章 / 视频 / 城市管理与错误日志</sub></td>
   </tr>
 </table>
 
