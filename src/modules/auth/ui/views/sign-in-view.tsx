@@ -16,7 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { OctagonAlert } from "lucide-react";
 import { useState } from "react";
@@ -78,8 +77,7 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-sky-100 via-indigo-50 to-rose-100">
         <AuraShaderBackground coverUrl={cover} playing />
       </div>
-      <Card className="overflow-hidden p-0 shadow-2xl">
-        <CardContent className="grid p-0 md:grid-cols-3">
+      <div className="grid overflow-hidden rounded-[22px] border border-white/20 bg-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-2xl backdrop-saturate-150 md:grid-cols-3 dark:border-white/10 dark:bg-black/40">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -157,8 +155,7 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
               }
             />
           </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 };
