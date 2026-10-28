@@ -11,7 +11,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         PORT: 3000,
-        BAIDU_PUSH_TOKEN: "DORUpk0uZHcly0pL",
+        BAIDU_PUSH_TOKEN: process.env.BAIDU_PUSH_TOKEN,
       },
     },
   ],
