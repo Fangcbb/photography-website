@@ -30,8 +30,8 @@ const signInSchema = z.object({
 
 const FALLBACK_COVER = "/bg.jpg";
 
-const AuraShaderBackground = dynamicImport(
-  () => import("@/components/AuraMusic/components/AuraShaderBackground"),
+const AuthShaderBackground = dynamicImport(
+  () => import("@/modules/auth/ui/components/auth-shader-background"),
   { ssr: false },
 );
 
@@ -75,7 +75,7 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
   return (
     <div className="flex flex-col gap-6">
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-sky-100 via-indigo-50 to-rose-100">
-        <AuraShaderBackground coverUrl={cover} playing />
+        <AuthShaderBackground coverUrl={cover} playing />
       </div>
       <div className="grid overflow-hidden rounded-[22px] border border-white/20 bg-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_24px_80px_-24px_rgba(0,0,0,0.45)] backdrop-blur-2xl backdrop-saturate-150 md:grid-cols-3 dark:border-white/10 dark:bg-black/40">
           <Form {...form}>

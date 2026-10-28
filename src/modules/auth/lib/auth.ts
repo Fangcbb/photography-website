@@ -22,6 +22,15 @@ export const auth = betterAuth({
     enabled: true,
   },
 
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60 * 60, max: 5 },
+    },
+  },
+
   plugins: [nextCookies()],
 
   hooks: {
