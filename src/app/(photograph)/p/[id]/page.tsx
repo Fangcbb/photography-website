@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const title = `${data.title} | Fang Bing Photography`;
-  const description = data.description || `${data.title} - 方斌摄影作品`;
+  const description = data.description?.trim() || `${data.title} - 方斌摄影作品`;
   const imageUrl = photoProxyUrl(data.id, "display");
 
   return {
@@ -75,6 +75,8 @@ const page = async ({ params }: Props) => {
     notFound();
   }
 
+  const description = data.description?.trim() || `${data.title} - 方斌摄影作品`;
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       {/* 结构化数据 - 百度/Google 图片富摘要 */}
@@ -85,7 +87,7 @@ const page = async ({ params }: Props) => {
             "@context": "https://schema.org",
             "@type": "ImageObject",
             "name": data.title,
-            "description": data.description || data.title,
+            "description": description,
             "contentUrl": photoDisplayUrl(data.url),
             "url": `${BASE_URL}/p/${id}`,
             "thumbnail": photoDisplayUrl(data.url),
