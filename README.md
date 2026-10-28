@@ -1,269 +1,170 @@
-# fangc.cc — Photography Portfolio with Immersive Music Player
+<div align="right">
+  <a href="README.md"><b>English</b></a> · <a href="README.zh-CN.md">简体中文</a>
+</div>
 
-一个融合摄影作品展示与沉浸式音乐播放的个人网站。照片库采用瀑布流布局，支持地图定位；音乐播放器拥有 WebGL 着色器背景、专辑封面色彩驱动、同步歌词等特性。
+<h1 align="center">Fang Photography</h1>
 
-> **在线演示**: https://www.fangc.cc  
-> **音乐播放器**: https://www.fangc.cc/music
+<p align="center">
+  A self-hosted photography portfolio, travel journal and music player — one Next.js app, end to end.
+</p>
 
----
+<p align="center">
+  <a href="https://www.fangc.cc"><b>www.fangc.cc</b></a>
+</p>
 
-## ✨ 特性
+<p align="center">
+  <img src="screenshots/home.webp" alt="Home page" width="860">
+</p>
 
-### 摄影作品库
-- 📷 **瀑布流照片墙** — 支持 6 种布局（经典网格、瀑布流、杂志风等）
-- 🗺️ **地图定位** — Mapbox 交互式地图，旅行照片按地理位置展示
-- 📁 **照片管理后台** — 后台管理系统，支持精选集、布局配置
-- 🖼️ **图片处理** — 腾讯云数据万象（图片质量评估、超分辨率）
-- 📱 **响应式设计** — 适配移动端与桌面端
+## What this is
 
-### 🎵 Aura Music 播放器
-- 🎨 **沉浸式 Shader 背景** — WebGL GLSL 着色器动画，随专辑封面色彩动态变化（ColorThief 提取）
-- 🎤 **多语言同步歌词** — 支持逐字时间轴，原始语种 + 翻译双语显示
-- 🔍 **音乐搜索** — 聚合搜索（网易云音乐）
-- 📡 **网络电台** — 内置 7 个高质量电台，每日自动切换
-- ⌨️ **全局快捷键** — 方向键控制播放、Shift+N 收藏、ESC 退出
+A personal site for a photographer: publish photos, group them into city collections, browse them on a map, write posts, and listen to music while you do it. The admin dashboard, upload pipeline, image delivery and error logging are all part of the same codebase — there is no CMS behind it.
 
-### 技术栈
-| 分类 | 技术 |
-|------|------|
-| 框架 | Next.js 16 (App Router) + React 19 |
-| 类型安全 | tRPC v11 + Zod |
-| 数据库 | PostgreSQL (Neon/Supabase) + Drizzle ORM |
-| 文件存储 | S3 兼容存储 (腾讯云 COS / AWS S3 / R2) |
-| 地图 | Mapbox GL JS + react-map-gl |
-| UI | Tailwind CSS v4 + shadcn/ui + Radix UI |
-| 状态管理 | Zustand + TanStack Query v5 |
-| 认证 | Better Auth |
-| 动画 | Framer Motion + React Spring |
-| 3D/Shader | Three.js + GLSL |
-| 图片处理 | ColorThief + 腾讯云数据万象 |
-| 歌词解析 | 自研 TTML/LRC 解析器，支持逐字时间 |
+Everything is designed around one constraint: **originals are huge** (3–18 MB RAW exports). Every image you see is generated on demand, cached at the CDN edge, and swapped for a blurhash placeholder while it loads.
 
----
+## Features
 
-## 🏗️ 项目架构
+**Photography**
+- Full-bleed hero carousel, masonry city walls, immersive photo view with an EXIF overlay (camera, lens, focal length, aperture, shutter, date)
+- BlurHash placeholders and dominant-colour backdrops, so a slow photo still looks intentional
+- Keyboard navigation between photos, `next/image`-free on-demand variants
+
+**Travel**
+- City collections with full-screen covers, narrative intros and live photo counts
+- Cover picker in the admin: star a photo to set the city cover, un-star to fall back to the newest public photo
+
+**Music (Aura Music)**
+- Search NetEase Cloud Music and stream through a same-origin proxy (`Range` / 206 supported)
+- Synced lyrics, cover-colour theming, GLSL shader background, keyboard shortcuts, Media Session integration
+- Optional NetEase cookie for VIP sources, with automatic mirror fallback when a CDN host refuses datacenter IPs
+
+**Admin & operations**
+- Dashboard with photo/post/video/city management and a city cover picker
+- Error log viewer: JSONL on disk, searchable by source, level, day and keyword — mirrored by a CLI
+- Multipart uploads (4 MiB chunks, HMAC-signed session, per-chunk retry) with a 99% "verifying" state instead of a lying progress bar
+- `/api/health` returns the running `buildId`
+
+**Platform**
+- tRPC v11 end-to-end types, Drizzle ORM + PostgreSQL, better-auth sessions
+- Nonce-based CSP, private photo visibility, SSRF guard on the lyric endpoint, rate-limited client error ingestion
+- PM2 + nginx + Tencent Cloud CDN, PWA, RSS, sitemap, JSON-LD
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/city.webp" alt="City collection"><br><sub><b>City collection</b> — full-screen cover, narrative intro, photo wall</sub></td>
+    <td width="50%"><img src="screenshots/music.webp" alt="Music player"><br><sub><b>Aura Music</b> — shader background, synced lyrics, NetEase search</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="screenshots/about.webp" alt="About page"><br><sub><b>About</b> — full-bleed portrait, gear list, stack badges</sub></td>
+    <td width="50%">
+      <sub><b>Admin dashboard</b> — stats, photo/post/video/city CRUD, error logs.<br><br>
+      Screenshot intentionally omitted: the dashboard needs a live session, so it is not captured in CI-style screenshot runs.</sub>
+    </td>
+  </tr>
+</table>
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router) + React 19 |
+| Language | TypeScript |
+| API | tRPC v11 + Zod |
+| Database | PostgreSQL (Neon) + Drizzle ORM |
+| Auth | better-auth |
+| Storage | S3-compatible (Tencent Cloud COS) + Tencent Cloud CI for on-the-fly processing |
+| UI | Tailwind CSS v4 + shadcn/ui + Radix |
+| Data fetching | TanStack Query v5 |
+| State | Zustand |
+| Motion / 3D | Framer Motion, Three.js + GLSL |
+| Maps | Mapbox GL JS (same-origin proxy for tiles and geocoding) |
+| Delivery | PM2 + nginx + Tencent Cloud CDN |
+
+## Image pipeline
+
+Originals stay untouched in object storage. Every rendered image goes through `/api/photo/v2/{id}?v={variant}`:
+
+| Variant | Width | Quality | Used for |
+|---|---|---|---|
+| `thumb` | 400 px | 75 | tiny thumbnails |
+| `fangb` | 800 px | 80 | cards, map markers, placeholders |
+| `display` | 1920 px | 82 | carousels, photo detail, map popups |
+| `hero` | 2560 px | 85 | full-height covers |
+
+The handler asks the image service for `imageMogr2/thumbnail/{w}x/format/webp/quality/{q}/strip`, falls back to a named style and then to the original. Responses are `immutable` for a year — which is why the route is versioned in the **path** (`/v2/`) rather than with a query string: the CDN ignores query parameters when building cache keys.
+
+## Architecture
 
 ```
-photography-website/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── (home)/             # 首页路由组
-│   │   ├── (photograph)/       # 照片库路由组
-│   │   ├── (dashboard)/       # 后台管理路由组
-│   │   ├── api/                # API 路由
-│   │   │   ├── music-search/   # 音乐搜索 API
-│   │   │   └── trpc/           # tRPC 端点
-│   │   └── music/              # 音乐播放器页面
-│   ├── components/
-│   │   ├── AuraMusic/          # 音乐播放器核心
-│   │   │   ├── components/     # UI 组件（播放器、歌词、搜索等）
-│   │   │   ├── hooks/          # React Hooks
-│   │   │   ├── services/       # 业务逻辑（音频处理、歌词解析）
-│   │   │   └── shaders/        # GLSL 着色器
-│   │   ├── home/               # 首页组件
-│   │   ├── photograph/         # 照片库组件
-│   │   └── ui/                 # 通用 UI 组件
-│   ├── lib/                    # 工具函数
-│   └── site.config.ts          # 品牌和站点配置（与 .env 共同构成完整配置）
-├── public/                     # 静态资源
-├── drizzle/                    # 数据库迁移
-├── scripts/                    # 运维脚本
-└── docker-compose.*.yml        # Docker 部署配置
+src/
+├── app/
+│   ├── (home)/            # landing, about, blog, music, discover
+│   ├── (photograph)/      # /p/[id] photo view
+│   ├── (dashboard)/       # admin area
+│   └── api/               # tRPC, photo proxy, upload, music, logs
+├── modules/               # feature modules (photos, cities, travel, music, s3, …)
+│   ├── */server/          # tRPC routers + business logic
+│   ├── */ui/              # views and components
+│   └── */lib/             # shared helpers
+├── components/            # design system + AuraMusic player
+├── db/                    # Drizzle schema and clients
+└── lib/                   # logger, photo proxy, music providers
+scripts/                   # audits, log CLI, seed
 ```
 
-### 核心模块
-
-**AuraMusic 播放器 (`src/components/AuraMusic/`)**
-- `App.tsx` — 播放器主容器，管理播放状态、队列、收藏
-- `components/SearchModal.tsx` — 搜索浮层，支持多引擎聚合搜索
-- `components/AuraShaderBackground.tsx` — WebGL 着色器背景（Three.js + GLSL）
-- `components/LyricsView.tsx` — 歌词面板，支持逐字高亮
-- `services/lyricsService.ts` — 歌词获取（网易云 API）
-- `services/audioLevelBridge.ts` — 音频分析与动画桥接
-- `hooks/usePlayer.ts` — 播放状态管理
-- `hooks/useNeteaseSearchProvider.ts` — 网易云搜索提供者
-
-**照片库 (`src/components/photograph/`)**
-- `components/PhotoGrid.tsx` — 瀑布流/网格布局
-- `components/MapView.tsx` — Mapbox 地图展示
-
----
-
-## 🚀 快速部署
-
-### 方式一：Vercel（一键部署）
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Fangcbb/photography-website)
-
-部署前需配置环境变量（见下方）。
-
-### 方式二：Docker（自托管）
-
-```bash
-# 克隆仓库
-git clone https://github.com/Fangcbb/photography-website.git
-cd photography-website
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 填入所需配置
-
-# 启动（使用 PostgreSQL 本地开发）
-docker-compose up -d
-
-# 或使用 PostgreSQL
-docker-compose -f docker-compose.yml up -d
-```
-
-### 方式三：Node.js 手动部署
-
-> ⚠️ **推荐方式**：生产环境应使用项目自带的部署脚本，见 [deploy/README.md](./deploy/README.md)。以下仅作参考。
+## Getting started
 
 ```bash
 git clone https://github.com/Fangcbb/photography-website.git
 cd photography-website
 npm install
+npm run db:push      # apply the Drizzle schema
+npm run dev
+```
 
-# 配置环境变量
-cp .env.example .env
+### Environment
 
-# 构建
+| Variable | Needed for | Notes |
+|---|---|---|
+| `DATABASE_URL` | everything | PostgreSQL connection string |
+| `BETTER_AUTH_SECRET` | auth | session signing key |
+| `NEXT_PUBLIC_APP_URL` | auth, tRPC | public origin, e.g. `https://www.fangc.cc` |
+| `S3_ENDPOINT` / `S3_BUCKET_NAME` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | uploads | any S3-compatible store |
+| `NEXT_PUBLIC_S3_PUBLIC_URL` | images | public/CDN base URL |
+| `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | `/discover` | Mapbox token |
+| `MUSIC_API_BASE` | `/music` | self-hosted NetEase proxy |
+| `MUSIC_U`, `MUSIC_R_U`, `MUSIC_R_T`, `MUSIC_A_T` | optional | NetEase cookie fields for VIP sources |
+| `NEXT_PUBLIC_GA_ID` | optional | GA4 |
+| `LOG_DIR` | optional | where JSONL error logs are written (`~/logs` by default) |
+| `DATABASE_URL_SECONDARY` | optional | dual-write target for migrations |
+
+### Build & run
+
+```bash
+export BETTER_AUTH_SECRET=build-only-placeholder-not-for-runtime
 npm run build
-
-# 启动
-npm start
+pm2 start npm --name photo -- start -- -H 127.0.0.1
 ```
 
----
+Two things bite people here:
 
-## ⚙️ 环境变量
+- `NEXT_PUBLIC_*` values are inlined at build time — changing them requires a rebuild, not a restart.
+- `next start` ignores the `HOSTNAME` environment variable; bind explicitly with `-H`. And `pm2 restart` does not reload standalone output, so use `pm2 delete` + `pm2 start` after a build.
 
-在 `.env` 中配置以下变量：
+## Scripts
 
-```env
-# ========== 数据库 ==========
-DATABASE_URL=postgresql://user:password@host:5432/dbname
-# 或使用 Neon/Supabase 连接字符串
+| Command | What it does |
+|---|---|
+| `npm run dev` | dev server |
+| `npm run build` | production build (webpack, PWA, strips source maps) |
+| `npm run lint` / `test` | lint / unit tests |
+| `npm run db:push` / `db:studio` | apply schema / browse data |
+| `npm run photos:audit` | check every photo record against storage |
+| `npm run photos:audit:fix` | re-link records to orphan files by camera filename |
+| `npm run logs` / `logs:summary` | query the JSONL error log from the CLI |
 
-# ========== 认证 ==========
-BETTER_AUTH_SECRET=your-secret-key-min-32-chars
-BETTER_AUTH_URL=https://your-domain.com
+## License
 
-# ========== 应用 ==========
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-
-# ========== S3 存储 ==========
-S3_ENDPOINT=https://s3.region.cloud.tencent.com
-S3_BUCKET_NAME=your-bucket
-S3_PUBLIC_URL=https://your-cdn-url.com
-S3_ACCESS_KEY_ID=your-access-key
-S3_SECRET_ACCESS_KEY=your-secret-key
-
-# ========== 地图（可选） ==========
-NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=your-mapbox-token
-
-# ========== 管理员账号 ==========
-SEED_USER_EMAIL=admin@example.com
-SEED_USER_PASSWORD=your-password
-SEED_USER_NAME=Admin
-```
-
-### 获取第三方 API Key
-
-| 服务 | 获取地址 | 用途 |
-|------|----------|------|
-| Neon (PostgreSQL) | https://neon.tech | 免费托管数据库 |
-| Supabase | https://supabase.com | 免费托管数据库 |
-| Mapbox | https://mapbox.com | 地图功能 |
-| 腾讯云 COS | https://cloud.tencent.com | 图片存储/CDN |
-
----
-
-## 🎨 自定义配置
-
-**编辑 `src/site.config.ts`** — 所有品牌信息集中于此：
-
-```typescript
-export const siteConfig = {
-  name: "Your Name",           // 姓名
-  tagline: "Photo",             // 标语
-  role: "Photographer",         // 职业
-  bio: "Your bio here...",     // 个人简介
-  avatar: "/avatar.jpg",       // 头像（放于 public/）
-  initials: "YN",              // 头像备用文字
-  socialLinks: [               // 社交链接
-    { title: "Instagram", href: "https://instagram.com/..." },
-    { title: "GitHub", href: "https://github.com/..." },
-  ],
-}
-```
-
----
-
-## 📂 照片管理
-
-1. 将照片放入 `public/photos/` 目录
-2. 或使用后台管理：访问 `/admin` 扫描照片目录
-3. 支持 EXIF 数据读取、自动生成缩略图
-4. 可创建精选集（Collections）分组展示
-
----
-
-## 🎵 音乐播放器
-
-音乐播放器集成于摄影网站，提供沉浸式体验：
-
-- **Shader 背景**：GPU 加速的 GLSL 着色器动画
-- **ColorThief**：从专辑封面提取主色调，驱动动画色彩
-- **歌词解析**：支持 TTML/LRC 格式，逐字时间轴
-- **搜索来源**：网易云音乐 API
-
-### 快捷键
-
-| 快捷键 | 功能 |
-|--------|------|
-| `Space` | 播放 / 暂停 |
-| `←` `→` | 上 / 下一首 |
-| `Shift+N` | 收藏当前歌曲 |
-| `L` | 切换歌词面板 |
-| `Esc` | 退出播放器 |
-
----
-
-## 🐳 Docker 部署详解
-
-### 文件说明
-
-| 文件 | 用途 |
-|------|------|
-| `Dockerfile` | 多阶段构建，生产镜像 |
-| `docker-compose.yml` → `standalone` | 本地开发（PostgreSQL，非生产方案） |
-| `docker-compose.cloud.yml` | 云端生产配置（PostgreSQL） |
-| `docker-compose.standalone.yml` | 完全独立部署 |
-
-### 生产环境建议
-
-- 使用 PostgreSQL 而非 SQLite（`docker-compose.cloud.yml`）
-- 配置 Nginx 反向代理 + SSL
-- 使用腾讯云 COS 作为存储后端
-- 启用 CDN 加速静态资源
-
----
-
-## 📜 许可证
-
-[MIT License](LICENSE) — 可自由使用、修改和分发。
-
----
-
-## 🙏 致谢
-
-- [Next.js](https://nextjs.org/) — React 全栈框架
-- [shadcn/ui](https://ui.shadcn.com/) — 精美 UI 组件库
-- [Three.js](https://threejs.org/) — 3D 图形库
-- [ColorThief](https://github.com/lokesh/color-thief) — 色彩提取
-- [网易云音乐 API](https://github.com/Binaryify/NeteaseCloudMusicApi) — 音乐数据
-
----
-
-*Built with ❤️ by [Fangcbb](https://github.com/Fangcbb)*
+[MIT](LICENSE) © Fang Bing
