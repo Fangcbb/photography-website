@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import dynamicImport from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -28,9 +29,19 @@ const signInSchema = z.object({
   }),
 });
 
-export const SignInView = () => {
+const FALLBACK_COVER = "/bg.jpg";
+
+const AuraShaderBackground = dynamicImport(
+  () => import("@/components/AuraMusic/components/AuraShaderBackground"),
+  { ssr: false },
+);
+
+export const SignInView = ({ coverId }: { coverId?: string | null }) => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [cover, setCover] = useState(
+    coverId ? `/api/photo/v2/${coverId}?v=display` : FALLBACK_COVER,
+  );
 
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
@@ -64,7 +75,10 @@ export const SignInView = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card className="overflow-hidden p-0">
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-sky-100 via-indigo-50 to-rose-100">
+        <AuraShaderBackground coverUrl={cover} playing />
+      </div>
+      <Card className="overflow-hidden p-0 shadow-2xl">
         <CardContent className="grid p-0 md:grid-cols-3">
           <Form {...form}>
             <form
@@ -128,13 +142,19 @@ export const SignInView = () => {
               </div>
             </form>
           </Form>
-          <div className="col-span-2 bg-radial from-sidebar-accent to-sidebar relative hidden md:flex flex-col gap-y-4 items-center justify-center">
+          <div className="col-span-2 relative hidden md:flex flex-col gap-y-4 items-center justify-center">
             <Image
-              src="/bg.jpg"
-              alt="Better nextjs"
+              src={cover}
+              alt=""
               width={1920}
               height={1080}
+              unoptimized
               className="size-full object-cover"
+              onError={() =>
+                setCover((current) =>
+                  current === FALLBACK_COVER ? current : FALLBACK_COVER,
+                )
+              }
             />
           </div>
         </CardContent>
