@@ -6,7 +6,7 @@ import { getSession } from "@/modules/auth/lib/get-session";
 import { log } from "@/lib/logger";
 import { UPLOAD_CHUNK_SIZE } from "@/modules/s3/lib/upload-limits";
 import { verifyUploadToken, expectedPartSize, UploadValidationError, type UploadSession } from "@/modules/s3/lib/upload-session";
-import { CI_PROCESS_LIMIT, SHARP_CAPABLE, replaceWithCompressed } from "@/modules/s3/lib/compress-oversize";
+import { CI_PROCESS_LIMIT, SHARP_CAPABLE, replaceWithCompressed, compressedKey } from "@/modules/s3/lib/compress-oversize";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,6 +27,23 @@ async function isComplete(upload: UploadSession): Promise<boolean> {
   }
 }
 
+// 大图压缩后原 key 已被删除并替换为 .c.jpg；重试时据此识别已存在的终态对象
+async function recoverCompressed(upload: UploadSession): Promise<string | null> {
+  try {
+    const candidate = compressedKey(upload.key);
+    const h = await s3Client.send(new HeadObjectCommand({ Bucket: process.env.S3_BUCKET_NAME, Key: candidate }));
+    return h.ContentLength !== undefined ? candidate : null;
+  } catch (error) {
+    if ((error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode === 404) return null;
+    throw error;
+  }
+}
+
+async function resolveExistingObject(upload: UploadSession): Promise<string | null> {
+  if (await isComplete(upload)) return upload.key;
+  return recoverCompressed(upload);
+}
+
 export async function POST(request: NextRequest) {
   const started = Date.now();
   let upload: UploadSession | undefined;
@@ -43,7 +60,8 @@ export async function POST(request: NextRequest) {
       throw new UploadValidationError("分片列表不完整或有重复序号");
     }
     // 响应丢失后重试同一请求：已存在且大小一致则直接确认，避免生成重复对象。
-    if (await isComplete(upload)) return NextResponse.json({ key, recovered: true });
+    const existing = await resolveExistingObject(upload);
+    if (existing) return NextResponse.json({ key: existing, recovered: true });
     const listed = await s3Client.send(new ListPartsCommand({ Bucket: process.env.S3_BUCKET_NAME, Key: key, UploadId: uploadId, MaxParts: 125 }));
     const remote = listed.Parts || [];
     if (listed.IsTruncated || remote.length !== count || remote.some((p, i) =>
@@ -76,7 +94,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // COS 合并成功但响应/随后校验瞬时失败，也先检查原对象而不是重传全文件。
     if (upload && !(error instanceof UploadValidationError)) {
-      try { if (await isComplete(upload)) return NextResponse.json({ key: upload.key, recovered: true }); } catch { /* 记录原始错误 */ }
+      try {
+        const recovered = await resolveExistingObject(upload);
+        if (recovered) return NextResponse.json({ key: recovered, recovered: true });
+      } catch { /* 记录原始错误 */ }
     }
     const known = error instanceof UploadValidationError;
     await log({ level: known ? "warn" : "error", source: "upload", path: upload?.key,

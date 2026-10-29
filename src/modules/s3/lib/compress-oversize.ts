@@ -13,6 +13,8 @@ export async function compressOversizeImage(
   buf: Buffer,
 ): Promise<{ out: Buffer; width: number; height: number }> {
   const out = await sharp(buf)
+    // 按 EXIF 方向自动旋转，避免超大图压缩后横躺或颠倒
+    .rotate()
     .resize({ width: 6000, height: 6000, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 85 })
     .toBuffer();
@@ -28,11 +30,16 @@ export async function downloadObject(key: string): Promise<Buffer> {
 }
 
 
+/** 超限对象压缩后的新 key（原扩展名替换为 .c.jpg） */
+export function compressedKey(key: string): string {
+  return key.replace(/(\.[^.]+)$/, ".c.jpg");
+}
+
 /** 把 COS 上超限的对象替换为压缩后的 .c.jpg，返回新 key */
 export async function replaceWithCompressed(key: string): Promise<string> {
   const raw = await downloadObject(key);
   const { out } = await compressOversizeImage(raw);
-  const newKey = key.replace(/(\.[^.]+)$/, ".c.jpg");
+  const newKey = compressedKey(key);
   await s3Client.send(
     new PutObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME!,

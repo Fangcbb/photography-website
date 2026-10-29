@@ -279,7 +279,8 @@ export class S3Client {
             "/api/upload/multipart/complete",
             { key: init.key, uploadId: init.uploadId, parts }, init.token,
           );
-          if (done.key !== init.key) throw new UploadError("服务器未确认文件已存储", 502);
+          // 服务端可能对超大图压缩并替换 key（如 .c.jpg），以可信响应的 finalKey 为准
+          if (!done.key) throw new UploadError("服务器未确认文件已存储", 502);
           onProgress?.(100);
           return done.key;
         } catch (error) {
