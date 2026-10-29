@@ -17,7 +17,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { OctagonAlert } from "lucide-react";
+import { OctagonAlert, CheckCircle2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { authClient } from "../../lib/auth-client";
 
@@ -28,6 +39,7 @@ const signInSchema = z.object({
   }),
 });
 
+const RESET_EMAIL = "1466719@qq.com";
 const FALLBACK_COVER = "/bg.jpg";
 
 const AuthShaderBackground = dynamicImport(
@@ -37,7 +49,10 @@ const AuthShaderBackground = dynamicImport(
 
 export const SignInView = ({ coverId }: { coverId?: string | null }) => {
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotPending, setForgotPending] = useState(false);
   const [cover, setCover] = useState(
     coverId ? `/api/photo/v2/${coverId}?v=display` : FALLBACK_COVER,
   );
@@ -67,6 +82,30 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
         onError: ({ error }) => {
           setPending(false);
           setError(error.message);
+        },
+      }
+    );
+  };
+
+  const handleForgotPassword = () => {
+    setForgotPending(true);
+    setError(null);
+    setNotice(null);
+
+    authClient.requestPasswordReset(
+      {
+        email: RESET_EMAIL,
+        redirectTo: "/reset-password",
+      },
+      {
+        onSuccess: () => {
+          setForgotPending(false);
+          setForgotOpen(false);
+          setNotice("重置邮件已发送，请查收邮箱（链接 15 分钟内有效）");
+        },
+        onError: ({ error }) => {
+          setForgotPending(false);
+          setError(error.message ?? "发送失败，请稍后重试");
         },
       }
     );
@@ -126,7 +165,50 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
                       </FormItem>
                     )}
                   />
+                  <div className="flex justify-end">
+                    <AlertDialog open={forgotOpen} onOpenChange={setForgotOpen}>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                        >
+                          忘记密码？
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>确认发送重置邮件？</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            我们将向注册邮箱（{RESET_EMAIL}
+                            ）发送一封包含重置链接的邮件，链接将在 15
+                            分钟后失效，请及时查收。
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={forgotPending}>
+                            取消
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            disabled={forgotPending}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              handleForgotPassword();
+                            }}
+                          >
+                            {forgotPending && <Spinner />}
+                            发送重置邮件
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
+                {!!notice && (
+                  <Alert className="bg-emerald-500/15 border-none">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600!" />
+                    <AlertTitle>{notice}</AlertTitle>
+                  </Alert>
+                )}
                 {!!error && (
                   <Alert className="bg-destructive/10 border-none">
                     <OctagonAlert className="h-4 w-4 text-destructive!" />

@@ -6,6 +6,7 @@ import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { nextCookies } from "better-auth/next-js";
 import { count } from "drizzle-orm";
+import { sendResetEmail } from "./send-reset-email";
 
 export const auth = betterAuth({
   trustedOrigins: [
@@ -20,6 +21,11 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    resetPasswordTokenExpiresIn: 15 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendResetEmail({ to: user.email, url });
+    },
   },
 
   rateLimit: {
@@ -28,6 +34,8 @@ export const auth = betterAuth({
     max: 100,
     customRules: {
       "/sign-in/email": { window: 60 * 60, max: 5 },
+      "/request-password-reset": { window: 60 * 60, max: 3 },
+      "/reset-password": { window: 15 * 60, max: 10 },
     },
   },
 
