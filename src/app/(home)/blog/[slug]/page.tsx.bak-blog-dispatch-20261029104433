@@ -1,0 +1,186 @@
+export const dynamic = "force-dynamic";
+
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { VideoPlayerView, VideoPlayerLoadingState } from "@/modules/video/ui/views/video-player-view";
+import { getQueryClient } from "@/trpc/server";
+import { trpc } from "@/trpc/server";
+import { HydrationBoundary } from "@tanstack/react-query";
+import { dehydrate } from "@tanstack/react-query";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
+import { db } from "@/db";
+import { posts } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
+import Link from "next/link";
+
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const slug = (await params).slug;
+  const decodedSlug = decodeURIComponent(slug);
+
+  try {
+    const queryClient = getQueryClient();
+    const data = await queryClient.fetchQuery(
+      trpc.video.getOne.queryOptions({ slug: decodedSlug })
+    );
+    return {
+      title: data.title,
+      description: data.description || `${data.title} - 方斌视频`,
+      alternates: { canonical: `https://www.fangc.cc/blog/${decodedSlug}` },
+      openGraph: {
+        title: data.title,
+        description: data.description || `${data.title} - 方斌视频`,
+        type: "video.other",
+        videos: data.videoUrl ? [data.videoUrl] : undefined,
+        images: data.thumbnailUrl ? [data.thumbnailUrl] : undefined,
+      },
+    };
+  } catch {}
+
+  const [post] = await db
+    .select({ title: posts.title, description: posts.description })
+    .from(posts)
+    .where(and(eq(posts.slug, decodedSlug), eq(posts.visibility, "public")))
+    .limit(1);
+
+  return {
+    title: post?.title || "内容不存在",
+    description: post?.description || "内容不存在或已被删除",
+    alternates: { canonical: `https://www.fangc.cc/blog/${decodedSlug}` },
+  };
+}
+
+export default async function page({ params }: Props) {
+  const slug = (await params).slug;
+  const decodedSlug = decodeURIComponent(slug);
+  const BASE_URL = "https://www.fangc.cc";
+
+  // 1) 文字游记：posts 表命中公开记录 → 渲染文章视图
+  const [post] = await db
+    .select()
+    .from(posts)
+    .where(and(eq(posts.slug, decodedSlug), eq(posts.visibility, "public")))
+    .limit(1);
+
+  if (post) {
+    return (
+      <div className="min-h-screen w-full">
+        <article className="max-w-3xl mx-auto px-4 md:px-8 py-16 relative z-10">
+          <Link
+            href="/blog"
+            className="text-sm opacity-70 hover:opacity-100 mb-8 inline-block"
+          >
+            &larr; Back to Blog
+          </Link>
+          <h1 className="text-3xl md:text-4xl font-semibold mb-4">
+            {post.title}
+          </h1>
+          <p className="text-sm opacity-60 mb-10">
+            {post.updatedAt ? new Date(post.updatedAt).toISOString().slice(0, 10) : ""}
+          </p>
+          {post.description && (
+            <p className="text-base opacity-80 mb-8 font-light leading-relaxed">
+              {post.description}
+            </p>
+          )}
+          {post.content && (
+            <div
+              className="prose prose-invert max-w-none opacity-90"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          )}
+        </article>
+      </div>
+    );
+  }
+
+  // 2) 视频：原逻辑（失败 → 404）
+  let video: Awaited<ReturnType<typeof getVideo>> | null = null;
+  try {
+    video = await getVideo(decodedSlug);
+  } catch {}
+
+  if (!video) {
+    notFound();
+  }
+
+  const queryClient = getQueryClient();
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {/* VideoObject 结构化数据 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            "name": video.title,
+            "description": video.description || video.title,
+            "thumbnailUrl": video.thumbnailUrl ? keyToUrl(video.thumbnailUrl) : undefined,
+            "contentUrl": video.videoUrl ? keyToUrl(video.videoUrl) : undefined,
+            "url": `${BASE_URL}/blog/${decodedSlug}`,
+            "uploadDate": video.createdAt ? new Date(video.createdAt).toISOString() : undefined,
+            "duration": video.videoDuration ? `PT${video.videoDuration}S` : undefined,
+            "author": {
+              "@type": "Person",
+              "name": "Fang Bing",
+              "url": BASE_URL
+            },
+            "publisher": {
+              "@type": "Person",
+              "name": "Fang Bing"
+            }
+          }),
+        }}
+      />
+      {/* BreadcrumbList 结构化数据 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首页",
+                "item": BASE_URL
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "视频",
+                "item": `${BASE_URL}/blog`
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": video.title,
+                "item": `${BASE_URL}/blog/${decodedSlug}`
+              }
+            ]
+          }),
+        }}
+      />
+      <Suspense fallback={<VideoPlayerLoadingState />}>
+        <ErrorBoundary fallback={<p className="text-white p-8">加载失败</p>}>
+          <VideoPlayerView slug={decodedSlug} />
+        </ErrorBoundary>
+      </Suspense>
+    </HydrationBoundary>
+  );
+}
+
+async function getVideo(slug: string) {
+  const queryClient = getQueryClient();
+  return queryClient.fetchQuery(
+    trpc.video.getOne.queryOptions({ slug })
+  );
+}

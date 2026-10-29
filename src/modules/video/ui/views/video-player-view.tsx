@@ -9,6 +9,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
+function getVideoPosterUrl(video: { videoUrl: string; thumbnailUrl?: string | null }) {
+  if (video.thumbnailUrl) return keyToUrl(video.thumbnailUrl);
+  const videoUrl = keyToUrl(video.videoUrl);
+  return `${videoUrl}${videoUrl.includes("?") ? "&" : "?"}ci-process=snapshot&time=1&format=jpg`;
+}
+
 interface VideoPlayerViewProps {
   slug: string;
 }
@@ -115,7 +121,9 @@ export const VideoPlayerView = ({ slug }: VideoPlayerViewProps) => {
               ref={videoRef}
               src={keyToUrl(video.videoUrl)}
               className="w-full aspect-video"
-              poster={video.thumbnailUrl ? keyToUrl(video.thumbnailUrl) : undefined}
+              poster={getVideoPosterUrl(video)}
+              playsInline
+              preload="metadata"
               onClick={togglePlay}
             />
 

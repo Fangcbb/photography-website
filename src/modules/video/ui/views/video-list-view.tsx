@@ -12,8 +12,19 @@ import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import Carousel from "@/components/photo-carousel";
 import { useState, useRef, useEffect } from "react";
 
+/**
+ * 视频可能没有独立 thumbnail_url。腾讯云 CI 可从 MP4 按需生成一帧 JPEG；
+ * query 参数放在 COS 对象 URL 上，视频播放本身仍使用原 MP4 地址。
+ */
+function getVideoPosterUrl(video: { videoUrl: string; thumbnailUrl?: string | null }) {
+  if (video.thumbnailUrl) return keyToUrl(video.thumbnailUrl);
+  const videoUrl = keyToUrl(video.videoUrl);
+  return `${videoUrl}${videoUrl.includes("?") ? "&" : "?"}ci-process=snapshot&time=1&format=jpg`;
+}
+
 // 视频卡片组件（单独提取以使用 hooks）
 const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (seconds?: number) => string }) => {
+  const posterUrl = getVideoPosterUrl(video);
   const [isHovering, setIsHovering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -33,9 +44,9 @@ const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (sec
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {video.thumbnailUrl && !isHovering ? (
+      {!isHovering ? (
         <img
-          src={keyToUrl(video.thumbnailUrl)}
+          src={posterUrl}
           alt={video.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -46,6 +57,7 @@ const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (sec
           className="w-full h-full object-cover"
           muted
           playsInline
+          poster={posterUrl}
           loop
           preload="metadata"
         />
@@ -91,18 +103,12 @@ export const VideoListView = () => {
                   href={`/blog/${video.slug}`}
                   className="block w-full h-full relative group"
                 >
-                  {video.thumbnailUrl ? (
-                    <img
-                      src={keyToUrl(video.thumbnailUrl)}
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <video
-                      src={keyToUrl(video.videoUrl)}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+                  <img
+                    src={getVideoPosterUrl(video)}
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                     <h2 className="text-2xl font-bold mb-2">{video.title}</h2>
