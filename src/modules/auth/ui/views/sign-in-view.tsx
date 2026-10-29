@@ -39,7 +39,6 @@ const signInSchema = z.object({
   }),
 });
 
-const RESET_EMAIL = "1466719@qq.com";
 const FALLBACK_COVER = "/bg.jpg";
 
 const AuthShaderBackground = dynamicImport(
@@ -52,6 +51,7 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
   const [forgotPending, setForgotPending] = useState(false);
   const [cover, setCover] = useState(
     coverId ? `/api/photo/v2/${coverId}?v=display` : FALLBACK_COVER,
@@ -94,7 +94,7 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
 
     authClient.requestPasswordReset(
       {
-        email: RESET_EMAIL,
+        email: forgotEmail,
         redirectTo: "/reset-password",
       },
       {
@@ -177,19 +177,24 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>确认发送重置邮件？</AlertDialogTitle>
+                          <AlertDialogTitle>发送重置邮件</AlertDialogTitle>
                           <AlertDialogDescription>
-                            我们将向注册邮箱（{RESET_EMAIL}
-                            ）发送一封包含重置链接的邮件，链接将在 15
-                            分钟后失效，请及时查收。
+                            请输入你的注册邮箱，我们将发送一封包含重置链接的邮件，链接将在 15 分钟后失效，请及时查收。
                           </AlertDialogDescription>
+                          <input
+                            type="email"
+                            value={forgotEmail}
+                            onChange={(e) => setForgotEmail(e.target.value)}
+                            placeholder="you@example.com"
+                            className="mt-2 w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                          />
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel disabled={forgotPending}>
                             取消
                           </AlertDialogCancel>
                           <AlertDialogAction
-                            disabled={forgotPending}
+                            disabled={forgotPending || !forgotEmail.includes("@")}
                             onClick={(event) => {
                               event.preventDefault();
                               handleForgotPassword();
