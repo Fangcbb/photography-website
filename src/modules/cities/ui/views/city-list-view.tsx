@@ -14,8 +14,8 @@ export function CityListView() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-4 md:px-8">
         <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">还没有城市</h3>
-        <p className="text-muted-foreground">上传带位置信息的照片，即可看到你的城市收藏</p>
+        <h3 className="text-lg font-semibold mb-2">No Cities Yet</h3>
+        <p className="text-muted-foreground">Upload photos with location data to see your city collection</p>
       </div>
     );
   }
@@ -46,8 +46,8 @@ export function CityListLoadingView() {
 export function CityListErrorView() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center px-4 md:px-8">
-      <p className="text-destructive mb-2">城市加载失败</p>
-      <p className="text-sm text-muted-foreground">请尝试刷新页面</p>
+      <p className="text-destructive mb-2">Failed to load cities</p>
+      <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { cache } from "react";
+import Link from "next/link";
 import { db } from "@/db";
-import { videos } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { videos, posts } from "@/db/schema";
+import { eq, asc, desc } from "drizzle-orm";
 import {
   VideoListView,
   VideoListLoadingStatus,
@@ -63,8 +64,75 @@ const getSeoVideos = cache(async () => {
   }
 });
 
+// 公开文字游记（服务端预取，保证 SEO 可爬）
+const getPublicPosts = cache(async () => {
+  try {
+    return await db
+      .select({
+        id: posts.id,
+        slug: posts.slug,
+        title: posts.title,
+        description: posts.description,
+        updatedAt: posts.updatedAt,
+      })
+      .from(posts)
+      .where(eq(posts.visibility, "public"))
+      .orderBy(desc(posts.updatedAt))
+      .limit(12);
+  } catch {
+    return [];
+  }
+});
+
+// 文字游记区块（服务端渲染，样式与视频卡片风格一致）
+const WrittenJournals = ({ items }: { items: {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  updatedAt: Date;
+}[] }) => {
+  if (items.length === 0) return null;
+
+  return (
+    <section className="w-full relative z-10 max-w-[1440px] mx-auto lg:w-1/2 lg:ml-auto p-3">
+      <div className="bg-muted rounded-xl">
+        <div className="p-8">
+          <h2 className="text-2xl mb-6">Written Journals</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {items.map((post) => (
+              <Link
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className="block rounded-xl overflow-hidden bg-background/50 p-4 hover:bg-background/80 transition-colors group"
+              >
+                <h3 className="font-semibold line-clamp-2 mb-1 group-hover:underline">
+                  {post.title}
+                </h3>
+                <div className="flex items-center gap-3 text-xs opacity-80 mb-2">
+                  <span>
+                    {new Date(post.updatedAt).toISOString().slice(0, 10)}
+                  </span>
+                </div>
+                {post.description && (
+                  <p className="text-sm font-light line-clamp-2">
+                    {post.description}
+                  </p>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const page = async () => {
-  const seoVideos = await getSeoVideos();
+  const [seoVideos, publicPosts] = await Promise.all([
+    getSeoVideos(),
+    getPublicPosts(),
+  ]);
 
   return (
     <>
@@ -103,6 +171,9 @@ const page = async () => {
           }}
         />
       )}
+
+      {/* 文字游记区块（服务端渲染，SEO 可爬） */}
+      <WrittenJournals items={publicPosts} />
 
       {/* 实际页面：客户端 React Query 获取完整数据 */}
       <Suspense fallback={<VideoListLoadingStatus />}>

@@ -135,7 +135,6 @@ npm run dev
 | `MUSIC_U`, `MUSIC_R_U`, `MUSIC_R_T`, `MUSIC_A_T` | optional | NetEase cookie fields for VIP sources |
 | `NEXT_PUBLIC_GA_ID` | optional | GA4 |
 | `LOG_DIR` | optional | where JSONL error logs are written (`~/logs` by default) |
-| `DATABASE_URL_SECONDARY` | optional | dual-write target for migrations |
 
 ### Build & run
 

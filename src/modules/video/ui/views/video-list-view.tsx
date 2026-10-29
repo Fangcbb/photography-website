@@ -57,7 +57,7 @@ const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (sec
           {video.videoDuration && (
             <span>{formatDuration(video.videoDuration)}</span>
           )}
-          <span>{video.viewCount} 次观看</span>
+          <span>{video.viewCount} views</span>
         </div>
       </div>
     </Link>
@@ -116,7 +116,7 @@ export const VideoListView = () => {
                       )}
                       <span className="flex items-center gap-1">
                         <Eye className="h-4 w-4" />
-                        {video.viewCount} 次观看
+                        {video.viewCount} views
                       </span>
                     </div>
                   </div>
@@ -131,7 +131,7 @@ export const VideoListView = () => {
           </Carousel>
         ) : (
           <div className="w-full h-full bg-muted rounded-xl flex items-center justify-center">
-            <p className="text-muted-foreground">暂无视频</p>
+            <p className="text-muted-foreground">No videos yet</p>
           </div>
         )}
       </div>

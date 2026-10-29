@@ -159,10 +159,10 @@ export const VideoPlayerView = ({ slug }: VideoPlayerViewProps) => {
                   onClick={togglePlay}
                   className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
-                  {isPlaying ? "暂停" : "播放"}
+                  {isPlaying ? "Pause" : "Play"}
                 </Button>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">音量</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Volume</span>
                   <input
                     type="range"
                     min={0}
@@ -180,7 +180,7 @@ export const VideoPlayerView = ({ slug }: VideoPlayerViewProps) => {
                 onClick={toggleFullscreen}
                 className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
               >
-                {isFullscreen ? "退出全屏" : "全屏"}
+                {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               </Button>
             </div>
           </div>
@@ -197,7 +197,7 @@ export const VideoPlayerView = ({ slug }: VideoPlayerViewProps) => {
               )}
               <span className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
-                {video.viewCount} 次观看
+                {video.viewCount} views
               </span>
               {video.updatedAt && (
                 <span className="flex items-center gap-1">

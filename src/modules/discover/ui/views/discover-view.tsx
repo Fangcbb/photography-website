@@ -272,7 +272,7 @@ export const DiscoverView = () => {
                             : ""}
                         </p>
                         {photo.type === "video" && (
-                          <span className="text-xs text-primary">视频</span>
+                          <span className="text-xs text-primary">Video</span>
                         )}
                       </div>
                     </div>
@@ -343,7 +343,7 @@ export const DiscoverView = () => {
                           : ""}
                       </p>
                       {photo.type === "video" && (
-                        <span className="text-xs text-primary">视频</span>
+                        <span className="text-xs text-primary">Video</span>
                       )}
                     </div>
                   </div>

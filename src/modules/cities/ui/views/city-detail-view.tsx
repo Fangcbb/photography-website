@@ -75,10 +75,10 @@ export function CityDetailView({ city }: CityDetailViewProps) {
         await queryClient.invalidateQueries(
           trpc.travel.getCitySets.queryOptions()
         );
-        toast.success("描述更新成功");
+        toast.success("Description updated");
       },
       onError: (error) => {
-        toast.error(error.message || "描述更新失败");
+        toast.error(error.message || "Failed to update description");
       },
     })
   );
@@ -113,10 +113,10 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           await queryClient.invalidateQueries(
             trpc.travel.getCitySets.queryOptions()
           );
-          toast.success("首页封面已更新");
+          toast.success("Homepage cover updated");
         },
         onError: (error) => {
-          toast.error(error.message || "封面照片更新失败");
+          toast.error(error.message || "Failed to update cover photo");
         },
       }
     );
@@ -130,7 +130,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
             <MapPin className="h-10 w-10 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold">城市不存在</h3>
+            <h3 className="text-xl font-semibold">City not found</h3>
             <p className="text-muted-foreground text-sm">
               The city you&apos;re looking for doesn&apos;t exist or may have
               been removed.
@@ -138,7 +138,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           </div>
           <Link href="/dashboard/cities">
             <Button variant="outline" className="min-w-[140px]">
-              <ArrowLeft className="mr-2 h-4 w-4" />返回城市</Button>
+              <ArrowLeft className="mr-2 h-4 w-4" />Back to Cities</Button>
           </Link>
         </div>
       </div>
@@ -153,7 +153,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           <div className="mb-6">
             <Link href="/dashboard/cities">
               <Button variant="ghost" className="mb-4 -ml-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />返回城市</Button>
+                <ArrowLeft className="mr-2 h-4 w-4" />Back to Cities</Button>
             </Link>
           </div>
           {/* Header Section */}
@@ -195,11 +195,11 @@ export function CityDetailView({ city }: CityDetailViewProps) {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-medium">城市描述</FormLabel>
+                        <FormLabel className="text-base font-medium">City Description</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="为这个城市写点介绍…"
+                            placeholder="Write an introduction for this city…"
                             className="min-h-[100px] resize-none"
                             rows={4}
                           />
@@ -215,8 +215,8 @@ export function CityDetailView({ city }: CityDetailViewProps) {
                       className="min-w-[100px]"
                     >
                       {updateDescription.isPending
-                        ? "保存中…"
-                        : "保存描述"}
+                        ? "Saving…"
+                        : "Save Description"}
                     </Button>
                   </div>
                 </form>
@@ -243,8 +243,8 @@ export function CityDetailView({ city }: CityDetailViewProps) {
                   size="icon"
                   title={
                     photo.id === cityData.coverPhotoId
-                      ? "点击取消首页封面（回退为最新照片）"
-                      : "设为首页城市封面"
+                      ? "Click to unset as homepage cover (reverts to latest photo)"
+                      : "Set as homepage city cover"
                   }
                   onClick={() => handleSetCover(photo.id)}
                 >
@@ -294,10 +294,10 @@ export function CityDetailLoadingView() {
 export function CityDetailErrorView() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center px-4 md:px-8">
-      <p className="text-destructive mb-2">城市详情加载失败</p>
+      <p className="text-destructive mb-2">Failed to load city details</p>
       <Link href="/dashboard/cities">
         <Button variant="outline" className="mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />返回城市</Button>
+          <ArrowLeft className="mr-2 h-4 w-4" />Back to Cities</Button>
       </Link>
     </div>
   );
