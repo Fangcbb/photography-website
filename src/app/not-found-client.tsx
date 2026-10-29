@@ -255,7 +255,7 @@ export default function NotFoundClient() {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap");
 
         html, body {
@@ -519,7 +519,7 @@ export default function NotFoundClient() {
             width: clamp(72px, 18vw, 100px);
           }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }
