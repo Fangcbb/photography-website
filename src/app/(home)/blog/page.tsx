@@ -95,7 +95,7 @@ const WrittenJournals = ({ items }: { items: {
   if (items.length === 0) return null;
 
   return (
-    <section className="w-full relative z-10 max-w-[1440px] mx-auto lg:w-1/2 lg:ml-auto p-3">
+    <section className="w-full">
       <div className="bg-muted rounded-xl">
         <div className="p-8">
           <h2 className="text-2xl mb-6">Written Journals</h2>

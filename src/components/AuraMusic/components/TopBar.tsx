@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useI18n } from "../hooks/useI18n";
 import { SearchIcon, CloudDownloadIcon, FullscreenIcon, MenuIcon, CloseIcon } from "./Icons";
+import FlipLink from "@/components/flip-link";
 
 interface TopBarProps {
   onFilesSelected: (files: FileList) => void;
@@ -111,22 +112,18 @@ const TopBar: React.FC<TopBarProps> = ({
           {/* Nav links */}
           <nav className="flex items-center gap-5">
             {navLinks.map((link) => (
-              <a
+              <span
                 key={link.href}
-                href={link.href}
-                className={`relative block overflow-hidden whitespace-nowrap font-light text-sm text-white/60 hover:text-white transition-colors ${
-                  link.href === "/music" ? "text-white font-medium" : ""
+                className={`transition-colors ${
+                  link.href === "/music"
+                    ? "text-white [&>a]:font-medium"
+                    : "text-white/60 hover:text-white"
                 }`}
               >
-                <div className="relative overflow-hidden">
-                  <span className="block transition-transform duration-300 ease-in-out hover:-translate-y-full">
-                    {link.label}
-                  </span>
-                  <span className="absolute inset-0 translate-y-full transition-transform duration-300 ease-in-out hover:translate-y-0">
-                    {link.label}
-                  </span>
-                </div>
-              </a>
+                {/* Use the shared page-header FlipLink so music hover timing,
+                    per-letter stagger, easing, and clipping match other pages. */}
+                <FlipLink href={link.href}>{link.label}</FlipLink>
+              </span>
             ))}
           </nav>
 
