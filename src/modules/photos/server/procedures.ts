@@ -13,7 +13,7 @@ import {
   photosUpdateSchema,
   photosInsertSchema,
 } from "@/db/schema";
-import { dualUpdate, dualDelete, dualTransaction } from "@/db";
+import { db, dualUpdate, dualTransaction } from "@/db";
 import { buildCitySlug } from "@/modules/photos/server/city-slug";
 import { TRPCError } from "@trpc/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
@@ -36,15 +36,30 @@ function toS3Key(url: string | null | undefined): string | null {
   return url;
 }
 
+// JP/TW 城市集以 region 作为 cityName，其余以 city，与 create 保持同一口径
+function citySetCityKey(
+  photo: { countryCode?: string | null; region?: string | null; city?: string | null }
+): string | null {
+  const key =
+    photo.countryCode === "JP" || photo.countryCode === "TW"
+      ? photo.region
+      : photo.city;
+  return key || null;
+}
+
+// JP/TW 的照片按 region 关联城市集，其余按 city
+function photoCityEq(countryCode: string | null, cityKey: string) {
+  return countryCode === "JP" || countryCode === "TW"
+    ? eq(photos.region, cityKey)
+    : eq(photos.city, cityKey);
+}
+
 export const photosRouter = createTRPCRouter({
   create: protectedProcedure
     .input(photosInsertSchema)
     .mutation(async ({ ctx, input }) => {
       const values = input;
-      const cityName =
-        values.countryCode === "JP" || values.countryCode === "TW"
-          ? values.region
-          : values.city;
+      const cityName = citySetCityKey(values);
 
       try {
         // Photo + city aggregate must commit or roll back together. The previous
@@ -124,16 +139,18 @@ export const photosRouter = createTRPCRouter({
           });
         }
 
+        const cityKey = citySetCityKey(photo);
+
         await dualTransaction(async (tx) => {
           // city set related
-          if (photo.country && photo.city) {
+          if (photo.country && cityKey) {
             const [citySet] = await tx
               .select()
               .from(citySets)
               .where(
                 and(
                   eq(citySets.country, photo.country),
-                  eq(citySets.city, photo.city),
+                  eq(citySets.city, cityKey),
                 ),
               );
 
@@ -146,7 +163,7 @@ export const photosRouter = createTRPCRouter({
                 .where(
                   and(
                     eq(photos.country, photo.country),
-                    eq(photos.city, photo.city),
+                    photoCityEq(photo.countryCode, cityKey),
                     eq(photos.visibility, "public"),
                     sql`${photos.id} != ${photo.id}`,
                   ),
@@ -154,7 +171,7 @@ export const photosRouter = createTRPCRouter({
 
               if (remaining.count === 0) {
                 // last public photo in city — delete the city set
-                await dualDelete(citySets).where(eq(citySets.id, citySet.id));
+                await tx.delete(citySets).where(eq(citySets.id, citySet.id));
               } else {
                 // find new cover photo if current cover is being deleted
                 const newCoverPhotoId =
@@ -166,7 +183,7 @@ export const photosRouter = createTRPCRouter({
                           .where(
                             and(
                               eq(photos.country, photo.country),
-                              eq(photos.city, photo.city),
+                              photoCityEq(photo.countryCode, cityKey),
                               eq(photos.visibility, "public"),
                               sql`${photos.id} != ${photo.id}`,
                             ),
@@ -176,11 +193,10 @@ export const photosRouter = createTRPCRouter({
                       )[0]?.id
                     : undefined;
 
-                // photoCount is a defensive decrement only — the real-time
-                // count above is the source of truth for the last-photo check.
-                await dualUpdate(citySets)
+                // 以实时公开计数为准，避免私有照片删除被错误扣减计数
+                await tx.update(citySets)
                   .set({
-                    photoCount: sql`greatest(${citySets.photoCount} - 1, 0)`,
+                    photoCount: remaining.count,
                     ...(newCoverPhotoId
                       ? { coverPhotoId: newCoverPhotoId }
                       : {}),
@@ -189,7 +205,7 @@ export const photosRouter = createTRPCRouter({
                   .where(
                     and(
                       eq(citySets.country, photo.country),
-                      eq(citySets.city, photo.city),
+                      eq(citySets.city, cityKey),
                     ),
                   );
               }
@@ -197,7 +213,7 @@ export const photosRouter = createTRPCRouter({
           }
 
           // delete photo record (S3 deletion happens after the transaction)
-          await dualDelete(photos).where(eq(photos.id, id));
+          await tx.delete(photos).where(eq(photos.id, id));
         });
 
         // S3 delete after DB — orphan file is acceptable, inconsistent DB is not
@@ -265,9 +281,11 @@ export const photosRouter = createTRPCRouter({
       }
 
       // Keep citySet photoCount in sync when visibility flips.
+      const cityKey = citySetCityKey(updatedPhoto);
       if (
         updatedPhoto.country &&
-        updatedPhoto.city &&
+        updatedPhoto.countryCode &&
+        cityKey &&
         existing.visibility !== updatedPhoto.visibility
       ) {
         try {
@@ -287,7 +305,7 @@ export const photosRouter = createTRPCRouter({
               .where(
                 and(
                   eq(citySets.country, updatedPhoto.country),
-                  eq(citySets.city, updatedPhoto.city),
+                  eq(citySets.city, cityKey),
                 ),
               );
 
@@ -299,7 +317,7 @@ export const photosRouter = createTRPCRouter({
               .where(
                 and(
                   eq(citySets.country, updatedPhoto.country),
-                  eq(citySets.city, updatedPhoto.city),
+                  eq(citySets.city, cityKey),
                   eq(citySets.coverPhotoId, updatedPhoto.id),
                 ),
               );
@@ -311,7 +329,7 @@ export const photosRouter = createTRPCRouter({
                 .where(
                   and(
                     eq(photos.country, updatedPhoto.country),
-                    eq(photos.city, updatedPhoto.city),
+                    photoCityEq(updatedPhoto.countryCode, cityKey),
                     eq(photos.visibility, "public"),
                     sql`${photos.id} != ${updatedPhoto.id}`,
                   ),
@@ -327,24 +345,35 @@ export const photosRouter = createTRPCRouter({
                 .where(
                   and(
                     eq(citySets.country, updatedPhoto.country),
-                    eq(citySets.city, updatedPhoto.city),
+                    eq(citySets.city, cityKey),
                     eq(citySets.coverPhotoId, updatedPhoto.id),
                   ),
                 );
             }
           } else if (becamePublic) {
-            // only increment when the city set already exists
-            await dualUpdate(citySets)
-              .set({
-                photoCount: sql`${citySets.photoCount} + 1`,
-                updatedAt: new Date(),
-              })
-              .where(
-                and(
-                  eq(citySets.country, updatedPhoto.country),
-                  eq(citySets.city, updatedPhoto.city),
+            // 恢复公开：城市集可能已被删除，用 upsert 重建并恢复封面
+            await db.insert(citySets)
+              .values({
+                country: updatedPhoto.country,
+                countryCode: updatedPhoto.countryCode,
+                city: cityKey,
+                slug: buildCitySlug(
+                  updatedPhoto.countryCode,
+                  updatedPhoto.country,
+                  cityKey,
                 ),
-              );
+                photoCount: 1,
+                coverPhotoId: updatedPhoto.id,
+              })
+              .onConflictDoUpdate({
+                target: [citySets.country, citySets.city],
+                set: {
+                  countryCode: updatedPhoto.countryCode,
+                  photoCount: sql`${citySets.photoCount} + 1`,
+                  coverPhotoId: updatedPhoto.id,
+                  updatedAt: new Date(),
+                },
+              });
           }
         } catch (error) {
           console.error("citySet photoCount sync failed:", error);
