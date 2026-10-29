@@ -52,9 +52,10 @@ export const ResetPasswordView = ({ coverId }: { coverId?: string | null }) => {
     const params = new URLSearchParams(window.location.search);
     // better-auth 1.7 邮件链接为路径式: /reset-password/<token>?callbackURL=...
     const pathSeg = window.location.pathname.split("/").filter(Boolean);
+    const rpIdx = pathSeg.indexOf("reset-password");
     const pathToken =
-      pathSeg[0] === "reset-password" && pathSeg.length > 1
-        ? decodeURIComponent(pathSeg[1])
+      rpIdx !== -1 && pathSeg.length > rpIdx + 1
+        ? decodeURIComponent(pathSeg[rpIdx + 1])
         : null;
     const tokenParam = params.get("token") ?? pathToken;
     setToken(tokenParam);
