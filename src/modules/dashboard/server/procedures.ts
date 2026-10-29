@@ -64,6 +64,34 @@ export const dashboardRouter = createTRPCRouter({
       return monthlyData;
     }),
 
+
+  getGa4Overview: protectedProcedure
+    .input(
+      z
+        .object({
+          days: z.number().min(1).max(90).default(30),
+        })
+        .optional(),
+    )
+    .query(async ({ input }) => {
+      const days = input?.days ?? 30;
+      const { fetchGa4Overview } = await import("./ga4");
+      try {
+        const data = await fetchGa4Overview(days);
+        return { ok: true as const, ...data };
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "GA4_ERROR";
+        return {
+          ok: false as const,
+          configured: false,
+          daily: [],
+          totalPv: 0,
+          totalUv: 0,
+          sources: [],
+          error: message,
+        };
+      }
+    }),
   getVisitedCountries: protectedProcedure.query(async ({ ctx }) => {
     const result = await ctx.db
       .select({
