@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
@@ -76,9 +77,14 @@ const Page = async ({ params }: Props) => {
   const { slug } = await params;
 
   const queryClient = getQueryClient();
-  const data = await queryClient.fetchQuery(
-    trpc.travel.getBySlug.queryOptions({ slug }),
-  );
+  let data;
+  try {
+    data = await queryClient.fetchQuery(
+      trpc.travel.getBySlug.queryOptions({ slug }),
+    );
+  } catch {
+    notFound();
+  }
 
   const city = data.city;
   const country = data.country;
