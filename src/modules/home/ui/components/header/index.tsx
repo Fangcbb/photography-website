@@ -22,7 +22,7 @@ const Header = () => {
         className="fixed left-3 z-50 bg-background rounded-br-[18px]"
         style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
-        <div className="relative">
+        <div className="relative font-system-plain">
           <Navbar onMobileMenuToggle={() => setIsMobileMenuOpen(true)} />
 
           {/* MOBILE TOP BAR — safe-area background */}
