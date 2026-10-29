@@ -4,6 +4,12 @@ import { desc, eq, and } from "drizzle-orm";
 import { citySets, photos } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 
+// JP/TW 的城市集以 region 作为 cityName，其余以 city；照片匹配按同一口径
+function photoCityMatch(citySet: { countryCode: string; city: string }) {
+  const isJpTw = citySet.countryCode === "JP" || citySet.countryCode === "TW";
+  return isJpTw ? eq(photos.region, citySet.city) : eq(photos.city, citySet.city);
+}
+
 export const travelRouter = createTRPCRouter({
   getCitySets: baseProcedure.query(async ({ ctx }) => {
     const data = await ctx.db.query.citySets.findMany({
@@ -22,7 +28,12 @@ export const travelRouter = createTRPCRouter({
       orderBy: [desc(citySets.updatedAt)],
     });
 
-    return data;
+    // 公开接口不得泄露私有封面：私有封面置空，交由前端 fallback 处理
+    return data.map((row) =>
+      row.coverPhoto && row.coverPhoto.visibility === "public"
+        ? row
+        : { ...row, coverPhoto: null },
+    );
   }),
   getOne: baseProcedure
     .input(
@@ -46,7 +57,13 @@ export const travelRouter = createTRPCRouter({
       const cityPhotos = await ctx.db
         .select()
         .from(photos)
-        .where(and(eq(photos.city, citySet.city), eq(photos.visibility, "public")))
+        .where(
+          and(
+            eq(photos.country, citySet.country),
+            photoCityMatch(citySet),
+            eq(photos.visibility, "public"),
+          ),
+        )
         .orderBy(desc(photos.dateTimeOriginal), desc(photos.createdAt));
 
       return {
@@ -76,7 +93,13 @@ export const travelRouter = createTRPCRouter({
       const cityPhotos = await ctx.db
         .select()
         .from(photos)
-        .where(and(eq(photos.city, citySet.city), eq(photos.visibility, "public")))
+        .where(
+          and(
+            eq(photos.country, citySet.country),
+            photoCityMatch(citySet),
+            eq(photos.visibility, "public"),
+          ),
+        )
         .orderBy(desc(photos.dateTimeOriginal), desc(photos.createdAt));
 
       return {
