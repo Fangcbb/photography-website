@@ -35,8 +35,12 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      // 彻底禁用注册接口（但保留登录功能）
-      if (ctx.path.endsWith("/sign-up/email")) {
+      // 彻底禁用注册接口（但保留登录功能）。仅在显式设置 ALLOW_SIGNUP=true 时
+      // 放开，用于 seed:user 首次初始化管理员。
+      if (
+        ctx.path.endsWith("/sign-up/email") &&
+        process.env.ALLOW_SIGNUP !== "true"
+      ) {
         throw new APIError("FORBIDDEN", {
           message: "已停用注册。",
         });

@@ -31,6 +31,20 @@ ARG DATABASE_URL
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_S3_PUBLIC_URL
 ARG NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+# SSG 页在构建期会导入 db 触发 validateServerEnv，需要提供构建期占位值
+# （真实密钥在运行时注入，不要烘焙进镜像）
+ARG S3_ENDPOINT
+ARG S3_BUCKET_NAME
+ARG S3_ACCESS_KEY_ID
+ARG S3_SECRET_ACCESS_KEY
+ARG BETTER_AUTH_SECRET
+ARG BETTER_AUTH_URL
+ENV S3_ENDPOINT=$S3_ENDPOINT \
+    S3_BUCKET_NAME=$S3_BUCKET_NAME \
+    S3_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID \
+    S3_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY \
+    BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET \
+    BETTER_AUTH_URL=$BETTER_AUTH_URL
 RUN npm run build
 
 # ---- Production runner (optimized standalone output) ----
@@ -40,6 +54,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+
+# 健康检查使用 curl，需要在基础镜像中安装
+RUN apk add --no-cache curl
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
