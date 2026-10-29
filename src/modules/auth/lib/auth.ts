@@ -34,7 +34,7 @@ export const auth = betterAuth({
     max: 100,
     customRules: {
       "/sign-in/email": { window: 60 * 60, max: 5 },
-      "/request-password-reset": { window: 60 * 60, max: 3 },
+      "/request-password-reset": { window: 10 * 60, max: 1 }, // 10 分钟 1 封，防发信风控
       "/reset-password": { window: 15 * 60, max: 10 },
     },
   },

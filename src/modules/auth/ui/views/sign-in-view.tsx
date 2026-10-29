@@ -29,7 +29,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "../../lib/auth-client";
 
 const signInSchema = z.object({
@@ -52,6 +52,17 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
   const [pending, setPending] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotCooldown, setForgotCooldown] = useState(0);
+  const [forgotNow, setForgotNow] = useState(Date.now());
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("forgot-cooldown-until");
+      if (saved && Number(saved) > Date.now()) setForgotCooldown(Number(saved));
+    } catch {}
+    const t = setInterval(() => setForgotNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
   const [forgotPending, setForgotPending] = useState(false);
   const [cover, setCover] = useState(
     coverId ? `/api/photo/v2/${coverId}?v=display` : FALLBACK_COVER,
@@ -101,7 +112,10 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
         onSuccess: () => {
           setForgotPending(false);
           setForgotOpen(false);
-          setNotice("重置邮件已发送，请查收邮箱（链接 15 分钟内有效）");
+          const until = Date.now() + 10 * 60 * 1000;
+          try { localStorage.setItem("forgot-cooldown-until", String(until)); } catch {}
+          setForgotCooldown(until);
+          setNotice("重置邮件已发送，请查收邮箱（链接 15 分钟内有效；10 分钟内不可重复发送）");
         },
         onError: ({ error }) => {
           setForgotPending(false);
@@ -194,14 +208,20 @@ export const SignInView = ({ coverId }: { coverId?: string | null }) => {
                             取消
                           </AlertDialogCancel>
                           <AlertDialogAction
-                            disabled={forgotPending || !forgotEmail.includes("@")}
+                            disabled={
+                              forgotPending ||
+                              !forgotEmail.includes("@") ||
+                              forgotCooldown > forgotNow
+                            }
                             onClick={(event) => {
                               event.preventDefault();
                               handleForgotPassword();
                             }}
                           >
                             {forgotPending && <Spinner />}
-                            发送重置邮件
+                            {forgotCooldown > forgotNow
+                              ? `已发送，${Math.ceil((forgotCooldown - forgotNow) / 1000)}s 后可重发`
+                              : "发送重置邮件"}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
