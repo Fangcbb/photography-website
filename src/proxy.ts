@@ -27,6 +27,7 @@ export async function proxy(request: NextRequest) {
     `connect-src 'self' https://*.fangc.cc https://*.cos.ap-nanjing.myqcloud.com https://*.cos.ap-shanghai.myqcloud.com https://hm.baidu.com`,
     `worker-src 'self' blob:`,
     `media-src 'self' https://cnn.fangc.cc https://*.fangc.cc https://*.cos.ap-nanjing.myqcloud.com https://*.cos.ap-shanghai.myqcloud.com`,
+    `frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com`,
     `child-src 'self' blob:`,
     `frame-ancestors 'self'`,
   ]
