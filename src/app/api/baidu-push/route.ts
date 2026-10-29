@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { photos, videos, citySets } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
+import { getSession } from "@/modules/auth/lib/get-session";
 
-const BAIDU_API = "http://data.zz.baidu.com/urls";
+const BAIDU_API = "https://data.zz.baidu.com/urls";
 const SITE = "https://www.fangc.cc";
 const TOKEN = process.env.BAIDU_PUSH_TOKEN || "";
 
-export async function GET() {
+// 仅管理员可触发的 POST：避免爬虫/预取通过匿名 GET 消耗推送额度
+export async function POST() {
   if (!TOKEN) {
     return NextResponse.json({ error: "BAIDU_PUSH_TOKEN not set" }, { status: 500 });
+  }
+
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   // 收集所有公开页面 URL

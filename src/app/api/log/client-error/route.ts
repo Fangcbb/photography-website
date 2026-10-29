@@ -18,6 +18,8 @@ export const runtime = "nodejs";
 
 const MAX_MESSAGE_LEN = 2000;
 const MAX_STACK_LEN = 8000;
+const MAX_BODY_BYTES = 64 * 1024;
+const MAX_META_LEN = 8192;
 const RATE_LIMIT_PER_MIN = 30;
 
 const bodySchema = z.object({
@@ -54,6 +56,14 @@ function clip(s: string | undefined, max: number): string | undefined {
   return s.length > max ? s.slice(0, max) + "…(truncated)" : s;
 }
 
+// meta 是任意对象，序列化前限制总长度，避免匿名上报放大磁盘/内存消耗
+function clipMeta(meta: Record<string, unknown> | undefined): Record<string, unknown> {
+  if (!meta) return {};
+  const s = JSON.stringify(meta);
+  if (s.length <= MAX_META_LEN) return meta;
+  return { truncated: true, preview: s.slice(0, MAX_META_LEN) };
+}
+
 export async function POST(request: NextRequest) {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -62,6 +72,11 @@ export async function POST(request: NextRequest) {
 
   if (hitRateLimit(ip)) {
     return new NextResponse(null, { status: 204 });
+  }
+
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ ok: false, error: "body too large" }, { status: 413 });
   }
 
   let parsed: z.infer<typeof bodySchema>;
@@ -80,12 +95,13 @@ export async function POST(request: NextRequest) {
     url: clip(parsed.url, 1000),
     userAgent: clip(request.headers.get("user-agent") || undefined, 400),
     meta: {
+      // 客户端 meta 先展开，服务端可信字段最后赋值，防止覆盖 ip/kind/componentStack
+      ...clipMeta(parsed.meta),
       kind: parsed.source,
       line: parsed.line,
       column: parsed.column,
       componentStack: clip(parsed.componentStack, 4000),
       ip,
-      ...parsed.meta,
     },
   });
 
