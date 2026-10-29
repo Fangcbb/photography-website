@@ -32,7 +32,7 @@ export const MapView = () => {
       </div>
 
       {/* GA4 analytics panel */}
-      <div className="lg:col-span-1 h-full min-h-[400px] overflow-y-auto">
+      <div className="lg:col-span-1 h-full min-h-[400px]">
         <React.Suspense
           fallback={
             <div className="h-full min-h-[400px] rounded-xl bg-muted/40 animate-pulse" />

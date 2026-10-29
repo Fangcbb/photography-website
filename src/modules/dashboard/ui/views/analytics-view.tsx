@@ -41,7 +41,7 @@ export function AnalyticsView() {
 
   if (!data.configured) {
     return (
-      <Card className="w-full">
+      <Card className="flex h-full w-full flex-col">
         <CardHeader>
           <CardTitle>网站访问数据</CardTitle>
           <CardDescription>
@@ -80,7 +80,7 @@ GA4_PRIVATE_KEY=<私钥 PEM>`}
   const totalUv = data.totalUv.toLocaleString();
 
   return (
-    <Card className="w-full">
+    <Card className="flex h-full w-full flex-col">
       <CardHeader>
         <CardTitle>网站访问数据</CardTitle>
         <CardDescription>
@@ -114,10 +114,10 @@ GA4_PRIVATE_KEY=<私钥 PEM>`}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4 px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="flex flex-1 flex-col gap-4 px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[220px] w-full"
+          className="aspect-auto min-h-[220px] w-full flex-1"
         >
           <AreaChart data={data.daily}>
             <defs>
