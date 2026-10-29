@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Play, Clock, Eye } from "lucide-react";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import Carousel from "@/components/photo-carousel";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 
 /**
  * 视频可能没有独立 thumbnail_url。腾讯云 CI 可从 MP4 按需生成一帧 JPEG；
@@ -76,7 +76,7 @@ const VideoCard = ({ video, formatDuration }: { video: any; formatDuration: (sec
   );
 };
 
-export const VideoListView = () => {
+export const VideoListView = ({ journals }: { journals?: ReactNode } = {}) => {
   const trpc = useTRPC();
   const { data: { data: videos } } = useSuspenseQuery(trpc.video.getMany.queryOptions({ limit: 20 }));
 
@@ -147,6 +147,7 @@ export const VideoListView = () => {
 
       {/* RIGHT CONTENT - Scrollable */}
       <div className="w-full lg:w-1/2 space-y-3 pb-3">
+        {journals}
         {/* DESCRIPTION CARD */}
         <CardContainer>
           <div className="flex flex-col p-12 gap-[128px]">

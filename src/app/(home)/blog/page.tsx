@@ -175,13 +175,11 @@ const page = async () => {
       {/* 实际页面：客户端 React Query 获取完整数据 */}
       <Suspense fallback={<VideoListLoadingStatus />}>
         <ErrorBoundary fallback={<p>Error</p>}>
-          <VideoListView />
+          <VideoListView journals={<WrittenJournals items={publicPosts} />} />
         </ErrorBoundary>
       </Suspense>
 
-      {/* 文字游记区块（服务端渲染，SEO 可爬） */}
-      <WrittenJournals items={publicPosts} />
-    </>
+      {/* 文字游记区块（服务端渲染，SEO 可爬） */}    </>
   );
 };
 
