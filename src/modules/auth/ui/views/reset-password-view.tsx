@@ -50,9 +50,19 @@ export const ResetPasswordView = ({ coverId }: { coverId?: string | null }) => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const tokenParam = params.get("token");
+    // better-auth 1.7 邮件链接为路径式: /reset-password/<token>?callbackURL=...
+    const pathSeg = window.location.pathname.split("/").filter(Boolean);
+    const pathToken =
+      pathSeg[0] === "reset-password" && pathSeg.length > 1
+        ? decodeURIComponent(pathSeg[1])
+        : null;
+    const tokenParam = params.get("token") ?? pathToken;
     setToken(tokenParam);
-    setInvalidLink(!tokenParam || params.get("error") === "INVALID_TOKEN");
+    setInvalidLink(
+      !tokenParam ||
+        params.get("error") === "INVALID_TOKEN" ||
+        pathSeg.includes("error"),
+    );
     setChecked(true);
   }, []);
 
