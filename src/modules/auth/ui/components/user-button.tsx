@@ -11,9 +11,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogOut, Loader2 } from "lucide-react";
 import { authClient } from "@/modules/auth/lib/auth-client";
+import { clearClientCaches } from "@/lib/clear-client-caches";
+import { useQueryClient } from "@tanstack/react-query";
 
 const UserButton = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isSignOut, setIsSignOut] = useState<boolean>(false);
   const { data: session } = authClient.useSession();
 
@@ -38,6 +41,8 @@ const UserButton = () => {
               await authClient.signOut({
                 fetchOptions: {
                   onSuccess() {
+                    void clearClientCaches();
+                    queryClient.clear();
                     router.push("/");
                   },
                 },

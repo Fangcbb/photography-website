@@ -140,8 +140,8 @@ export async function handlePhotoProxy(
 
     headers.set("Content-Type", contentType);
     if (isPublic) {
-      // 公开图不依赖 Cookie，允许 CDN 长缓存
-      headers.set("Cache-Control", "public, max-age=31536000, immutable");
+      // 公开图允许缓存，但保留再验证能力，便于照片转私有后能在有限窗口内撤回
+      headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=86400");
     } else {
       // 私有图按 Cookie 区分身份，绝不能进共享缓存
       headers.set("Cache-Control", "private, no-store, max-age=0");

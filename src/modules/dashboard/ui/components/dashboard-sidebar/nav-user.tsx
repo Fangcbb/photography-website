@@ -27,6 +27,8 @@ import Link from "next/link";
 import { authClient } from "@/modules/auth/lib/auth-client";
 import { User } from "@/modules/auth/lib/auth-types";
 import { useRouter } from "next/navigation";
+import { clearClientCaches } from "@/lib/clear-client-caches";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   user: User;
@@ -34,9 +36,12 @@ interface Props {
 
 export function NavUser({ user }: Props) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isMobile } = useSidebar();
 
   const handleLogout = () => {
+    void clearClientCaches();
+    queryClient.clear();
     authClient.signOut();
     router.push("/");
   };
