@@ -11,7 +11,16 @@ import crypto from "crypto";
 
 const TOKEN_URL = (process.env.GA4_OAUTH_BASE || "https://oauth2.googleapis.com") + "/token";
 const SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
-const DATA_API = (process.env.GA4_API_BASE || "https://analyticsdata.googleapis.com") + "/v1beta";
+const RAW_DATA_BASE = process.env.GA4_API_BASE || "https://analyticsdata.googleapis.com";
+const DATA_API = RAW_DATA_BASE + "/v1beta";
+
+// relay base: build ?path= style URL for Netlify/Deno relays
+function apiUrl(path: string): string {
+  if (/\.netlify\.app|\.deno\.dev/.test(RAW_DATA_BASE)) {
+    return `${RAW_DATA_BASE.replace(/\/$/, "")}?path=${encodeURIComponent(path)}`;
+  }
+  return `https://${path}`;
+}
 
 let cachedToken: { token: string; exp: number } | null = null;
 
@@ -76,7 +85,7 @@ export async function fetchGa4Overview(days = 30): Promise<{
   };
 
   const dailyRes = await fetch(
-    `${DATA_API}/properties/${propertyId}:runReport`,
+    apiUrl(`analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`),
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -99,7 +108,7 @@ export async function fetchGa4Overview(days = 30): Promise<{
   }));
 
   const sourceRes = await fetch(
-    `${DATA_API}/properties/${propertyId}:runReport`,
+    apiUrl(`analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`),
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
