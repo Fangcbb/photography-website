@@ -42,7 +42,7 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
       {/* RIGHT CONTENT - Scrollable */}
       <div className="w-full lg:w-1/2 space-y-3 pb-3">
         {/* CONTENT  */}
-        <div className="bg-muted rounded-xl p-10 md:p-12 md:h-[calc(100vh-24px)] flex flex-col">
+        <div className="bg-muted rounded-xl p-10 md:p-12 flex flex-col">
           <div className="mb-10">
             <span className="bg-muted-hover rounded-sm py-1 px-2 text-xs text-text-muted font-light">
               {new Date(data.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
