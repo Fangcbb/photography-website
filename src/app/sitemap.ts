@@ -5,6 +5,9 @@ import { desc, eq } from "drizzle-orm";
 
 const BASE_URL = "https://www.fangc.cc";
 
+// 每小时再验证一次，运行后新增的公开内容无需重新部署即可进入站点地图
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
@@ -35,8 +38,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     }));
-  } catch {
-    // DB 查询失败时跳过
+  } catch (error) {
+    console.error("sitemap: 照片查询失败", error);
   }
 
   // 动态页面 — 城市/旅行集
@@ -54,8 +57,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     }));
-  } catch {
-    // DB 查询失败时跳过
+  } catch (error) {
+    console.error("sitemap: 城市查询失败", error);
   }
 
   // 动态页面 — 视频详情
@@ -74,8 +77,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     }));
-  } catch {
-    // DB 查询失败时跳过
+  } catch (error) {
+    console.error("sitemap: 视频查询失败", error);
   }
 
   return [...staticPages, ...photoPages, ...travelPages, ...videoPages];

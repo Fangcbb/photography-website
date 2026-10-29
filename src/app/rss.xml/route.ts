@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { photos, posts, videos } from "@/db/schema";
+import { photos, videos } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 
 const BASE_URL = "https://www.fangc.cc";
@@ -62,39 +62,6 @@ export async function GET() {
     }
   } catch {
     // DB unavailable — skip photos
-  }
-
-  // ── Recent posts (blog/video) ──────────────────────────
-  try {
-    const recentPosts = await db
-      .select({
-        id: posts.id,
-        title: posts.title,
-        slug: posts.slug,
-        description: posts.description,
-        coverImage: posts.coverImage,
-        createdAt: posts.createdAt,
-      })
-      .from(posts)
-      .where(eq(posts.visibility, "public"))
-      .orderBy(desc(posts.createdAt))
-      .limit(20);
-
-    for (const post of recentPosts) {
-      const link = `${BASE_URL}/blog/${post.slug}`;
-
-      items.push(`
-    <item>
-      <title>${escapeXml(post.title)}</title>
-      <link>${link}</link>
-      <guid isPermaLink="true">${link}</guid>
-      <pubDate>${toRfc822(post.createdAt)}</pubDate>
-      ${post.description ? `<description>${escapeXml(post.description)}</description>` : ""}
-      ${post.coverImage ? `<enclosure url="${escapeXml(post.coverImage)}" type="image/jpeg" />` : ""}
-    </item>`);
-    }
-  } catch {
-    // DB unavailable — skip posts
   }
 
   // ── Recent videos ──────────────────────────────────────

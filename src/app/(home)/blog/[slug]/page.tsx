@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: data.title,
       description: data.description || `${data.title} - 方斌视频`,
+      alternates: { canonical: `https://www.fangc.cc/blog/${decodedSlug}` },
       openGraph: {
         title: data.title,
         description: data.description || `${data.title} - 方斌视频`,
@@ -39,6 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: "视频不存在",
       description: "视频不存在或已被删除",
+      alternates: { canonical: `https://www.fangc.cc/blog/${decodedSlug}` },
     };
   }
 }

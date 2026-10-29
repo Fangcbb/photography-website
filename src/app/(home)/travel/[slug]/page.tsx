@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title,
       description,
+      alternates: { canonical: `${BASE_URL}/travel/${slug}` },
       openGraph: {
         type: "article",
         title,
@@ -65,6 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const title = `${slug.charAt(0).toUpperCase() + slug.slice(1)} Travel Photography`;
     return {
       title,
+      alternates: { canonical: `${BASE_URL}/travel/${slug}` },
       openGraph: { title, url: `${BASE_URL}/travel/${slug}` },
     };
   }
