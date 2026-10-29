@@ -98,7 +98,7 @@ const WrittenJournals = ({ items }: { items: {
     <section className="w-full">
       <div className="bg-muted rounded-xl">
         <div className="p-8">
-          <h2 className="text-2xl mb-6">Written Journals</h2>
+          <h1 className="text-3xl mb-6">Written Journals</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {items.map((post) => (
               <Link
