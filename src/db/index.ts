@@ -109,10 +109,19 @@ function getPrimaryTransactional() {
   return g.__primaryTransactionalDb;
 }
 
+let secondaryWarningLogged = false;
 function getSecondary() {
   const url = process.env.DATABASE_URL_SECONDARY;
   if (!url) return null;
-  return (g.__secondaryDb ??= createDb(url, true));
+  // 双写当前不可靠（重复执行、主从不一致、内存队列丢事件），暂不支持：
+  // 单主库为主，配置了备库时降级为主库写入并明确告警。
+  if (!secondaryWarningLogged) {
+    secondaryWarningLogged = true;
+    console.warn(
+      "[dual-write] DATABASE_URL_SECONDARY is set but dual-write is not supported; continuing with primary-only writes.",
+    );
+  }
+  return null;
 }
 
 // ── Dual-Write Helper ──────────────────────────────────────────────
