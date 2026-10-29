@@ -9,9 +9,9 @@ import crypto from "crypto";
  * 未配置时 getOverview 返回 { configured: false }。
  */
 
-const TOKEN_URL = "https://oauth2.googleapis.com/token";
+const TOKEN_URL = (process.env.GA4_OAUTH_BASE || "https://oauth2.googleapis.com") + "/token";
 const SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
-const DATA_API = "https://analyticsdata.googleapis.com/v1beta";
+const DATA_API = (process.env.GA4_API_BASE || "https://analyticsdata.googleapis.com") + "/v1beta";
 
 let cachedToken: { token: string; exp: number } | null = null;
 
