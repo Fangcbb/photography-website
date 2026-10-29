@@ -150,7 +150,7 @@ export const VideoListView = ({ journals }: { journals?: ReactNode } = {}) => {
         {journals}
         {/* DESCRIPTION CARD */}
         <CardContainer>
-          <div className="flex flex-col p-12 gap-[128px]">
+          <div className="flex flex-col p-12 gap-8">
             <h1 className="text-3xl">Videos</h1>
             <div className="flex flex-col gap-4 font-light">
               <p>
@@ -200,7 +200,7 @@ export const VideoListLoadingStatus = () => {
       {/* RIGHT CONTENT - Scrollable */}
       <div className="w-full lg:w-1/2 space-y-3 pb-3">
         <CardContainer>
-          <div className="flex flex-col p-12 gap-[128px]">
+          <div className="flex flex-col p-12 gap-8">
             <Skeleton className="h-10 w-24" />
             <div className="flex flex-col gap-4">
               <Skeleton className="h-4 w-full" />

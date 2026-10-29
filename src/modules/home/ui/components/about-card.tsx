@@ -8,7 +8,7 @@ interface AboutCardProps {
 const AboutCard = ({ heading = "About", paragraphs = [] }: AboutCardProps) => {
   return (
     <CardContainer>
-      <div className="flex flex-col p-12 gap-[128px]">
+      <div className="flex flex-col p-12 gap-8">
         <h1 className="text-3xl">{heading}</h1>
         <div className="flex flex-col gap-4 font-light">
           {paragraphs.map((p, i) => (

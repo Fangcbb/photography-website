@@ -13,7 +13,7 @@ const CameraCard = ({
 }: CameraCardProps) => {
   return (
     <CardContainer>
-      <div className="flex flex-col p-12 gap-[128px]">
+      <div className="flex flex-col p-12 gap-8">
         <div className="flex flex-col text-3xl">
           <h1>{heading}</h1>
           <h1>{subheading}</h1>

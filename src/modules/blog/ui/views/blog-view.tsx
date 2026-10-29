@@ -27,7 +27,7 @@ export const BlogView = () => {
       <div className="w-full lg:w-1/2 space-y-3 pb-3">
         {/* DESCRIPTION CARD  */}
         <CardContainer>
-          <div className="flex flex-col p-12 gap-[128px]">
+          <div className="flex flex-col p-12 gap-8">
             <h1 className="text-3xl">Blog</h1>
             <div className="flex flex-col gap-4 font-light">
               <p>
@@ -79,7 +79,7 @@ export const BlogViewLoadingStatus = () => {
       <div className="w-full lg:w-1/2 space-y-3 pb-3">
         {/* DESCRIPTION CARD SKELETON */}
         <CardContainer>
-          <div className="flex flex-col p-12 gap-[128px]">
+          <div className="flex flex-col p-12 gap-8">
             <h1 className="text-3xl">Blog</h1>
             <div className="flex flex-col gap-4 font-light">
               <p>
